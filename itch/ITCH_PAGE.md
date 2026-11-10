@@ -7,6 +7,8 @@ Everything you need is in this folder:
 | `bobber-and-brine-itch.zip` | The game. Upload this. |
 | `cover.png` | Cover image (1260 × 1000, the 630 × 500 shape itch.io asks for, at double resolution) |
 | `screenshots/` | Seven screenshots for the page |
+| `banner-1920x600.png` | Banner image for the top of the page |
+| `background-1920x1400.png` | Page background image |
 
 ## Upload steps
 
@@ -30,6 +32,23 @@ Everything you need is in this folder:
 6. **Genre:** Simulation. **Tags:** idle, incremental, fishing, clicker, casual, relaxing, singleplayer, 2D.
 7. **Cover image:** upload `cover.png`. **Screenshots:** upload the files in `screenshots/` in order.
 8. Set **Visibility & access** to **Draft** and save. Open the page, play a few casts to check it, then switch to **Public**.
+
+## Page theme (Edit theme, on your game page)
+
+| Setting | Value |
+|---|---|
+| **Banner** | Upload `banner-1920x600.png`. itch.io scales it down to the page width, and the extra resolution keeps it sharp on high-resolution screens. |
+| **Background** | Upload `background-1920x1400.png`. Set it to **not repeat**, aligned **top center**. The bottom fades into the BG color, so long pages have no seam. |
+| **BG color** | `#04121b` |
+| **BG2 color** (the page column) | `#0d2a3a` |
+| **Text** | `#eaf7f5` |
+| **Link** | `#ffcf5a` |
+| **Button** | `#ff6b3d` |
+| **Embed BG** | `#0a2231` |
+
+Embed BG is the color around the game window and behind it while it loads. `#0a2231` matches the game's own deep-water color, so the game blends into the page.
+
+Font: pick **Nunito** or **Lato** if they're offered. They're close to the game's body text.
 
 ## Description (paste this)
 
