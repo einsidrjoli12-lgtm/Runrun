@@ -186,7 +186,8 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
 .skill.ready { animation: glow 1.6s ease-in-out infinite; }
 @keyframes glow { 50% { box-shadow: 0 0 26px color-mix(in srgb, var(--c) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.1); } }
 .skill:disabled { cursor: default; filter: saturate(.55) brightness(.85); }
-.skill.locked { border-style: dashed; filter: saturate(0) brightness(.7); }
+.skill.locked { border-style: dashed; filter: saturate(.15) brightness(.8); }
+.skill.locked .nm small { color: var(--gold); }
 .skill kbd { position: absolute; right: 6px; top: 4px; font: 800 .62rem var(--body); color: var(--muted); }
 
 .lastcatch {
@@ -214,7 +215,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   .skill .ic { width: 28px; height: 28px; }
   .skill kbd { display: none; }
 }
-@media (max-width: 520px) { .skill .nm { display: none; } .skill { justify-content: center; } }
+@media (max-width: 520px) { .skill { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; } .skill .nm { font-size: .68rem; } .skill .nm small { font-size: .62rem; } }
 
 /* ---- shop ---- */
 .shop {
@@ -881,8 +882,8 @@ function refreshAffordability() {
 }
 
 function renderSkillbar() {
-  $('skillbar').innerHTML = ABILITIES.map((d, i) => `<button class="skill ${has(d.id) ? '' : 'locked'}" data-skill="${d.id}" style="--c:${d.c}" ${has(d.id) ? '' : 'disabled'} title="${d.name}: ${d.desc}">
-    <span class="ic"><span>${icon(d.icon)}</span></span><span class="nm">${d.short}<small id="sk-${d.id}">${has(d.id) ? 'Ready' : money(d.cost)}</small></span><kbd>${i + 1}</kbd></button>`).join('');
+  $('skillbar').innerHTML = ABILITIES.map((d, i) => `<button class="skill ${has(d.id) ? '' : 'locked'}" data-skill="${d.id}" ${has(d.id) ? '' : 'data-locked="1"'} style="--c:${d.c}" title="${d.name}: ${d.desc}${has(d.id) ? '' : ' Tap to see it in the Specials tab.'}">
+    <span class="ic"><span>${icon(d.icon)}</span></span><span class="nm">${d.short}<small id="sk-${d.id}">${has(d.id) ? 'Ready' : 'Unlock ' + money(d.cost)}</small></span><kbd>${i + 1}</kbd></button>`).join('');
   updateSkillbar();
 }
 function updateSkillbar() {
@@ -898,7 +899,11 @@ function updateSkillbar() {
     const sm = $('sk-' + d.id); if (sm && sm.textContent !== label) sm.textContent = label;
   });
 }
-$('skillbar').addEventListener('click', e => { const b = e.target.closest('[data-skill]'); if (b) useAbility(b.dataset.skill); });
+$('skillbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-skill]'); if (!b) return;
+  if (b.dataset.locked) { document.querySelector('#tabs [data-tab="specials"]').click(); return; } // not bought yet: open the shop
+  useAbility(b.dataset.skill);
+});
 
 function updateEffects() {
   const chips = [];
