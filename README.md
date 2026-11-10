@@ -4,7 +4,8 @@ An idle fishing game in a single HTML file. Open `index.html` in a browser to pl
 
 - **Cast** by tapping the water (or pressing Space). Reel in while the bobber dips for a perfect catch worth ×2.
 - **Rod Holder** recasts for you and has an on/off switch once you own it.
-- **Tackle** upgrades raise catch value, bite speed, rare-fish odds and double-catch chance.
+- **Tackle** upgrades raise catch value, bite speed, rare-fish odds and double-catch chance. A basic rod mostly catches common fish; every Rod level makes rarer fish bite more often.
+- **Legends**: about 1 bite in 1,000 is a monster worth 40× that water's best fish. Tap fast to fill the tension meter within 10 seconds or the line snaps.
 - **Crew** deckhands fish for you nonstop, and keep working at half speed for up to 8 hours while you're away.
 - **Waters**: six fishing spots from Farm Pond to the Midnight Trench, each with six species to log.
 - **Music and sound**: synthesized live in the browser, with a different tune for each water. Toggle them in the header.
