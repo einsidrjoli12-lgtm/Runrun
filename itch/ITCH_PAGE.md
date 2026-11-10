@@ -9,7 +9,8 @@ Everything you need is in this folder:
 | `screenshots/` | Seven screenshots for the page |
 | `banner-1920x600.png` | Banner image for the top of the page |
 | `background-1920x1400.png` | Page background image |
-| `embed-bg-1280x800.png` | Embed BG: the picture inside the game window before the player presses Run game |
+| `embed-bg-960x600.png` | Embed BG for a 960 × 600 game window (recommended) |
+| `embed-bg-640x360.png` | Embed BG for itch.io's default 640 × 360 window, if you keep it |
 
 ## Upload steps
 
@@ -23,7 +24,7 @@ Everything you need is in this folder:
    - **Pricing:** No payments, or Donate / Pay what you want
 3. **Uploads:** upload `bobber-and-brine-itch.zip`, then tick **This file will be played in the browser**.
 4. **Embed options:**
-   - **Viewport dimensions:** 1280 × 800
+   - **Viewport dimensions:** 960 × 600. This is the widest size that fits itch.io's standard page. At the default 640 × 360 the shop is too small to use.
    - Tick **Mobile friendly**, orientation **Portrait**
    - Tick **Fullscreen button**
    - Leave **Automatically start on page load** off, so the "Run game" button gives the browser the click it needs to allow sound
@@ -45,7 +46,7 @@ Everything you need is in this folder:
 | **Text** | `#eaf7f5` |
 | **Link** | `#ffcf5a` |
 | **Button** | `#ff6b3d` |
-| **Embed BG** | Upload `embed-bg-1280x800.png`. It's the same size as the 1280 × 800 game window, with the center left clear for the Run game button. |
+| **Embed BG** | Upload `embed-bg-960x600.png` (or the 640 × 360 one if you kept that window size). itch.io shows this picture at its real size, centered, without shrinking it, so it has to match the viewport exactly. |
 
 
 Font: pick **Nunito** or **Lato** if they're offered. They're close to the game's body text.
