@@ -171,7 +171,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
         <div class="loc-badge" id="locBadge">Farm Pond</div>
       </div>
       <button class="action" id="action" data-state="idle">Cast line</button>
-      <div class="hint">Tap the water or press Space. Reel in while the bobber dips for a <b>perfect catch (×3)</b>.</div>
+      <div class="hint">Tap the water or press Space. Reel in while the bobber dips for a <b>perfect catch (×2)</b>.</div>
       <div class="lastcatch" id="lastcatch"><span class="meta">No fish yet. Cast your first line.</span></div>
     </div>
 
@@ -204,59 +204,59 @@ const LOCS = [
     desc: 'Muddy banks, lily pads and a rickety dock. Everyone starts here.',
     sky: ['#8fc9e0', '#f2e6c4'], water: ['#4c8a72', '#1d4038'], far: '#4f7d45', sil: '#1b2a22', sun: '#fff1a8', night: false,
     fish: [['Bluegill', 0, 2, 0.2], ['Yellow Perch', 0, 3, 0.3], ['Bullhead Catfish', 1, 8, 1.1], ['Largemouth Bass', 2, 25, 2.4], ['Koi', 3, 90, 4], ['Golden Carp', 4, 400, 9]] },
-  { id: 'river', name: 'Willow River', cost: 2500, color: '#5fb0b8',
+  { id: 'river', name: 'Willow River', cost: 3000, color: '#5fb0b8',
     desc: 'Cold, quick water running under the willows. Trout country.',
     sky: ['#7fb7e6', '#fde2b8'], water: ['#3f7f95', '#163848'], far: '#3d6b4a', sil: '#16262c', sun: '#ffe08a', night: false,
     fish: [['Creek Chub', 0, 15, 0.1], ['Rainbow Trout', 0, 22, 1.5], ['Smallmouth Bass', 1, 60, 1.8], ['Walleye', 2, 180, 3], ['Lake Sturgeon', 3, 700, 40], ['Paddlefish', 4, 3000, 30]] },
-  { id: 'lake', name: 'Glacier Lake', cost: 60000, color: '#8fd3f0',
+  { id: 'lake', name: 'Glacier Lake', cost: 500000, color: '#8fd3f0',
     desc: 'Clear meltwater ringed by peaks. The pike here hold grudges.',
     sky: ['#b5d8f2', '#e9f1f7'], water: ['#3f8fb0', '#123a52'], far: '#8aa1b5', sil: '#16283a', sun: '#ffffff', night: false,
     fish: [['Cisco', 0, 120, 0.4], ['Lake Trout', 0, 170, 4], ['Northern Pike', 1, 450, 5], ['Muskellunge', 2, 1400, 12], ['Arctic Char', 3, 5200, 6], ['Ghost Pike', 4, 24000, 18]] },
-  { id: 'coast', name: 'Rocky Coast', cost: 1500000, color: '#4fa3c7',
+  { id: 'coast', name: 'Rocky Coast', cost: 1e9, color: '#4fa3c7',
     desc: 'Salt spray, gulls and a lighthouse. Bring a bigger cooler.',
     sky: ['#f4a76b', '#ffd9a0'], water: ['#2f7aa0', '#0e2e45'], far: '#5a4a52', sil: '#1c1a24', sun: '#ffd27a', night: false,
     fish: [['Atlantic Mackerel', 0, 2000, 0.6], ['Striped Bass', 0, 2800, 7], ['Red Snapper', 1, 7500, 5], ['Atlantic Halibut', 2, 24000, 60], ['Yellowtail', 3, 90000, 15], ['Goliath Grouper', 4, 400000, 180]] },
-  { id: 'ocean', name: 'Open Ocean', cost: 50000000, color: '#2f6fd0',
+  { id: 'ocean', name: 'Open Ocean', cost: 5e12, color: '#2f6fd0',
     desc: 'Nothing but blue to the horizon. Marlin, tuna and big money.',
     sky: ['#4b86d6', '#bfe0ff'], water: ['#1f5fae', '#081f45'], far: null, sil: '#0b1630', sun: '#ffffff', night: false,
     fish: [['Skipjack Tuna', 0, 40000, 3], ['Mahi-mahi', 0, 55000, 10], ['Wahoo', 1, 150000, 20], ['Swordfish', 2, 480000, 110], ['Blue Marlin', 3, 1800000, 300], ['Atlantic Bluefin', 4, 8000000, 400]] },
-  { id: 'trench', name: 'Midnight Trench', cost: 2000000000, color: '#7a5cff',
+  { id: 'trench', name: 'Midnight Trench', cost: 5e16, color: '#7a5cff',
     desc: 'A mile of black water under a moonless sky. Things glow down there.',
     sky: ['#05060f', '#1b1840'], water: ['#1a1550', '#03030d'], far: null, sil: '#000000', sun: '#d8e2ff', night: true,
     fish: [['Lanternfish', 0, 1000000, 0.02], ['Hatchetfish', 0, 1400000, 0.05], ['Gulper Eel', 1, 4000000, 1.5], ['Anglerfish', 2, 13000000, 3], ['Giant Squid', 3, 50000000, 250], ['Coelacanth', 4, 220000000, 80]] },
 ];
 
 const UPGRADES = [
-  { id: 'holder', name: 'Rod Holder', max: 1, cost: () => 250,
-    desc: () => 'Recasts your line automatically after every catch.' },
-  { id: 'rod', name: 'Fishing Rod', max: 80, cost: l => 25 * 1.95 ** l,
-    desc: l => `Catch value ×${fx(1.25 ** l)} → ×${fx(1.25 ** (l + 1))}` },
-  { id: 'line', name: 'Braided Line', max: 25, cost: l => 40 * 2.1 ** l,
+  { id: 'holder', name: 'Rod Holder', max: 1, cost: () => 300,
+    desc: () => S.up.holder ? `Recasting automatically: ${S.autoCast ? 'on' : 'off'}. Tap to switch.` : 'Recasts your line automatically after every catch. You can switch it on and off.' },
+  { id: 'rod', name: 'Fishing Rod', max: 80, cost: l => 20 * 2.4 ** l,
+    desc: l => `Catch value ×${fx(1.18 ** l)} → ×${fx(1.18 ** (l + 1))}` },
+  { id: 'line', name: 'Braided Line', max: 25, cost: l => 30 * 2.6 ** l,
     desc: l => `Average bite wait ${biteTime(l).toFixed(2)}s → ${biteTime(l + 1).toFixed(2)}s` },
-  { id: 'bait', name: 'Bait Box', max: 20, cost: l => 150 * 2.4 ** l,
+  { id: 'bait', name: 'Bait Box', max: 20, cost: l => 150 * 3 ** l,
     desc: l => `Rare-or-better chance here ${pct(rareChance(S.loc, l))} → ${pct(rareChance(S.loc, l + 1))}` },
-  { id: 'net', name: 'Landing Net', max: 12, cost: l => 500 * 2.8 ** l,
+  { id: 'net', name: 'Landing Net', max: 12, cost: l => 1000 * 3.4 ** l,
     desc: l => `Double-catch chance ${pct(0.08 * l)} → ${pct(0.08 * (l + 1))}` },
-  { id: 'market', name: 'Market Stall', max: 60, cost: l => 1000 * 2.3 ** l,
-    desc: l => `Sell price ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
+  { id: 'market', name: 'Market Stall', max: 60, cost: l => 2000 * 2.8 ** l,
+    desc: l => `Sell price ×${fx(1.1 ** l)} → ×${fx(1.1 ** (l + 1))}` },
 ];
 const CREW = [
-  { id: 'hands', name: 'Deckhand', max: Infinity, cost: n => 120 * 1.22 ** n,
+  { id: 'hands', name: 'Deckhand', max: Infinity, cost: n => 100 * 1.35 ** n,
     desc: () => `Each one lands a fish every ${handInterval().toFixed(1)}s, even while you are away.` },
-  { id: 'speed', name: 'Crew Training', max: 20, cost: l => 800 * 2.3 ** l,
+  { id: 'speed', name: 'Crew Training', max: 20, cost: l => 3000 * 3 ** l,
     desc: l => `Deckhand catch time ${handInterval(l).toFixed(2)}s → ${handInterval(l + 1).toFixed(2)}s` },
-  { id: 'skill', name: 'Crew Gear', max: 60, cost: l => 3000 * 2.5 ** l,
-    desc: l => `Deckhand catch value ×${fx(1.2 ** l)} → ×${fx(1.2 ** (l + 1))}` },
+  { id: 'skill', name: 'Crew Gear', max: 60, cost: l => 10000 * 3.2 ** l,
+    desc: l => `Deckhand catch value ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
 ];
 
 /* ---------- State ---------- */
-const SAVE_KEY = 'bobber-brine-save-v1';
+const SAVE_KEY = 'bobber-brine-save-v2'; // v2: rebalanced economy, older saves start over
 const fresh = () => ({
   cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0,
   loc: 0, unlocked: [true, false, false, false, false, false],
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
-  log: {}, catches: 0, perfects: 0, lastSave: Date.now(), buyMax: false, music: true, sfx: true,
+  log: {}, catches: 0, perfects: 0, lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true,
 });
 let S = fresh();
 
@@ -294,23 +294,24 @@ const pct = n => (Math.min(1, n) * 100).toFixed(n < 0.1 ? 1 : 0) + '%';
 const kg = w => w < 1 ? Math.round(w * 1000) + ' g' : w.toFixed(w < 10 ? 2 : 1) + ' kg';
 
 const fameMult = () => 1 + 0.1 * S.fame;
-const valueMult = () => 1.25 ** S.up.rod * 1.15 ** S.up.market * fameMult();
-const crewMult = () => valueMult() * 1.2 ** S.crew.skill;
+const valueMult = () => 1.18 ** S.up.rod * 1.1 ** S.up.market * fameMult();
+const crewMult = () => valueMult() * 1.15 ** S.crew.skill;
 function biteTime(l = S.up.line) { return Math.max(0.5, 3.6 * 0.92 ** l); }
-function handInterval(l = S.crew.speed) { return 8 * 0.9 ** l; }
+function handInterval(l = S.crew.speed) { return 12 * 0.9 ** l; }
 const netChance = () => Math.min(0.96, 0.08 * S.up.net);
 
 function weights(locIdx, bait = S.up.bait) {
-  return LOCS[locIdx].fish.map(f => RARITY_W[f[1]] * (1 + 0.25 * bait) ** f[1]);
+  return LOCS[locIdx].fish.map(f => RARITY_W[f[1]] * (1 + 0.06 * bait) ** f[1]);
 }
 function rareChance(locIdx, bait) {
   const w = weights(locIdx, bait); const tot = w.reduce((a, b) => a + b, 0);
   return LOCS[locIdx].fish.reduce((a, f, i) => a + (f[1] >= 2 ? w[i] : 0), 0) / tot;
 }
 const AVG_SIZE = 0.875; // mean of 0.5 + 1.5 * U * U
+const PRICE = 0.3;     // global fish price scale
 function expectedBase(locIdx) {
   const w = weights(locIdx); const tot = w.reduce((a, b) => a + b, 0);
-  return LOCS[locIdx].fish.reduce((a, f, i) => a + f[2] * w[i], 0) / tot * AVG_SIZE;
+  return LOCS[locIdx].fish.reduce((a, f, i) => a + f[2] * PRICE * w[i], 0) / tot * AVG_SIZE;
 }
 function crewRate() {
   return S.crew.hands / handInterval() * expectedBase(S.loc) * crewMult() * (1 + netChance());
@@ -320,9 +321,9 @@ function rollFish(locIdx) {
   let r = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
   while (r > w[i] && i < w.length - 1) { r -= w[i]; i++; }
   const f = loc.fish[i]; const size = 0.5 + Math.random() * Math.random() * 1.5;
-  return { idx: i, name: f[0], rarity: f[1], weight: f[3] * size, base: f[2] * size };
+  return { idx: i, name: f[0], rarity: f[1], weight: f[3] * size, base: f[2] * PRICE * size };
 }
-function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e7)); }
+function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e9)); }
 
 /* ---------- Economy actions ---------- */
 function earn(amount) { S.cash += amount; S.runEarned += amount; S.totalEarned += amount; }
@@ -346,7 +347,7 @@ function landCatch(perfect) {
   let total = 0, best = null;
   for (let k = 0; k < count; k++) {
     const fish = rollFish(S.loc);
-    const value = fish.base * valueMult() * (perfect ? 3 : 1);
+    const value = fish.base * valueMult() * (perfect ? 2 : 1);
     total += value; recordFish(fish, S.loc);
     if (!best || fish.rarity > best.rarity) best = Object.assign(fish, { value });
   }
@@ -408,14 +409,14 @@ let retireArmed = false, resetArmed = false;
 function retire() {
   const gain = pendingFame(); if (gain < 1) return;
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
-  const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, catches: S.catches, perfects: S.perfects, music: S.music, sfx: S.sfx };
+  const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, catches: S.catches, perfects: S.perfects, music: S.music, sfx: S.sfx, autoCast: S.autoCast };
   S = Object.assign(fresh(), keep);
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`);
 }
 function hardReset() {
   if (!resetArmed) { resetArmed = true; renderPanel(); return; }
-  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); save();
+  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx, autoCast: S.autoCast }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); save();
   toast('Save wiped. Back to the farm pond.');
 }
 
@@ -435,7 +436,8 @@ function itemHTML(kind, d, lvl) {
   const cost = maxed ? 0 : d.cost(lvl);
   const lvlText = d.max === 1 ? (lvl ? 'Owned' : '') : d.max === Infinity ? `×${lvl}` : `Lv ${lvl}/${d.max}`;
   let btn;
-  if (maxed) btn = `<button class="buy maxed" disabled>${d.max === 1 ? 'Owned' : 'Maxed'}</button>`;
+  if (maxed && d.id === 'holder') btn = `<button class="buy ${S.autoCast ? '' : 'ghost'}" data-toggle="autocast" aria-pressed="${S.autoCast}">${S.autoCast ? 'On' : 'Off'}</button>`;
+  else if (maxed) btn = `<button class="buy maxed" disabled>${d.max === 1 ? 'Owned' : 'Maxed'}</button>`;
   else {
     let label = money(cost);
     if (kind === 'crew' && d.id === 'hands' && S.buyMax) {
@@ -475,7 +477,7 @@ function renderPanel() {
       const best = L.fish[5];
       h += `<div class="item water-card ${here ? 'here' : ''}" style="--c:${L.color}">
         <div><span class="name">${L.name}</span><span class="lvl">${open ? 'Unlocked' : reachable ? 'Next' : 'Unlock ' + (LOCS[i - 1].name) + ' first'}</span></div>
-        <div class="desc">${L.desc} Fish from ${money(L.fish[0][2])}; the ${best[0]} is worth ${money(best[2])}+.</div>${btn}</div>`;
+        <div class="desc">${L.desc} Fish from ${money(L.fish[0][2] * PRICE)}; the ${best[0]} is worth ${money(best[2] * PRICE)}+.</div>${btn}</div>`;
     });
   } else if (activeTab === 'log') {
     const found = Object.keys(S.log).length, all = LOCS.length * 6;
@@ -492,13 +494,13 @@ function renderPanel() {
     });
   } else if (activeTab === 'retire') {
     const gain = pendingFame();
-    const nextAt = (gain + 1) ** 2 * 1e7;
+    const nextAt = (gain + 1) ** 2 * 1e9;
     h += `<h3>Retire and tell tales</h3>
       <p class="note">Sell the boat, hang up the rod and become a legend at the bait shop. You lose your cash, tackle, crew and waters, but every Fame star adds +10% to all income forever. Your logbook stays.</p>
       <div class="item"><div><div class="bigstat">+${gain} ★</div></div>
         <div class="desc">Earned this career: ${money(S.runEarned)}. Next star at ${money(nextAt)}. You have ${S.fame} ★ (income ×${fameMult().toFixed(1)}).</div>
         <button class="buy ${retireArmed ? 'danger' : ''}" id="retireBtn" ${gain < 1 ? 'disabled' : ''}>${retireArmed ? 'Tap to confirm' : 'Retire'}</button></div>
-      <p class="note">${gain < 1 ? 'Earn $10M in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
+      <p class="note">${gain < 1 ? 'Earn $1B in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
       <h3>Records</h3>
       <p class="note">Lifetime earnings ${money(S.totalEarned)} · Careers retired: ${S.retires}</p>
       <div class="row"><span class="note">Progress saves in this browser automatically.</span>
@@ -521,6 +523,7 @@ panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.kind) buy(b.dataset.kind, b.dataset.id);
   else if (b.dataset.travel) unlockOrTravel(+b.dataset.travel);
+  else if (b.dataset.toggle === 'autocast') { SND.click(); S.autoCast = !S.autoCast; if (!S.autoCast) cast.autoT = -1; renderPanel(); save(); }
   else if (b.dataset.buymax) { SND.click(); S.buyMax = b.dataset.buymax === '1'; renderPanel(); }
   else if (b.id === 'retireBtn') retire();
   else if (b.id === 'resetBtn') hardReset();
@@ -534,7 +537,7 @@ function toast(html) {
 }
 function showLastCatch(fish, total, count, perfect) {
   $('lastcatch').innerHTML = `<span class="who" style="color:${RARITY_C[fish.rarity]}">${fish.name}${count > 1 ? ' + 1 more' : ''}</span>
-    <span class="meta">${RARITY[fish.rarity]} · ${kg(fish.weight)}${perfect ? ' · <b style="color:var(--gold)">Perfect ×3</b>' : ''}</span>
+    <span class="meta">${RARITY[fish.rarity]} · ${kg(fish.weight)}${perfect ? ' · <b style="color:var(--gold)">Perfect ×2</b>' : ''}</span>
     <span class="who" style="color:var(--gold)">+${money(total)}</span>`;
 }
 
@@ -754,7 +757,7 @@ function stepCast(dt) {
   } else if (cast.state === 'reel') {
     if (cast.t >= 0.7) {
       cast.state = 'idle'; cast.t = 0; updateAction();
-      if (S.up.holder) cast.autoT = 0.35;
+      if (S.up.holder && S.autoCast) cast.autoT = 0.35;
     }
   } else if (cast.state === 'idle' && cast.autoT >= 0) {
     cast.autoT -= dt; if (cast.autoT < 0) startCast();
