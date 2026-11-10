@@ -502,7 +502,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
         <button class="buy violet" data-dev="cash12">+ $1T</button>
         <button class="buy violet" data-dev="cashx">Cash × 1,000</button>
         <button class="buy violet" data-dev="maxup">Max all tackle</button>
-        <button class="buy violet" data-dev="crew">+100 deckhands</button>
+        <button class="buy violet" data-dev="crew">Max out crew</button>
         <button class="buy violet" data-dev="waters">Unlock all waters</button>
         <button class="buy violet" data-dev="specials">Unlock all specials</button>
         <button class="buy violet" data-dev="cooldowns">Recharge abilities</button>
@@ -590,22 +590,22 @@ const LOCS = [
     sky: ['#6fa9e2', '#ffd9a8'], water: ['#3a8099', '#123344'], far: '#6b9a7a', far2: '#2f5a44', sil: '#122028', sun: '#ffe08a',
     v: { clouds: '#fff4e6', birds: true, reeds: true, trees: 'willow', sunY: 0.55, sunR: 0.065, current: true },
     fish: [['Creek Chub', 0, 15, 0.1], ['Rainbow Trout', 0, 22, 1.5], ['Smallmouth Bass', 1, 60, 1.8], ['Walleye', 2, 180, 3], ['Lake Sturgeon', 3, 700, 40], ['Paddlefish', 4, 3000, 30]] },
-  { id: 'lake', name: 'Glacier Lake', cost: 6e5, color: '#8fe3ff', depth: '60 m', temp: '3°C',
+  { id: 'lake', name: 'Glacier Lake', cost: 5e5, color: '#8fe3ff', depth: '60 m', temp: '3°C',
     desc: 'Clear meltwater ringed by peaks, under the northern lights. The pike here hold grudges.',
     sky: ['#081430', '#35628c'], water: ['#235f80', '#061a2c'], far: '#6d8eb0', far2: '#1a2f45', sil: '#0a1622', sun: '#eef6ff',
     v: { stars: true, aurora: true, ice: true, trees: 'pine', peaks: true, moon: true, lantern: true, sunY: 0.3, sunR: 0.045 },
     fish: [['Cisco', 0, 120, 0.4], ['Lake Trout', 0, 170, 4], ['Northern Pike', 1, 450, 5], ['Muskellunge', 2, 1400, 12], ['Arctic Char', 3, 5200, 6], ['Ghost Pike', 4, 24000, 18]] },
-  { id: 'coast', name: 'Rocky Coast', cost: 3e9, color: '#ffa36b', depth: '30 m', temp: '14°C',
+  { id: 'coast', name: 'Rocky Coast', cost: 2e9, color: '#ffa36b', depth: '30 m', temp: '14°C',
     desc: 'Salt spray, gulls and a lighthouse at sunset. Bring a bigger cooler.',
     sky: ['#5b4a8a', '#ffb070'], water: ['#3a6f94', '#0c2440'], far: '#7a5a6e', far2: '#2a1f30', sil: '#160f1c', sun: '#ffcf6a',
     v: { clouds: '#ffc0a0', birds: true, lighthouse: true, rocks: true, lantern: true, sunY: 0.86, sunR: 0.11 },
     fish: [['Atlantic Mackerel', 0, 2000, 0.6], ['Striped Bass', 0, 2800, 7], ['Red Snapper', 1, 7500, 5], ['Atlantic Halibut', 2, 24000, 60], ['Yellowtail', 3, 90000, 15], ['Goliath Grouper', 4, 400000, 180]] },
-  { id: 'ocean', name: 'Open Ocean', cost: 5e13, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
+  { id: 'ocean', name: 'Open Ocean', cost: 2e13, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
     desc: 'Nothing but blue to the horizon. Marlin, tuna and big money.',
     sky: ['#2f6fd6', '#c4e6ff'], water: ['#1c64b8', '#061a40'], far: null, far2: null, sil: '#0a1430', sun: '#ffffff',
     v: { clouds: '#ffffff', birds: true, ship: true, swell: 1.9, sunY: 0.22, sunR: 0.06 },
     fish: [['Skipjack Tuna', 0, 40000, 3], ['Mahi-mahi', 0, 55000, 10], ['Wahoo', 1, 150000, 20], ['Swordfish', 2, 480000, 110], ['Blue Marlin', 3, 1800000, 300], ['Atlantic Bluefin', 4, 8000000, 400]] },
-  { id: 'trench', name: 'Midnight Trench', cost: 1e17, color: '#a07bff', depth: '10,900 m', temp: '1°C',
+  { id: 'trench', name: 'Midnight Trench', cost: 3e16, color: '#a07bff', depth: '10,900 m', temp: '1°C',
     desc: 'A mile of black water under a moonless sky. Things glow down there.',
     sky: ['#03040c', '#16123a'], water: ['#16124a', '#020208'], far: null, far2: null, sil: '#000000', sun: '#d8e2ff',
     v: { stars: true, plankton: true, jelly: true, lantern: true, moon: true, sunY: 0.28, sunR: 0.035 },
@@ -648,12 +648,17 @@ const UPGRADES = [
   { id: 'market', name: 'Market Stall', icon: 'market', c: '#ffcf5a', max: 60, cost: l => 400 * 2.6 ** l,
     desc: l => `Sell price ×${fx(1.11 ** l)} → ×${fx(1.11 ** (l + 1))}` },
 ];
+// Crew limits rise with the furthest water you've unlocked. Unlocking a new water resets your cash and crew.
+const CREW_CAPS = { hands: [5, 10, 20, 35, 60, 100], speed: [4, 8, 12, 16, 20, 20], skill: [10, 20, 30, 40, 50, 60] };
+const topWater = () => S.unlocked.lastIndexOf(true);
+const crewCap = (id, w = topWater()) => CREW_CAPS[id][Math.max(0, w)];
+function clampCrew() { for (const id in CREW_CAPS) S.crew[id] = Math.min(S.crew[id], crewCap(id)); }
 const CREW = [
-  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', max: Infinity, cost: n => 100 * 1.35 ** n,
+  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', get max() { return crewCap('hands'); }, cost: n => 100 * 1.35 ** n,
     desc: () => `Each one lands a fish every ${handInterval().toFixed(1)}s, even while you are away.` },
-  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', max: 20, cost: l => 3000 * 3 ** l,
+  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', get max() { return crewCap('speed'); }, cost: l => 3000 * 3 ** l,
     desc: l => `Deckhand catch time ${handInterval(l).toFixed(2)}s → ${handInterval(l + 1).toFixed(2)}s` },
-  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', max: 60, cost: l => 10000 * 3.2 ** l,
+  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', get max() { return crewCap('skill'); }, cost: l => 10000 * 3.2 ** l,
     desc: l => `Deckhand catch value ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
 ];
 // Active abilities: buy once, fire with a button or keys 1-4, then wait for them to recharge.
@@ -943,13 +948,19 @@ function buy(kind, id) {
   } else SND.deny();
 }
 
+let unlockArmed = -1;
 function unlockOrTravel(i) {
   if (S.unlocked[i]) { S.loc = i; SND.click(); onLocChange(); renderPanel(); return; }
   if (!S.unlocked[i - 1] || S.cash < LOCS[i].cost) return;
-  S.cash -= LOCS[i].cost; S.unlocked[i] = true; S.loc = i; SND.fanfare();
-  toast(`You unlocked <b>${LOCS[i].name}</b>. New fish await.`, 'wave', LOCS[i].color);
+  if (unlockArmed !== i) { unlockArmed = i; SND.click(); renderPanel(); return; } // first tap asks for confirmation
+  unlockArmed = -1;
+  S.unlocked[i] = true; S.loc = i; S.cash = 0; dispCash = 0;
+  S.crew = { hands: 0, speed: 0, skill: 0 }; crewAcc = 0; layoutBoats();
+  SND.fanfare();
+  toast(`You unlocked <b>${LOCS[i].name}</b>. Your cash and crew start fresh, and you can now hire up to ${crewCap('hands')} deckhands.`, 'wave', LOCS[i].color);
   onLocChange(); renderPanel();
-  banner(LOCS[i].name.toUpperCase(), 'NEW WATERS', LOCS[i].color);
+  banner(LOCS[i].name.toUpperCase(), 'NEW WATERS · CREW CAP ' + crewCap('hands'), LOCS[i].color);
+  save();
 }
 
 function useAbility(id) {
@@ -1013,10 +1024,10 @@ function bumpCash() { const el = $('cash'); el.classList.remove('bump'); void el
 function itemHTML(kind, d, lvl) {
   const maxed = lvl >= d.max;
   const cost = maxed ? 0 : d.cost(lvl);
-  const lvlText = d.max === 1 ? (lvl ? 'Owned' : '') : d.max === Infinity ? `×${lvl}` : `Lv ${lvl}/${d.max}`;
+  const lvlText = d.max === 1 ? (lvl ? 'Owned' : '') : d.id === 'hands' ? `${lvl}/${d.max} hired` : `Lv ${lvl}/${d.max}`;
   let btn;
   if (maxed && d.id === 'holder') btn = `<button class="buy ${S.autoCast ? '' : 'ghost'}" data-toggle="autocast" aria-pressed="${S.autoCast}">${S.autoCast ? 'On' : 'Off'}</button>`;
-  else if (maxed) btn = `<button class="buy maxed" disabled>${d.max === 1 ? 'Owned' : 'Maxed'}</button>`;
+  else if (maxed) btn = `<button class="buy maxed" disabled>${d.max === 1 ? 'Owned' : kind === 'crew' && topWater() < LOCS.length - 1 ? 'Capped' : 'Maxed'}</button>`;
   else {
     let label = money(cost);
     if (S.buyMax && d.max > 1) {
@@ -1030,7 +1041,7 @@ function itemHTML(kind, d, lvl) {
   const bar = isFinite(d.max) && d.max > 1 ? `<div class="bar"><i style="width:${lvl / d.max * 100}%"></i></div>` : '';
   return `<div class="item" style="--c:${c}"><div class="tile">${icon(d.icon)}</div>
     <div class="head"><span class="name">${d.title ? d.title(lvl) : d.name}</span><span class="lvl">${lvlText}</span></div>
-    <div class="desc">${maxed && d.max !== 1 ? 'Fully upgraded.' : d.desc(lvl)}</div>${bar}${btn}</div>`;
+    <div class="desc">${maxed && kind === 'crew' && topWater() < LOCS.length - 1 ? `Capped at ${d.max} for now. Unlock ${LOCS[topWater() + 1].name} to raise the cap to ${crewCap(d.id, topWater() + 1)}.` : maxed && d.max !== 1 ? 'Fully upgraded.' : d.desc(lvl)}</div>${bar}${btn}</div>`;
 }
 function specialHTML(d, isAbility) {
   const owned = has(d.id);
@@ -1065,7 +1076,7 @@ function renderPanel() {
     h += `<div class="row"><p class="note">Better tackle makes every fish worth more and brings rarer fish to the hook.</p>${segHTML()}</div>`;
     h += UPGRADES.map(d => itemHTML('up', d, S.up[d.id])).join('');
   } else if (activeTab === 'crew') {
-    h += `<div class="row"><p class="note">Deckhands fish at your current water nonstop, and keep working at ${has('captain') ? 'full' : 'half'} speed while you're away (up to 8 hours).</p>
+    h += `<div class="row"><p class="note">Deckhands fish nonstop, even while you're away (${has('captain') ? 'full' : 'half'} speed, up to 8 hours). Crew limits rise with each new water you unlock, and unlocking one resets your crew.</p>
       ${segHTML()}</div>`;
     h += CREW.map(d => itemHTML('crew', d, S.crew[d.id])).join('');
   } else if (activeTab === 'specials') {
@@ -1075,19 +1086,19 @@ function renderPanel() {
     h += CHARMS.map(d => specialHTML(d, false)).join('');
     h += `<div class="section-note">${icon('storm', 'style="width:16px;height:16px;vertical-align:-3px;color:#8fb4ff"')} Storms roll in every few minutes and last ${STORM_LEN} seconds. While it rains, rare fish bite more often. Abilities and charms stay with your career until you retire.</div>`;
   } else if (activeTab === 'waters') {
-    h += `<p class="note">Each new water has bigger fish worth far more. Your crew follows you.</p>`;
+    h += `<p class="note">Each new water has bigger fish worth far more and raises your crew limits. Unlocking one starts your cash and crew from zero; you can travel back to old waters any time for free.</p>`;
     LOCS.forEach((L, i) => {
       const here = S.loc === i, open = S.unlocked[i], reachable = S.unlocked[i - 1] || i === 0;
       let btn;
       if (here) btn = `<button class="buy maxed" disabled>You're here</button>`;
       else if (open) btn = `<button class="buy" data-travel="${i}">Travel</button>`;
-      else if (reachable) btn = `<button class="buy gold" data-travel="${i}" data-cost="${L.cost}">${money(L.cost)}</button>`;
+      else if (reachable) btn = `<button class="buy gold ${unlockArmed === i ? 'danger' : ''}" data-travel="${i}" data-cost="${L.cost}">${unlockArmed === i ? 'Tap to confirm' : money(L.cost)}</button>`;
       else btn = `<button class="buy" disabled>Locked</button>`;
       const best = L.fish[5];
       h += `<div class="item water-card ${here ? 'here' : ''} ${!open && !reachable ? 'locked' : ''}" style="--c:${L.color};--sky1:${L.sky[0]};--sky2:${L.sky[1]};--w1:${L.water[0]};--w2:${L.water[1]};--far:${L.far || L.water[0]};--sun:${L.sun}">
         <div class="tile"></div>
         <div class="head"><span class="name">${L.name}</span><span class="lvl">${L.depth} deep · ${L.temp} · ${open ? 'Unlocked' : reachable ? 'Next' : 'Unlock ' + LOCS[i - 1].name + ' first'}</span></div>
-        <div class="desc">${L.desc} Fish from ${money(L.fish[0][2] * PRICE)}; the ${best[0]} is worth ${money(best[2] * PRICE)}+. Legend: ${S.monsters[i] ? MONSTERS[i].name : '???'}.</div>${btn}</div>`;
+        <div class="desc">${L.desc} Fish from ${money(L.fish[0][2] * PRICE)}; the ${best[0]} is worth ${money(best[2] * PRICE)}+. Legend: ${S.monsters[i] ? MONSTERS[i].name : '???'}.${!open ? `<br><b style="color:${unlockArmed === i ? 'var(--danger)' : 'var(--gold)'}">Unlocking resets your cash and crew to zero.</b> Tackle, specials, goals and Fame stay. Crew cap here: ${crewCap('hands', i)} deckhands.` : ''}</div>${btn}</div>`;
     });
   } else if (activeTab === 'log') {
     const found = Object.keys(S.log).length, all = LOCS.length * 6;
@@ -1199,7 +1210,7 @@ function updateEffects() {
 
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button[data-tab]'); if (!b) return;
-  activeTab = b.dataset.tab; retireArmed = resetArmed = false; SND.click();
+  activeTab = b.dataset.tab; retireArmed = resetArmed = false; unlockArmed = -1; SND.click();
   document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
   panel.scrollTop = 0;
   renderPanel();
@@ -1476,7 +1487,7 @@ function devAction(id) {
   switch (id) {
     case 'cashx': S.cash = Math.max(1, S.cash) * 1000; return done(`Cash is now ${money(S.cash)}.`);
     case 'maxup': UPGRADES.forEach(d => { S.up[d.id] = d.max; }); CREW.forEach(d => { if (isFinite(d.max)) S.crew[d.id] = d.max; }); return done('Every tackle and crew upgrade is maxed.');
-    case 'crew': S.crew.hands += 100; layoutBoats(); return done('Hired 100 deckhands.');
+    case 'crew': for (const id in CREW_CAPS) S.crew[id] = crewCap(id); layoutBoats(); return done(`Crew maxed for this water (${S.crew.hands} deckhands).`);
     case 'waters': S.unlocked = LOCS.map(() => true); return done('Every water is unlocked. Travel from the Waters tab.');
     case 'specials': [...ABILITIES, ...CHARMS].forEach(d => { S.sp[d.id] = 1; }); return done('Every ability and charm is unlocked.');
     case 'cooldowns': S.cd = {}; return done('All abilities are recharged.');
@@ -1514,7 +1525,7 @@ $('importGo').addEventListener('click', () => {
   try { data = decodeSave($('saveCode').value); if (typeof data !== 'object' || typeof data.cash !== 'number') throw 0; }
   catch (e) { backupMsg("That doesn't look like a Bobber & Brine backup code. Copy the whole code and try again.", 'bad'); return; }
   if (!importArmed) { importArmed = true; $('importGo').textContent = 'Tap again to replace your save'; backupMsg(`This backup has ${money(data.cash)} and ${Object.keys(data.log || {}).length} species. Loading it replaces your current progress.`, ''); return; }
-  S = merge(data); dispCash = S.cash; save();
+  S = merge(data); clampCrew(); dispCash = S.cash; save();
   resetCast(); onLocChange(); renderPanel(); renderSkillbar(); syncSettings(); syncToggles(); SND.apply();
   $('saveCode').hidden = true; $('importRow').hidden = true; importArmed = false;
   backupMsg('Backup loaded.', 'ok'); toast('Backup loaded.', 'book', '#5fe08a');
@@ -2374,6 +2385,7 @@ function start(hotData) {
       if (gained > 0 && away > 30) { earn(gained); setTimeout(() => toast(`Welcome back. Your crew earned <b>${money(gained)}</b> while you were away.${rawAway > 8 * 3600 ? ' They stop after 8 hours, so check in more often to earn more.' : ''}`, 'crew', '#3fc8b8'), 400); }
     }
   }
+  clampCrew(); // saves from before the crew caps
   dispCash = S.cash;
   resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings(); checkGoals();
   window.addEventListener('resize', resize);
