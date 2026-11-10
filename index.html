@@ -52,6 +52,12 @@ header.top {
 .brand { font-family: var(--display); font-size: 1.7rem; letter-spacing: .5px; line-height: 1; }
 .brand span { color: var(--buoy); }
 .stats { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.toggles { display: inline-flex; gap: 6px; }
+.tog {
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); font: 800 .8rem var(--body); cursor: pointer;
+}
+.tog[aria-pressed="true"] { background: var(--line); color: var(--fg); }
 .cash { font-family: var(--display); font-size: 1.9rem; color: var(--gold); line-height: 1; }
 .stat-sub { color: var(--muted); font-weight: 600; }
 .stat-sub b { color: var(--fg); }
@@ -151,6 +157,10 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
       <div class="cash" id="cash">$0</div>
       <div class="stat-sub">Crew: <b id="rate">$0</b>/s</div>
       <div class="stat-sub">Fame: <b id="fame">0</b> ★</div>
+      <div class="toggles">
+        <button class="tog" id="musicBtn" aria-pressed="true">Music on</button>
+        <button class="tog" id="sfxBtn" aria-pressed="true">Sound on</button>
+      </div>
     </div>
   </header>
 
@@ -194,49 +204,49 @@ const LOCS = [
     desc: 'Muddy banks, lily pads and a rickety dock. Everyone starts here.',
     sky: ['#8fc9e0', '#f2e6c4'], water: ['#4c8a72', '#1d4038'], far: '#4f7d45', sil: '#1b2a22', sun: '#fff1a8', night: false,
     fish: [['Bluegill', 0, 2, 0.2], ['Yellow Perch', 0, 3, 0.3], ['Bullhead Catfish', 1, 8, 1.1], ['Largemouth Bass', 2, 25, 2.4], ['Koi', 3, 90, 4], ['Golden Carp', 4, 400, 9]] },
-  { id: 'river', name: 'Willow River', cost: 500, color: '#5fb0b8',
+  { id: 'river', name: 'Willow River', cost: 2500, color: '#5fb0b8',
     desc: 'Cold, quick water running under the willows. Trout country.',
     sky: ['#7fb7e6', '#fde2b8'], water: ['#3f7f95', '#163848'], far: '#3d6b4a', sil: '#16262c', sun: '#ffe08a', night: false,
     fish: [['Creek Chub', 0, 15, 0.1], ['Rainbow Trout', 0, 22, 1.5], ['Smallmouth Bass', 1, 60, 1.8], ['Walleye', 2, 180, 3], ['Lake Sturgeon', 3, 700, 40], ['Paddlefish', 4, 3000, 30]] },
-  { id: 'lake', name: 'Glacier Lake', cost: 8000, color: '#8fd3f0',
+  { id: 'lake', name: 'Glacier Lake', cost: 60000, color: '#8fd3f0',
     desc: 'Clear meltwater ringed by peaks. The pike here hold grudges.',
     sky: ['#b5d8f2', '#e9f1f7'], water: ['#3f8fb0', '#123a52'], far: '#8aa1b5', sil: '#16283a', sun: '#ffffff', night: false,
     fish: [['Cisco', 0, 120, 0.4], ['Lake Trout', 0, 170, 4], ['Northern Pike', 1, 450, 5], ['Muskellunge', 2, 1400, 12], ['Arctic Char', 3, 5200, 6], ['Ghost Pike', 4, 24000, 18]] },
-  { id: 'coast', name: 'Rocky Coast', cost: 150000, color: '#4fa3c7',
+  { id: 'coast', name: 'Rocky Coast', cost: 1500000, color: '#4fa3c7',
     desc: 'Salt spray, gulls and a lighthouse. Bring a bigger cooler.',
     sky: ['#f4a76b', '#ffd9a0'], water: ['#2f7aa0', '#0e2e45'], far: '#5a4a52', sil: '#1c1a24', sun: '#ffd27a', night: false,
     fish: [['Atlantic Mackerel', 0, 2000, 0.6], ['Striped Bass', 0, 2800, 7], ['Red Snapper', 1, 7500, 5], ['Atlantic Halibut', 2, 24000, 60], ['Yellowtail', 3, 90000, 15], ['Goliath Grouper', 4, 400000, 180]] },
-  { id: 'ocean', name: 'Open Ocean', cost: 3000000, color: '#2f6fd0',
+  { id: 'ocean', name: 'Open Ocean', cost: 50000000, color: '#2f6fd0',
     desc: 'Nothing but blue to the horizon. Marlin, tuna and big money.',
     sky: ['#4b86d6', '#bfe0ff'], water: ['#1f5fae', '#081f45'], far: null, sil: '#0b1630', sun: '#ffffff', night: false,
     fish: [['Skipjack Tuna', 0, 40000, 3], ['Mahi-mahi', 0, 55000, 10], ['Wahoo', 1, 150000, 20], ['Swordfish', 2, 480000, 110], ['Blue Marlin', 3, 1800000, 300], ['Atlantic Bluefin', 4, 8000000, 400]] },
-  { id: 'trench', name: 'Midnight Trench', cost: 80000000, color: '#7a5cff',
+  { id: 'trench', name: 'Midnight Trench', cost: 2000000000, color: '#7a5cff',
     desc: 'A mile of black water under a moonless sky. Things glow down there.',
     sky: ['#05060f', '#1b1840'], water: ['#1a1550', '#03030d'], far: null, sil: '#000000', sun: '#d8e2ff', night: true,
     fish: [['Lanternfish', 0, 1000000, 0.02], ['Hatchetfish', 0, 1400000, 0.05], ['Gulper Eel', 1, 4000000, 1.5], ['Anglerfish', 2, 13000000, 3], ['Giant Squid', 3, 50000000, 250], ['Coelacanth', 4, 220000000, 80]] },
 ];
 
 const UPGRADES = [
-  { id: 'holder', name: 'Rod Holder', max: 1, cost: () => 100,
+  { id: 'holder', name: 'Rod Holder', max: 1, cost: () => 250,
     desc: () => 'Recasts your line automatically after every catch.' },
-  { id: 'rod', name: 'Fishing Rod', max: 80, cost: l => 15 * 1.7 ** l,
-    desc: l => `Catch value ×${fx(1.35 ** l)} → ×${fx(1.35 ** (l + 1))}` },
-  { id: 'line', name: 'Braided Line', max: 25, cost: l => 25 * 1.85 ** l,
+  { id: 'rod', name: 'Fishing Rod', max: 80, cost: l => 25 * 1.95 ** l,
+    desc: l => `Catch value ×${fx(1.25 ** l)} → ×${fx(1.25 ** (l + 1))}` },
+  { id: 'line', name: 'Braided Line', max: 25, cost: l => 40 * 2.1 ** l,
     desc: l => `Average bite wait ${biteTime(l).toFixed(2)}s → ${biteTime(l + 1).toFixed(2)}s` },
-  { id: 'bait', name: 'Bait Box', max: 20, cost: l => 80 * 2.1 ** l,
+  { id: 'bait', name: 'Bait Box', max: 20, cost: l => 150 * 2.4 ** l,
     desc: l => `Rare-or-better chance here ${pct(rareChance(S.loc, l))} → ${pct(rareChance(S.loc, l + 1))}` },
-  { id: 'net', name: 'Landing Net', max: 12, cost: l => 250 * 2.4 ** l,
+  { id: 'net', name: 'Landing Net', max: 12, cost: l => 500 * 2.8 ** l,
     desc: l => `Double-catch chance ${pct(0.08 * l)} → ${pct(0.08 * (l + 1))}` },
-  { id: 'market', name: 'Market Stall', max: 60, cost: l => 600 * 2 ** l,
-    desc: l => `Sell price ×${fx(1.2 ** l)} → ×${fx(1.2 ** (l + 1))}` },
+  { id: 'market', name: 'Market Stall', max: 60, cost: l => 1000 * 2.3 ** l,
+    desc: l => `Sell price ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
 ];
 const CREW = [
-  { id: 'hands', name: 'Deckhand', max: Infinity, cost: n => 50 * 1.16 ** n,
+  { id: 'hands', name: 'Deckhand', max: Infinity, cost: n => 120 * 1.22 ** n,
     desc: () => `Each one lands a fish every ${handInterval().toFixed(1)}s, even while you are away.` },
-  { id: 'speed', name: 'Crew Training', max: 20, cost: l => 400 * 2.05 ** l,
+  { id: 'speed', name: 'Crew Training', max: 20, cost: l => 800 * 2.3 ** l,
     desc: l => `Deckhand catch time ${handInterval(l).toFixed(2)}s → ${handInterval(l + 1).toFixed(2)}s` },
-  { id: 'skill', name: 'Crew Gear', max: 60, cost: l => 1500 * 2.2 ** l,
-    desc: l => `Deckhand catch value ×${fx(1.25 ** l)} → ×${fx(1.25 ** (l + 1))}` },
+  { id: 'skill', name: 'Crew Gear', max: 60, cost: l => 3000 * 2.5 ** l,
+    desc: l => `Deckhand catch value ×${fx(1.2 ** l)} → ×${fx(1.2 ** (l + 1))}` },
 ];
 
 /* ---------- State ---------- */
@@ -246,7 +256,7 @@ const fresh = () => ({
   loc: 0, unlocked: [true, false, false, false, false, false],
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
-  log: {}, catches: 0, perfects: 0, lastSave: Date.now(), buyMax: false,
+  log: {}, catches: 0, perfects: 0, lastSave: Date.now(), buyMax: false, music: true, sfx: true,
 });
 let S = fresh();
 
@@ -284,10 +294,10 @@ const pct = n => (Math.min(1, n) * 100).toFixed(n < 0.1 ? 1 : 0) + '%';
 const kg = w => w < 1 ? Math.round(w * 1000) + ' g' : w.toFixed(w < 10 ? 2 : 1) + ' kg';
 
 const fameMult = () => 1 + 0.1 * S.fame;
-const valueMult = () => 1.35 ** S.up.rod * 1.2 ** S.up.market * fameMult();
-const crewMult = () => valueMult() * 1.25 ** S.crew.skill;
-function biteTime(l = S.up.line) { return Math.max(0.5, 3.2 * 0.92 ** l); }
-function handInterval(l = S.crew.speed) { return 6 * 0.9 ** l; }
+const valueMult = () => 1.25 ** S.up.rod * 1.15 ** S.up.market * fameMult();
+const crewMult = () => valueMult() * 1.2 ** S.crew.skill;
+function biteTime(l = S.up.line) { return Math.max(0.5, 3.6 * 0.92 ** l); }
+function handInterval(l = S.crew.speed) { return 8 * 0.9 ** l; }
 const netChance = () => Math.min(0.96, 0.08 * S.up.net);
 
 function weights(locIdx, bait = S.up.bait) {
@@ -312,7 +322,7 @@ function rollFish(locIdx) {
   const f = loc.fish[i]; const size = 0.5 + Math.random() * Math.random() * 1.5;
   return { idx: i, name: f[0], rarity: f[1], weight: f[3] * size, base: f[2] * size };
 }
-function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e6)); }
+function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e7)); }
 
 /* ---------- Economy actions ---------- */
 function earn(amount) { S.cash += amount; S.runEarned += amount; S.totalEarned += amount; }
@@ -322,6 +332,7 @@ function recordFish(fish, locIdx) {
   const entry = S.log[key];
   if (!entry) {
     S.log[key] = { n: 1, best: fish.weight };
+    SND.discover();
     toast(`New species: <b style="color:${RARITY_C[fish.rarity]}">${fish.name}</b> (${RARITY[fish.rarity]})`);
     if (activeTab === 'log') renderPanel();
   } else {
@@ -362,7 +373,7 @@ function crewTick(dt) {
     total += whole * expectedBase(S.loc) * crewMult() * (1 + netChance());
   }
   if (total > 0) {
-    earn(total);
+    earn(total); SND.coin();
     if (boats.length) {
       const b = boats[Math.floor(Math.random() * Math.min(boats.length, S.crew.hands))];
       floaters.push({ x: b.x, y: b.y - 16, text: '+' + money(total), color: '#cfe8ee', life: 1.2, size: 12 });
@@ -382,13 +393,13 @@ function buy(kind, id) {
     if (S.cash < c) break;
     S.cash -= c; store[id]++; bought++;
   } while (kind === 'crew' && id === 'hands' && S.buyMax && bought < 1000);
-  if (bought) { renderPanel(); updateHeader(); }
+  if (bought) { SND.buy(); renderPanel(); updateHeader(); } else SND.deny();
 }
 
 function unlockOrTravel(i) {
-  if (S.unlocked[i]) { S.loc = i; onLocChange(); renderPanel(); return; }
+  if (S.unlocked[i]) { S.loc = i; SND.click(); onLocChange(); renderPanel(); return; }
   if (!S.unlocked[i - 1] || S.cash < LOCS[i].cost) return;
-  S.cash -= LOCS[i].cost; S.unlocked[i] = true; S.loc = i;
+  S.cash -= LOCS[i].cost; S.unlocked[i] = true; S.loc = i; SND.fanfare();
   toast(`You unlocked <b>${LOCS[i].name}</b>. New fish await.`);
   onLocChange(); renderPanel();
 }
@@ -397,14 +408,14 @@ let retireArmed = false, resetArmed = false;
 function retire() {
   const gain = pendingFame(); if (gain < 1) return;
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
-  const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, catches: S.catches, perfects: S.perfects };
+  const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, catches: S.catches, perfects: S.perfects, music: S.music, sfx: S.sfx };
   S = Object.assign(fresh(), keep);
-  retireArmed = false; resetCast(); onLocChange(); renderPanel(); save();
+  retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`);
 }
 function hardReset() {
   if (!resetArmed) { resetArmed = true; renderPanel(); return; }
-  S = fresh(); resetArmed = false; resetCast(); onLocChange(); renderPanel(); save();
+  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); save();
   toast('Save wiped. Back to the farm pond.');
 }
 
@@ -449,7 +460,7 @@ function renderPanel() {
     h += `<p class="note">Better tackle makes every fish you catch worth more. Prices climb with each level.</p>`;
     h += UPGRADES.map(d => itemHTML('up', d, S.up[d.id])).join('');
   } else if (activeTab === 'crew') {
-    h += `<div class="row"><p class="note">Deckhands fish at your current water nonstop, even while you're away (up to 8 hours).</p>
+    h += `<div class="row"><p class="note">Deckhands fish at your current water nonstop, and keep working at half speed while you're away (up to 8 hours).</p>
       <div class="seg" role="group" aria-label="Hire amount"><button data-buymax="0" aria-pressed="${!S.buyMax}">×1</button><button data-buymax="1" aria-pressed="${S.buyMax}">Max</button></div></div>`;
     h += CREW.map(d => itemHTML('crew', d, S.crew[d.id])).join('');
   } else if (activeTab === 'waters') {
@@ -481,13 +492,13 @@ function renderPanel() {
     });
   } else if (activeTab === 'retire') {
     const gain = pendingFame();
-    const nextAt = (gain + 1) ** 2 * 1e6;
+    const nextAt = (gain + 1) ** 2 * 1e7;
     h += `<h3>Retire and tell tales</h3>
       <p class="note">Sell the boat, hang up the rod and become a legend at the bait shop. You lose your cash, tackle, crew and waters, but every Fame star adds +10% to all income forever. Your logbook stays.</p>
       <div class="item"><div><div class="bigstat">+${gain} ★</div></div>
         <div class="desc">Earned this career: ${money(S.runEarned)}. Next star at ${money(nextAt)}. You have ${S.fame} ★ (income ×${fameMult().toFixed(1)}).</div>
         <button class="buy ${retireArmed ? 'danger' : ''}" id="retireBtn" ${gain < 1 ? 'disabled' : ''}>${retireArmed ? 'Tap to confirm' : 'Retire'}</button></div>
-      <p class="note">${gain < 1 ? 'Earn $1M in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
+      <p class="note">${gain < 1 ? 'Earn $10M in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
       <h3>Records</h3>
       <p class="note">Lifetime earnings ${money(S.totalEarned)} · Careers retired: ${S.retires}</p>
       <div class="row"><span class="note">Progress saves in this browser automatically.</span>
@@ -502,7 +513,7 @@ function refreshAffordability() {
 
 $('tabs').addEventListener('click', e => {
   const b = e.target.closest('button[data-tab]'); if (!b) return;
-  activeTab = b.dataset.tab; retireArmed = resetArmed = false;
+  activeTab = b.dataset.tab; retireArmed = resetArmed = false; SND.click();
   document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
   renderPanel();
 });
@@ -510,7 +521,7 @@ panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.kind) buy(b.dataset.kind, b.dataset.id);
   else if (b.dataset.travel) unlockOrTravel(+b.dataset.travel);
-  else if (b.dataset.buymax) { S.buyMax = b.dataset.buymax === '1'; renderPanel(); }
+  else if (b.dataset.buymax) { SND.click(); S.buyMax = b.dataset.buymax === '1'; renderPanel(); }
   else if (b.id === 'retireBtn') retire();
   else if (b.id === 'resetBtn') hardReset();
 });
@@ -526,6 +537,132 @@ function showLastCatch(fish, total, count, perfect) {
     <span class="meta">${RARITY[fish.rarity]} · ${kg(fish.weight)}${perfect ? ' · <b style="color:var(--gold)">Perfect ×3</b>' : ''}</span>
     <span class="who" style="color:var(--gold)">+${money(total)}</span>`;
 }
+
+/* ---------- Audio (all synthesized with Web Audio) ---------- */
+// Per-water music: root note (MIDI), tempo, and mode.
+const MUSIC = [
+  { root: 60, bpm: 82, minor: false }, // pond: C major, easygoing
+  { root: 62, bpm: 90, minor: false }, // river: D major, a little brisker
+  { root: 57, bpm: 70, minor: false }, // lake: A major, slow and airy
+  { root: 55, bpm: 94, minor: false }, // coast: G major, sea shanty pace
+  { root: 53, bpm: 76, minor: true },  // ocean: F minor, wide and lonely
+  { root: 50, bpm: 60, minor: true },  // trench: D minor, slow and dark
+];
+const SND = (() => {
+  let ac = null, master, sfxBus, musicBus, ambBus, noiseBuf, ambSrc, ambLfo;
+  let nextTime = 0, step = 0, melIdx = 4, timer = null, lastCoin = 0;
+  const mtof = m => 440 * 2 ** ((m - 69) / 12);
+  const MAJ = [0, 2, 4, 5, 7, 9, 11], MIN = [0, 2, 3, 5, 7, 8, 10];
+  const PENT_MAJ = [0, 2, 4, 7, 9], PENT_MIN = [0, 3, 5, 7, 10];
+
+  function init() {
+    if (ac) { if (ac.state === 'suspended' && !document.hidden) ac.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    try { ac = new AC(); } catch (e) { return; }
+    master = ac.createGain(); master.gain.value = 0.7;
+    const comp = ac.createDynamicsCompressor(); master.connect(comp); comp.connect(ac.destination);
+    sfxBus = ac.createGain(); sfxBus.connect(master);
+    musicBus = ac.createGain(); musicBus.connect(master);
+    ambBus = ac.createGain(); ambBus.connect(musicBus);
+    noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    // gentle lapping water bed
+    ambSrc = ac.createBufferSource(); ambSrc.buffer = noiseBuf; ambSrc.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 420;
+    const ambGain = ac.createGain(); ambGain.gain.value = 0.035;
+    ambLfo = ac.createOscillator(); ambLfo.frequency.value = 0.18;
+    const lfoAmt = ac.createGain(); lfoAmt.gain.value = 0.025; ambLfo.connect(lfoAmt); lfoAmt.connect(ambGain.gain);
+    ambSrc.connect(lp); lp.connect(ambGain); ambGain.connect(ambBus); ambSrc.start(); ambLfo.start();
+    apply();
+    nextTime = ac.currentTime + 0.1;
+    timer = setInterval(schedule, 60);
+  }
+  function apply() {
+    if (!ac) return;
+    const t = ac.currentTime;
+    musicBus.gain.setTargetAtTime(S.music ? 0.55 : 0, t, 0.25);
+    sfxBus.gain.setTargetAtTime(S.sfx ? 1 : 0, t, 0.05);
+  }
+  function tone(freq, t, dur, { type = 'triangle', vol = 0.2, bus = sfxBus, attack = 0.005, glide = 0, cutoff = 0 } = {}) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (glide) o.frequency.exponentialRampToValueAtTime(glide, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let node = o;
+    if (cutoff) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = cutoff; o.connect(f); node = f; }
+    node.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(t, dur, { vol = 0.2, type = 'bandpass', from = 1000, to = 1000, q = 1, bus = sfxBus } = {}) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noiseBuf; f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(bus); s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  }
+  const ok = () => ac && S.sfx;
+
+  /* music: a chord pad, a plucked bass and a wandering pentatonic melody */
+  function schedule() {
+    if (!ac || !S.music || ac.state !== 'running') { if (ac) nextTime = Math.max(nextTime, ac.currentTime + 0.05); return; }
+    const M = MUSIC[S.loc] || MUSIC[0], eighth = 60 / M.bpm / 2;
+    if (nextTime < ac.currentTime - 0.5) nextTime = ac.currentTime + 0.05;
+    while (nextTime < ac.currentTime + 0.25) { playStep(step, nextTime, M, eighth); step = (step + 1) % 64; nextTime += eighth; }
+  }
+  function playStep(s, t, M, eighth) {
+    const scale = M.minor ? MIN : MAJ, pent = M.minor ? PENT_MIN : PENT_MAJ;
+    const prog = M.minor ? [0, 5, 2, 6] : [0, 5, 3, 4];      // i-VI-III-VII / I-vi-IV-V
+    const deg = prog[Math.floor(s / 16)];
+    const note = k => M.root + scale[(deg + k) % 7] + 12 * Math.floor((deg + k) / 7);
+    const mb = { bus: musicBus };
+    if (s % 16 === 0) [0, 2, 4].forEach(k => tone(mtof(note(k)), t, eighth * 16, { ...mb, type: 'triangle', vol: 0.045, attack: 0.6, cutoff: 1200 }));
+    if (s % 4 === 0) tone(mtof(note(0) - 24 + (s % 8 === 4 ? 7 : 0)), t, eighth * 3, { ...mb, type: 'sine', vol: 0.14, attack: 0.01 });
+    if (s % 2 === 0 || Math.random() < 0.25) {
+      if (Math.random() < 0.6) {
+        melIdx = Math.max(0, Math.min(9, melIdx + [-2, -1, -1, 0, 1, 1, 2][Math.floor(Math.random() * 7)]));
+        const m = M.root + 12 + pent[melIdx % 5] + 12 * Math.floor(melIdx / 5);
+        tone(mtof(m), t, eighth * 2.5, { ...mb, type: 'triangle', vol: 0.06, attack: 0.008, cutoff: 2600 });
+        if (Math.random() < 0.15) tone(mtof(m + 12), t + eighth, eighth * 2, { ...mb, type: 'sine', vol: 0.03 });
+      }
+    }
+    if (s % 8 === 6 && Math.random() < 0.5) noise(t, 0.05, { bus: musicBus, vol: 0.03, type: 'highpass', from: 6000, to: 6000 });
+  }
+
+  return {
+    init, apply,
+    resetMusic() { step = 0; },
+    pause() { if (ac && ac.state === 'running') ac.suspend(); },
+    resume() { if (ac && ac.state === 'suspended') ac.resume(); },
+    click() { if (!ok()) return; tone(900, ac.currentTime, 0.05, { type: 'square', vol: 0.03, cutoff: 3000 }); },
+    cast() { if (!ok()) return; const t = ac.currentTime; noise(t, 0.4, { vol: 0.12, from: 600, to: 3500, q: 2 }); tone(1400, t, 0.35, { type: 'sine', vol: 0.03, glide: 500 }); },
+    plop() { if (!ok()) return; const t = ac.currentTime; tone(520, t, 0.16, { type: 'sine', vol: 0.22, glide: 160 }); noise(t, 0.2, { vol: 0.07, from: 1200, to: 400 }); },
+    bite() { if (!ok()) return; const t = ac.currentTime; [0, 0.11, 0.22].forEach((d, i) => tone(330 - i * 30, t + d, 0.1, { type: 'sine', vol: 0.2, glide: 180 })); },
+    catch(rarity, perfect) {
+      if (!ok()) return; const t = ac.currentTime;
+      noise(t, 0.45, { vol: 0.2, type: 'lowpass', from: 3000, to: 300 });
+      const base = [72, 74, 76, 79, 84][rarity];
+      const notes = rarity >= 3 ? [0, 4, 7, 12, 16] : rarity >= 1 ? [0, 4, 7, 12] : [0, 7];
+      notes.forEach((n, i) => tone(mtof(base + n), t + 0.12 + i * 0.07, 0.3, { type: 'triangle', vol: 0.12 }));
+      if (perfect) [0, 1, 2, 3].forEach(i => tone(mtof(96 + i * 2), t + 0.45 + i * 0.05, 0.25, { type: 'sine', vol: 0.06 }));
+    },
+    coin() { if (!ok() || ac.currentTime - lastCoin < 1.4) return; lastCoin = ac.currentTime; tone(1976, ac.currentTime, 0.12, { type: 'sine', vol: 0.025 }); tone(2637, ac.currentTime + 0.06, 0.15, { type: 'sine', vol: 0.02 }); },
+    buy() { if (!ok()) return; const t = ac.currentTime; tone(988, t, 0.1, { type: 'square', vol: 0.05, cutoff: 3000 }); tone(1319, t + 0.07, 0.22, { type: 'square', vol: 0.05, cutoff: 3000 }); noise(t, 0.12, { vol: 0.04, type: 'highpass', from: 5000, to: 5000 }); },
+    deny() { if (!ok()) return; tone(160, ac.currentTime, 0.15, { type: 'square', vol: 0.04, cutoff: 800 }); },
+    discover() { if (!ok()) return; const t = ac.currentTime + 0.5; [67, 72, 76, 79].forEach((m, i) => tone(mtof(m + 12), t + i * 0.09, 0.4, { type: 'sine', vol: 0.08 })); },
+    fanfare() { if (!ok()) return; const t = ac.currentTime; [[60, 0], [64, 0.15], [67, 0.3], [72, 0.45], [67, 0.6], [72, 0.75]].forEach(([m, d], i) => tone(mtof(m + 12), t + d, i === 5 ? 0.8 : 0.18, { type: 'square', vol: 0.06, cutoff: 2500 })); },
+  };
+})();
+
+function syncToggles() {
+  const m = $('musicBtn'), f = $('sfxBtn');
+  m.setAttribute('aria-pressed', S.music); m.textContent = S.music ? 'Music on' : 'Music off';
+  f.setAttribute('aria-pressed', S.sfx); f.textContent = S.sfx ? 'Sound on' : 'Sound off';
+}
+$('musicBtn').addEventListener('click', () => { SND.init(); S.music = !S.music; SND.apply(); syncToggles(); save(); });
+$('sfxBtn').addEventListener('click', () => { SND.init(); S.sfx = !S.sfx; SND.apply(); syncToggles(); save(); });
+// Browsers only allow audio after the player interacts, so start it on the first tap or key.
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.init(), true));
 
 /* ---------- Scene ---------- */
 const cv = $('sea'), ctx = cv.getContext('2d');
@@ -549,6 +686,7 @@ const rodTip = () => ({ x: W * 0.13 + 58, y: dockY() - 78 });
 
 function onLocChange() {
   $('locBadge').textContent = LOCS[S.loc].name;
+  SND.resetMusic();
   swimmers = Array.from({ length: 6 }, () => newSwimmer(true));
   layoutBoats(); updateHeader();
 }
@@ -576,10 +714,12 @@ function startCast() {
   cast.state = 'cast'; cast.t = 0; cast.autoT = -1;
   cast.tx = W * (0.5 + Math.random() * 0.3); cast.ty = dockY() + 8 + Math.random() * (H - dockY() - 40);
   cast.wait = biteTime() * (0.7 + Math.random() * 0.6);
+  SND.cast();
   updateAction();
 }
 function reelIn(perfect) {
   const res = landCatch(perfect);
+  SND.catch(res.fish.rarity, perfect);
   cast.state = 'reel'; cast.t = 0; cast.reel = res;
   ripples.push({ x: cast.x, y: cast.y, r: 4, life: 1 });
   floaters.push({ x: cast.x, y: cast.y - 24, text: (perfect ? 'PERFECT  ' : '') + '+' + money(res.total),
@@ -605,10 +745,10 @@ function stepCast(dt) {
     const p = Math.min(1, cast.t / 0.55);
     cast.x = tip.x + (cast.tx - tip.x) * p;
     cast.y = tip.y + (cast.ty - tip.y) * p - Math.sin(p * Math.PI) * 70;
-    if (p >= 1) { cast.state = 'wait'; cast.t = 0; ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); updateAction(); }
+    if (p >= 1) { cast.state = 'wait'; cast.t = 0; SND.plop(); ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); updateAction(); }
   } else if (cast.state === 'wait') {
     cast.x = cast.tx; cast.y = cast.ty;
-    if (cast.t >= cast.wait) { cast.state = 'bite'; cast.t = 0; ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); updateAction(); }
+    if (cast.t >= cast.wait) { cast.state = 'bite'; cast.t = 0; SND.bite(); ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); updateAction(); }
   } else if (cast.state === 'bite') {
     if (cast.t >= 1.1) reelIn(false);
   } else if (cast.state === 'reel') {
@@ -765,7 +905,7 @@ function frame(now) {
   dtFrame = Math.min(0.1, (now - lastFrame) / 1000); lastFrame = now;
   const wall = Date.now(); let dt = (wall - lastWall) / 1000; lastWall = wall;
   if (dt > 2) { // tab was hidden: pay the crew at the expected rate
-    earn(crewRate() * Math.min(dt, 8 * 3600)); dt = 0;
+    earn(crewRate() * 0.5 * Math.min(dt, 8 * 3600)); dt = 0;
   }
   crewTick(dt);
   stepCast(dtFrame);
@@ -787,14 +927,14 @@ function start(hotData) {
     S = saved;
     if (!(hotData && hotData.S)) {
       const away = Math.min(8 * 3600, (Date.now() - (S.lastSave || Date.now())) / 1000);
-      const gained = crewRate() * away;
+      const gained = crewRate() * 0.5 * away;
       if (gained > 0 && away > 30) { earn(gained); setTimeout(() => toast(`Welcome back. Your crew earned <b>${money(gained)}</b> while you were away.`), 400); }
     }
   }
-  resize(); onLocChange(); renderPanel(); updateAction(); updateHeader();
+  resize(); onLocChange(); renderPanel(); updateAction(); updateHeader(); syncToggles();
   window.addEventListener('resize', resize);
   window.addEventListener('beforeunload', save);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); SND.pause(); } else SND.resume(); });
   requestAnimationFrame(frame);
 }
 
