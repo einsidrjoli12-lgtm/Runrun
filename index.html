@@ -1306,7 +1306,8 @@ function winFight() {
 function loseFight() {
   const f = cast.fight;
   SND.setFight(false); SND.snap();
-  floaters.push({ x: f.fx, y: f.fy - 30, text: 'SNAP! It got away…', color: '#ff8a65', life: 2.2, size: 22 });
+  banner('SNAP! IT GOT AWAY…', f.name.toUpperCase() + ' BROKE YOUR LINE', '#ff8a65');
+  splash(f.fx, f.fy, 20);
   toast(`The line snapped. <b>${f.name}</b> got away. Maybe next time.`, 'fish', '#ff8a65');
   cast.state = 'idle'; cast.t = 0; cast.fight = null; cast.autoT = S.up.holder && S.autoCast ? 1.5 : -1;
   updateAction();
