@@ -9,6 +9,7 @@ Everything you need is in this folder:
 | `screenshots/` | Seven screenshots for the page |
 | `banner-1920x600.png` | Banner image for the top of the page |
 | `background-1920x1400.png` | Page background image |
+| `embed-bg-1280x800.png` | Embed BG: the picture inside the game window before the player presses Run game |
 
 ## Upload steps
 
@@ -44,9 +45,8 @@ Everything you need is in this folder:
 | **Text** | `#eaf7f5` |
 | **Link** | `#ffcf5a` |
 | **Button** | `#ff6b3d` |
-| **Embed BG** | `#0a2231` |
+| **Embed BG** | Upload `embed-bg-1280x800.png`. It's the same size as the 1280 × 800 game window, with the center left clear for the Run game button. |
 
-Embed BG is the color around the game window and behind it while it loads. `#0a2231` matches the game's own deep-water color, so the game blends into the page.
 
 Font: pick **Nunito** or **Lato** if they're offered. They're close to the game's body text.
 
