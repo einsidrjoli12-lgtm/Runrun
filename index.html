@@ -251,8 +251,11 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
 @media (max-width: 919px) {
   .hint { display: none; }
   .scene-col { gap: 8px; }
-  .action { padding: 10px 14px; font-size: 1.2rem; }
-  .lastcatch { padding: 5px 12px; min-height: 0; font-size: .86rem; }
+  .action { padding: 8px 14px; font-size: 1.1rem; border-radius: 14px; }
+  .lastcatch { padding: 4px 10px; min-height: 0; font-size: .8rem; gap: 6px; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+  .lastcatch .meta { overflow: hidden; text-overflow: ellipsis; font-size: .76rem; }
+  .lastcatch .pill { font-size: .6rem; padding: 0 6px; }
+  .lastcatch .gain { font-size: 1rem; }
   .brand { font-size: 1.3rem; } .brand svg { width: 28px; height: 28px; }
   .cash { font-size: 1.4rem; } .coin { width: 22px; height: 22px; }
   header.top { padding: 6px 8px 6px 10px; gap: 6px 10px; }
@@ -262,7 +265,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   .skill .ic { width: 28px; height: 28px; }
   .skill kbd { display: none; }
 }
-@media (max-width: 520px) { .skill { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; } .skill .nm { font-size: .68rem; } .skill .nm small { font-size: .62rem; } }
+@media (max-width: 520px) { .skill { flex-direction: row; gap: 5px; padding: 4px 5px; border-radius: 12px; } .skill .ic { width: 24px; height: 24px; padding: 2px; } .skill .ic svg { width: 13px; height: 13px; } .skill .nm { font-size: .64rem; } .skill .nm small { font-size: .58rem; } .skillbar { gap: 5px; } }
 
 /* ---- shop ---- */
 .shop {
@@ -271,6 +274,11 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   border: 1px solid var(--edge); box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .06);
   backdrop-filter: blur(10px);
 }
+.shop-top { flex: none; display: flex; align-items: center; border-bottom: 1px solid var(--edge); }
+.shop-top .tabs { flex: 1; min-width: 0; border-bottom: 0; }
+.expand { display: none; flex: none; width: 34px; height: 34px; margin-right: 6px; border-radius: 10px; border: 1px solid var(--edge); background: var(--glass); color: var(--muted); cursor: pointer; place-items: center; }
+.expand svg { width: 18px; height: 18px; }
+.expand[aria-pressed="true"] { color: var(--fg); background: var(--glass-3); border-color: var(--edge-hi); }
 .tabs { flex: none; display: flex; overflow-x: auto; gap: 4px; padding: 8px; border-bottom: 1px solid var(--edge); scrollbar-width: none; }
 .tabs button {
   flex: 1 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 10px; border-radius: 12px;
@@ -351,6 +359,31 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .toast, .action, .action::after, .buy::after, .skill.ready, .brand svg, .caustics, .bubbles span { animation: none !important; }
   .bubbles { display: none; }
 }
+/* phones: shrink everything around the shop so several upgrades fit, and offer a full-screen shop */
+@media (max-width: 919px) {
+  .wrap { padding-block: 8px 4px; gap: 8px; }
+  .game { gap: 8px; }
+  .expand { display: grid; }
+  .shop-full .scene-col { display: none; }
+  .shop-full .game { grid-template-rows: minmax(0, 1fr); }
+  .tabs { padding: 6px 4px; gap: 2px; }
+  .tabs button { flex: 1 1 0; min-width: 0; padding: 5px 2px; font-size: .66rem; gap: 2px; border-radius: 10px; }
+  .tabs button svg { width: 18px; height: 18px; }
+  .tabs button .dot { top: 3px; right: 4px; width: 7px; height: 7px; }
+  .panel { padding: 8px; gap: 7px; }
+  .panel > p.note:first-child { display: none; }
+  .item { grid-template-columns: 38px minmax(0, 1fr) auto; padding: 8px 10px; gap: 1px 10px; border-radius: 14px; }
+  .item .tile { width: 38px; height: 38px; border-radius: 11px; }
+  .item .tile svg { width: 20px; height: 20px; }
+  .item .name { font-size: .9rem; }
+  .item .desc { font-size: .76rem; line-height: 1.3; }
+  .item .bar { height: 4px; margin-top: 2px; }
+  .buy { min-width: 76px; padding: 8px 8px; font-size: .82rem; border-radius: 10px; }
+  .water-card { grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .water-card .tile { width: 48px; height: 48px; }
+  .shop { border-radius: 16px; }
+}
+@media (max-width: 919px) and (max-height: 760px) { .lastcatch { display: none; } header.top { padding-block: 4px; } }
 </style>
 </head>
 <body>
@@ -389,6 +422,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </div>
 
     <section class="shop">
+      <div class="shop-top">
       <div class="tabs" role="tablist" id="tabs">
         <button role="tab" data-tab="tackle" aria-selected="true"><span data-icon="hook"></span>Tackle</button>
         <button role="tab" data-tab="crew" aria-selected="false"><span data-icon="crew"></span>Crew</button>
@@ -396,6 +430,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
         <button role="tab" data-tab="waters" aria-selected="false"><span data-icon="wave"></span>Waters</button>
         <button role="tab" data-tab="log" aria-selected="false"><span data-icon="book"></span>Logbook</button>
         <button role="tab" data-tab="retire" aria-selected="false"><span data-icon="star"></span>Retire</button>
+      </div>
+      <button class="expand" id="expandShop" aria-pressed="false" aria-label="Show the shop full screen" title="Full-screen shop"><span data-icon="expand"></span></button>
       </div>
       <div class="panel" id="panel"></div>
     </section>
@@ -485,6 +521,8 @@ const ICONS = {
   note: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   speaker: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
   storm: '<path d="M6 15a4 4 0 0 1 .5-8A6 6 0 0 1 18 8a3.5 3.5 0 0 1 0 7"/><path d="M12 13l-2 4h3l-2 4"/>',
+  expand: '<path d="M4 14v6h6M20 10V4h-6M4 20l6-6M20 4l-6 6"/>',
+  collapse: '<path d="M10 20v-6H4M14 4v6h6M4 20l6-6M20 4l-6 6"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   fish: '<path d="M2 12c3-5 9-6 13-2l5-3v10l-5-3c-4 4-10 3-13-2z"/><circle cx="7.5" cy="11" r="1"/>',
 };
@@ -1243,6 +1281,15 @@ function syncSettings() {
   document.body.classList.toggle('dev-on', !!S.dev);
 }
 $('settingsBtn').addEventListener('click', openSettings);
+$('expandShop').addEventListener('click', () => {
+  const on = !document.body.classList.contains('shop-full');
+  document.body.classList.toggle('shop-full', on);
+  const b = $('expandShop'); b.setAttribute('aria-pressed', on);
+  b.title = on ? 'Back to the water' : 'Full-screen shop'; b.setAttribute('aria-label', b.title);
+  b.innerHTML = icon(on ? 'collapse' : 'expand');
+  SND.click();
+  if (!on) requestAnimationFrame(resize); // the scene was hidden, so re-measure it
+});
 $('closeSettings').addEventListener('click', closeSettings);
 $('settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
 [['volMaster', 'master'], ['volMusic', 'musicVol'], ['volSfx', 'sfxVol']].forEach(([id, k]) => {
@@ -1316,7 +1363,7 @@ function resize() {
   const vh = window.innerHeight;
   H = window.innerWidth >= 920
     ? Math.round(Math.max(240, Math.min(W * 0.62, vh - 330)))   // wide: fill the left column
-    : Math.round(Math.max(170, Math.min(W * 0.56, vh * 0.34))); // phone: leave room for the shop
+    : Math.round(Math.max(130, Math.min(W * 0.52, vh * (vh < 760 ? 0.22 : 0.27)))); // phone: leave room for the shop
   cv.width = W * DPR; cv.height = H * DPR; cv.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   stars = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.36, r: Math.random() * 1.3 + 0.3, p: Math.random() * 6 }));
