@@ -154,6 +154,7 @@ input[type=range] { width: 100%; min-width: 0; accent-color: var(--buoy); }
   color: var(--fg); font: 800 .95rem var(--body); letter-spacing: 1px;
 }
 .code-row input:focus, .dev-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+#saveCode { width: 100%; min-width: 0; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--edge-hi); background: rgba(0, 0, 0, .3); color: var(--fg); font: 600 .78rem ui-monospace, Menlo, Consolas, monospace; word-break: break-all; }
 .code-msg { min-height: 1.2em; font-size: .84rem; font-weight: 700; color: var(--muted); }
 .code-msg.ok { color: var(--kelp); } .code-msg.bad { color: var(--danger); }
 .dev { border-color: rgba(185, 140, 255, .5); background: linear-gradient(180deg, rgba(185, 140, 255, .12), rgba(0, 0, 0, .2)); box-shadow: 0 0 24px rgba(185, 140, 255, .15); }
@@ -257,7 +258,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   .lastcatch .pill { font-size: .6rem; padding: 0 6px; }
   .lastcatch .gain { font-size: 1rem; }
   .brand { font-size: 1.3rem; } .brand svg { width: 28px; height: 28px; }
-  .cash { font-size: 1.4rem; } .coin { width: 22px; height: 22px; }
+  .cash { font-size: 1.2rem; } .coin { width: 20px; height: 20px; font-size: .7rem; }
   header.top { padding: 6px 8px 6px 10px; gap: 6px 10px; }
   .chip { padding: 4px 9px; font-size: .78rem; }
   .tog { width: 32px; height: 32px; }
@@ -266,6 +267,24 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   .skill kbd { display: none; }
 }
 @media (max-width: 520px) { .skill { flex-direction: row; gap: 5px; padding: 4px 5px; border-radius: 12px; } .skill .ic { width: 24px; height: 24px; padding: 2px; } .skill .ic svg { width: 13px; height: 13px; } .skill .nm { font-size: .64rem; } .skill .nm small { font-size: .58rem; } .skillbar { gap: 5px; } }
+
+.goalbar {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 12px; cursor: pointer; min-width: 0;
+  background: linear-gradient(90deg, rgba(255, 207, 90, .12), rgba(255, 207, 90, .03)); border: 1px solid rgba(255, 207, 90, .3);
+  font-size: .8rem; font-weight: 800;
+}
+.goalbar svg { width: 16px; height: 16px; color: var(--gold); flex: none; }
+.goalbar .gname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; }
+.goalbar .gbar, .goal .gbar { flex: 1; min-width: 40px; height: 6px; border-radius: 99px; background: rgba(0, 0, 0, .35); overflow: hidden; }
+.goalbar .gbar i, .goal .gbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff2b8); box-shadow: 0 0 8px var(--gold); }
+.goalbar .gnum { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.goal { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 4px 10px; align-items: center; padding: 8px 12px; border-radius: 12px; background: var(--glass-2); border: 1px solid var(--edge); font-weight: 800; font-size: .86rem; }
+.goal .gi { grid-row: 1 / span 2; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255, 207, 90, .14); color: var(--gold); }
+.goal .gi svg { width: 17px; height: 17px; }
+.goal .gnum { color: var(--muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.goal .gbar { grid-column: 2 / span 2; }
+.goal.done { opacity: .6; grid-template-rows: auto; }
+.goal.done .gnum { color: var(--kelp); }
 
 /* ---- shop ---- */
 .shop {
@@ -384,6 +403,18 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .shop { border-radius: 16px; }
 }
 @media (max-width: 919px) and (max-height: 760px) { .lastcatch { display: none; } header.top { padding-block: 4px; } }
+@media (max-width: 919px) {
+  .stats { gap: 5px; flex-wrap: nowrap; }
+  .chip { padding: 3px 7px; font-size: .72rem; gap: 4px; }
+  .chip svg { width: 13px; height: 13px; }
+  .cash-chip { padding: 2px 10px 2px 4px; gap: 6px; }
+  .panel > .row:first-child > p.note { display: none; }
+  .toasts { max-width: min(300px, calc(100vw - 24px)); gap: 6px; }
+  .toast { padding: 7px 10px; font-size: .78rem; gap: 8px; border-radius: 12px; }
+  .toast svg { width: 16px; height: 16px; }
+  .toast:nth-last-child(n+3) { display: none; }
+}
+@media (max-width: 919px) { .tabs button .long { display: none; } .goalbar { padding: 4px 10px; font-size: .74rem; } }
 </style>
 </head>
 <body>
@@ -397,6 +428,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </div>
     <div class="stats">
       <div class="cash-chip"><div class="coin">$</div><div class="cash" id="cash">$0</div></div>
+      <div class="chip" title="Your fishing income per second (last minute)"><span data-icon="hook"></span><b id="youRate">$0</b>/s</div>
       <div class="chip" title="Crew income per second"><span data-icon="crew"></span><b id="rate">$0</b>/s</div>
       <div class="chip" title="Fame stars"><span data-icon="star" style="color:var(--gold)"></span><b id="fame">0</b></div>
     </div>
@@ -417,6 +449,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       </div>
       <button class="action" id="action" data-state="idle">Cast line</button>
       <div class="skillbar" id="skillbar"></div>
+      <div class="goalbar" id="goalbar" title="Your closest goal. See them all in the Goals tab."></div>
       <div class="hint">Tap the water or press Space. Reel in while the bobber dips for a <b>perfect catch</b>. Keys 1–4 fire abilities.</div>
       <div class="lastcatch" id="lastcatch"><span class="meta">No fish yet. Cast your first line.</span></div>
     </div>
@@ -428,7 +461,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
         <button role="tab" data-tab="crew" aria-selected="false"><span data-icon="crew"></span>Crew</button>
         <button role="tab" data-tab="specials" aria-selected="false"><span data-icon="spark"></span>Specials</button>
         <button role="tab" data-tab="waters" aria-selected="false"><span data-icon="wave"></span>Waters</button>
-        <button role="tab" data-tab="log" aria-selected="false"><span data-icon="book"></span>Logbook</button>
+        <button role="tab" data-tab="goals" aria-selected="false"><span data-icon="trophy"></span>Goals</button>
+        <button role="tab" data-tab="log" aria-selected="false"><span data-icon="book"></span><span>Log<span class="long">book</span></span></button>
         <button role="tab" data-tab="retire" aria-selected="false"><span data-icon="star"></span>Retire</button>
       </div>
       <button class="expand" id="expandShop" aria-pressed="false" aria-label="Show the shop full screen" title="Full-screen shop"><span data-icon="expand"></span></button>
@@ -480,6 +514,14 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <button class="buy ghost" data-dev="off">Turn off developer mode</button>
     </div>
     <div class="group">
+      <h4>Backup</h4>
+      <p class="code-msg" style="margin:0">Your progress lives in this browser. Copy a backup code to keep it safe or move it to another device.</p>
+      <div class="dev-row"><button class="buy" id="exportBtn" type="button">Copy backup code</button><button class="buy ghost" id="importBtn" type="button">Load a backup</button></div>
+      <textarea id="saveCode" rows="3" spellcheck="false" aria-label="Backup code" hidden></textarea>
+      <div class="dev-row" id="importRow" hidden><button class="buy gold" id="importGo" type="button">Load this backup</button><button class="buy ghost" id="importCancel" type="button">Cancel</button></div>
+      <div class="code-msg" id="backupMsg" aria-live="polite"></div>
+    </div>
+    <div class="group">
       <h4>Save</h4>
       <div class="switch-row"><span>Progress saves in this browser automatically.</span><button class="buy ghost" id="wipeBtn">Wipe save</button></div>
     </div>
@@ -521,6 +563,8 @@ const ICONS = {
   note: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   speaker: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
   storm: '<path d="M6 15a4 4 0 0 1 .5-8A6 6 0 0 1 18 8a3.5 3.5 0 0 1 0 7"/><path d="M12 13l-2 4h3l-2 4"/>',
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3a3 3 0 0 1-3 4M7 5H4a3 3 0 0 0 3 4"/>',
+  you: '<circle cx="12" cy="7" r="3.5"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><path d="M18 3l3 3"/>',
   expand: '<path d="M4 14v6h6M20 10V4h-6M4 20l6-6M20 4l-6 6"/>',
   collapse: '<path d="M10 20v-6H4M14 4v6h6M4 20l6-6M20 4l-6 6"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
@@ -546,22 +590,22 @@ const LOCS = [
     sky: ['#6fa9e2', '#ffd9a8'], water: ['#3a8099', '#123344'], far: '#6b9a7a', far2: '#2f5a44', sil: '#122028', sun: '#ffe08a',
     v: { clouds: '#fff4e6', birds: true, reeds: true, trees: 'willow', sunY: 0.55, sunR: 0.065, current: true },
     fish: [['Creek Chub', 0, 15, 0.1], ['Rainbow Trout', 0, 22, 1.5], ['Smallmouth Bass', 1, 60, 1.8], ['Walleye', 2, 180, 3], ['Lake Sturgeon', 3, 700, 40], ['Paddlefish', 4, 3000, 30]] },
-  { id: 'lake', name: 'Glacier Lake', cost: 400000, color: '#8fe3ff', depth: '60 m', temp: '3°C',
+  { id: 'lake', name: 'Glacier Lake', cost: 6e5, color: '#8fe3ff', depth: '60 m', temp: '3°C',
     desc: 'Clear meltwater ringed by peaks, under the northern lights. The pike here hold grudges.',
     sky: ['#081430', '#35628c'], water: ['#235f80', '#061a2c'], far: '#6d8eb0', far2: '#1a2f45', sil: '#0a1622', sun: '#eef6ff',
     v: { stars: true, aurora: true, ice: true, trees: 'pine', peaks: true, moon: true, lantern: true, sunY: 0.3, sunR: 0.045 },
     fish: [['Cisco', 0, 120, 0.4], ['Lake Trout', 0, 170, 4], ['Northern Pike', 1, 450, 5], ['Muskellunge', 2, 1400, 12], ['Arctic Char', 3, 5200, 6], ['Ghost Pike', 4, 24000, 18]] },
-  { id: 'coast', name: 'Rocky Coast', cost: 1e9, color: '#ffa36b', depth: '30 m', temp: '14°C',
+  { id: 'coast', name: 'Rocky Coast', cost: 3e9, color: '#ffa36b', depth: '30 m', temp: '14°C',
     desc: 'Salt spray, gulls and a lighthouse at sunset. Bring a bigger cooler.',
     sky: ['#5b4a8a', '#ffb070'], water: ['#3a6f94', '#0c2440'], far: '#7a5a6e', far2: '#2a1f30', sil: '#160f1c', sun: '#ffcf6a',
     v: { clouds: '#ffc0a0', birds: true, lighthouse: true, rocks: true, lantern: true, sunY: 0.86, sunR: 0.11 },
     fish: [['Atlantic Mackerel', 0, 2000, 0.6], ['Striped Bass', 0, 2800, 7], ['Red Snapper', 1, 7500, 5], ['Atlantic Halibut', 2, 24000, 60], ['Yellowtail', 3, 90000, 15], ['Goliath Grouper', 4, 400000, 180]] },
-  { id: 'ocean', name: 'Open Ocean', cost: 5e12, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
+  { id: 'ocean', name: 'Open Ocean', cost: 5e13, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
     desc: 'Nothing but blue to the horizon. Marlin, tuna and big money.',
     sky: ['#2f6fd6', '#c4e6ff'], water: ['#1c64b8', '#061a40'], far: null, far2: null, sil: '#0a1430', sun: '#ffffff',
     v: { clouds: '#ffffff', birds: true, ship: true, swell: 1.9, sunY: 0.22, sunR: 0.06 },
     fish: [['Skipjack Tuna', 0, 40000, 3], ['Mahi-mahi', 0, 55000, 10], ['Wahoo', 1, 150000, 20], ['Swordfish', 2, 480000, 110], ['Blue Marlin', 3, 1800000, 300], ['Atlantic Bluefin', 4, 8000000, 400]] },
-  { id: 'trench', name: 'Midnight Trench', cost: 2e15, color: '#a07bff', depth: '10,900 m', temp: '1°C',
+  { id: 'trench', name: 'Midnight Trench', cost: 1e17, color: '#a07bff', depth: '10,900 m', temp: '1°C',
     desc: 'A mile of black water under a moonless sky. Things glow down there.',
     sky: ['#03040c', '#16123a'], water: ['#16124a', '#020208'], far: null, far2: null, sil: '#000000', sun: '#d8e2ff',
     v: { stars: true, plankton: true, jelly: true, lantern: true, moon: true, sunY: 0.28, sunR: 0.035 },
@@ -578,7 +622,7 @@ const MONSTERS = [
   { name: 'Grandfather Marlin', kg: 700, desc: 'Fourteen feet of spear and spite.' },
   { name: 'The Leviathan', kg: 2000, desc: 'Something from the bottom of the trench. It glows.' },
 ];
-const FIGHT = { time: 10, start: 30, drain: 15, tap: 4.5 }; // seconds, meter start %, drain %/s, % per tap
+const FIGHT = { time: 10, start: 30, drain: 14, tap: 5.5 }; // seconds, meter start %, drain %/s, % per tap
 
 const TREASURES = ['Message in a Bottle', 'Barnacled Pocket Watch', 'Sunken Chest', "Pirate's Compass", 'Jeweled Crown'];
 const ROD_TIERS = [
@@ -601,8 +645,8 @@ const UPGRADES = [
     desc: l => `Rare-or-better chance here ${pct(rareChance(S.loc, l, S.up.rod))} → ${pct(rareChance(S.loc, l + 1, S.up.rod))}` },
   { id: 'net', name: 'Landing Net', icon: 'net', c: '#5fe08a', max: 12, cost: l => 1000 * 3.4 ** l,
     desc: l => `Double-catch chance ${pct(0.08 * l)} → ${pct(0.08 * (l + 1))}` },
-  { id: 'market', name: 'Market Stall', icon: 'market', c: '#ffcf5a', max: 60, cost: l => 2000 * 2.8 ** l,
-    desc: l => `Sell price ×${fx(1.1 ** l)} → ×${fx(1.1 ** (l + 1))}` },
+  { id: 'market', name: 'Market Stall', icon: 'market', c: '#ffcf5a', max: 60, cost: l => 400 * 2.6 ** l,
+    desc: l => `Sell price ×${fx(1.11 ** l)} → ×${fx(1.11 ** (l + 1))}` },
 ];
 const CREW = [
   { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', max: Infinity, cost: n => 100 * 1.35 ** n,
@@ -635,6 +679,68 @@ const CHARMS = [
 ];
 const STORM_LEN = 45; // seconds
 
+// Goals: lifetime milestones. Each one pays cash (about a minute of your income) and +1.5% income forever.
+// Completing every species at a water adds +10% income forever. Both survive retiring.
+const GOALS = [];
+function goalGroup(key, name, icn, get, tiers) {
+  // names are built when shown, because the number formatters are defined further down
+  tiers.forEach((t, i) => GOALS.push({ id: key + ':' + t, key, icon: icn, get, target: t, tier: i,
+    get name() { return name.replace('#', key === 'earn' ? money(t) : t < 1e6 ? t.toLocaleString('en-US') : fmt(t)).replace(/\((\w+)\)/, t === 1 ? '' : '$1'); } }));
+}
+goalGroup('catch', 'Land # fish', 'fish', () => S.catches, [1, 10, 50, 250, 1000, 5000, 25000, 100000]);
+goalGroup('perfect', 'Make # perfect catch(es)', 'hook', () => S.perfects, [5, 50, 250, 1000, 5000]);
+goalGroup('species', 'Log # species', 'book', () => Object.keys(S.log).length, [3, 6, 12, 18, 24, 30, 36]);
+goalGroup('earn', 'Earn # in total', 'market', () => S.totalEarned, [500, 1e5, 1e7, 1e9, 1e12, 1e15, 1e18]);
+goalGroup('rod', 'Reach rod level #', 'rod', () => S.up.rod, [5, 10, 25, 50, 80]);
+goalGroup('hands', 'Hire # deckhand(s)', 'hands', () => S.crew.hands, [1, 10, 25, 50, 100]);
+goalGroup('waters', 'Unlock # waters', 'wave', () => S.unlocked.filter(Boolean).length, [2, 3, 4, 5, 6]);
+goalGroup('legend', 'Land # legendary monster(s)', 'star', () => Object.values(S.monsters).reduce((a, e) => a + e.n, 0), [1, 3, 10]);
+goalGroup('storm', 'Catch # fish during storms', 'storm', () => S.stormCatches, [10, 100, 1000]);
+goalGroup('golden', 'Catch # golden fish', 'gem', () => S.goldens, [1, 25]);
+goalGroup('treasure', 'Find # treasure(s)', 'chest', () => S.treasures, [1, 25]);
+const GOAL_FLOOR = [15, 40, 120, 400, 1500, 6000, 25000, 100000]; // minimum cash reward by tier, for the early game
+const goalsDone = () => GOALS.filter(g => S.goals[g.id]).length;
+const watersComplete = () => LOCS.filter((L, li) => L.fish.every((f, fi) => S.log[li + ':' + fi])).length;
+const trophyMult = () => (1 + 0.015 * goalsDone()) * (1 + 0.1 * watersComplete());
+const goalProgress = g => Math.min(1, g.get() / g.target);
+// The goal strip shows the easiest open goal: lowest tier first, then in this order.
+const GOAL_ORDER = ['catch', 'perfect', 'species', 'earn', 'rod', 'hands', 'waters', 'storm', 'legend', 'golden', 'treasure'];
+function nextGoal() {
+  const open = GOALS.filter(g => !S.goals[g.id]);
+  open.sort((a, b) => a.tier - b.tier || GOAL_ORDER.indexOf(a.key) - GOAL_ORDER.indexOf(b.key));
+  return open[0] || null;
+}
+function checkGoals() {
+  GOALS.forEach(g => {
+    if (S.goals[g.id] || g.get() < g.target) return;
+    S.goals[g.id] = 1;
+    const reward = Math.max(GOAL_FLOOR[g.tier] || 0, 60 * (youRate() + crewRate()));
+    earn(reward);
+    toast(`<b>Goal complete:</b> ${g.name}<br>+${money(reward)} and +1.5% income forever`, 'trophy', '#ffcf5a');
+    SND.goal();
+    if (activeTab === 'goals') renderPanel();
+  });
+  renderGoalbar();
+}
+function renderGoalbar() {
+  const g = nextGoal(), el = $('goalbar');
+  if (!g) { el.innerHTML = `${icon('trophy')}<span class="gname">Every goal complete. Legendary angler.</span>`; return; }
+  const cur = g.get(), show = g.key === 'earn' ? money : fmt;
+  const html = `${icon(g.icon)}<span class="gname">${g.name}</span><span class="gbar"><i style="width:${(goalProgress(g) * 100).toFixed(1)}%"></i></span><span class="gnum">${show(Math.min(cur, g.target))}/${show(g.target)}</span>`;
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+
+// Your own (hands-on) income over the last minute, for the header and goal rewards.
+const youLog = [];
+function youEarned(v) { youLog.push([performance.now(), v]); }
+function youRate() {
+  const tNow = performance.now();
+  while (youLog.length && tNow - youLog[0][0] > 60000) youLog.shift();
+  if (!youLog.length) return 0;
+  const span = Math.max(15, (tNow - youLog[0][0]) / 1000);
+  return youLog.reduce((a, e) => a + e[1], 0) / span;
+}
+
 /* ---------- State ---------- */
 const SAVE_KEY = 'bobber-brine-save-v2';
 const fresh = () => ({
@@ -643,7 +749,7 @@ const fresh = () => ({
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
   sp: {}, cd: {}, until: {}, sonar: 0, nextStorm: 0,
-  log: {}, monsters: {}, catches: 0, perfects: 0, goldens: 0, treasures: 0,
+  log: {}, monsters: {}, catches: 0, perfects: 0, goldens: 0, treasures: 0, stormCatches: 0, early: 0, sinceMonster: 0, goals: {},
   lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true, dev: false,
   set: { master: 80, musicVol: 60, sfxVol: 100, shake: true, flash: true, numbers: true },
 });
@@ -656,7 +762,7 @@ function merge(data) {
   base.up = Object.assign(fresh().up, data.up || {});
   base.crew = Object.assign(fresh().crew, data.crew || {});
   base.unlocked = LOCS.map((_, i) => i === 0 || !!(data.unlocked && data.unlocked[i]));
-  for (const k of ['log', 'monsters', 'sp', 'cd', 'until']) base[k] = data[k] || {};
+  for (const k of ['log', 'monsters', 'sp', 'cd', 'until', 'goals']) base[k] = data[k] || {};
   base.set = Object.assign(fresh().set, data.set || {});
   return base;
 }
@@ -692,7 +798,7 @@ function nextTierText(l) {
   return next ? ` Becomes a ${next.name} at level ${next.at}.` : '';
 }
 const fameMult = () => 1 + 0.1 * S.fame;
-const valueMult = () => 1.12 ** S.up.rod * 1.1 ** S.up.market * fameMult();
+const valueMult = () => 1.12 ** S.up.rod * 1.11 ** S.up.market * fameMult() * trophyMult();
 const hourMult = () => active('golden') ? 3 : 1;
 const crewMult = () => valueMult() * 1.15 ** S.crew.skill * (has('captain') ? 2 : 1);
 const perfectMult = () => has('lucky') ? 3 : 2;
@@ -705,7 +811,7 @@ const fightDrain = () => FIGHT.drain * (has('titanium') ? 0.7 : 1);
 const stormMult = () => active('storm') ? (has('chaser') ? 3 : 2) : 1;
 
 function weights(locIdx, bait = S.up.bait, rod = S.up.rod, storm = stormMult()) {
-  const shift = (1 + 0.03 * rod) * (1 + 0.06 * bait);
+  const shift = (1 + 0.03 * rod) * (1 + 0.1 * bait);
   return LOCS[locIdx].fish.map(f => RARITY_W[f[1]] * shift ** f[1] * (f[1] >= 2 ? storm : 1));
 }
 function rareChance(locIdx, bait, rod) {
@@ -735,18 +841,26 @@ function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e9)); }
 /* ---------- Economy actions ---------- */
 function earn(amount) { S.cash += amount; S.runEarned += amount; S.totalEarned += amount; }
 
-function recordFish(fish, locIdx) {
+function recordFish(fish, locIdx, quiet = false) {
   const key = locIdx + ':' + fish.idx;
   const entry = S.log[key];
   if (!entry) {
+    const before = watersComplete();
     S.log[key] = { n: 1, best: fish.weight };
-    SND.discover();
-    toast(`New species: <b style="color:${RARITY_C[fish.rarity]}">${fish.name}</b> (${RARITY[fish.rarity]})`, 'book', RARITY_C[fish.rarity]);
-    if (activeTab === 'log') renderPanel();
-  } else {
-    entry.n++;
-    if (fish.weight > entry.best) entry.best = fish.weight;
+    if (!quiet) {
+      SND.discover();
+      toast(`New species: <b style="color:${RARITY_C[fish.rarity]}">${fish.name}</b> (${RARITY[fish.rarity]}). First catch pays ×5!`, 'book', RARITY_C[fish.rarity]);
+    }
+    if (watersComplete() > before) {
+      banner(LOCS[locIdx].name.toUpperCase() + ' COMPLETE', 'EVERY SPECIES LOGGED · +10% INCOME FOREVER', LOCS[locIdx].color);
+      toast(`You logged every species in <b>${LOCS[locIdx].name}</b>. +10% income forever.`, 'book', LOCS[locIdx].color); SND.goal();
+    }
+    if (activeTab === 'log' || activeTab === 'goals') renderPanel();
+    return true;
   }
+  entry.n++;
+  if (fish.weight > entry.best) entry.best = fish.weight;
+  return false;
 }
 
 function landCatch(perfect) {
@@ -756,8 +870,9 @@ function landCatch(perfect) {
   for (let k = 0; k < count; k++) {
     const fish = rollFish(S.loc, sonar ? 2 : 0);
     fish.golden = has('scales') && Math.random() < 1 / 60;
-    const value = fish.base * valueMult() * (perfect ? perfectMult() : 1) * (fish.golden ? 10 : 1) * hourMult();
-    total += value; recordFish(fish, S.loc);
+    fish.isNew = recordFish(fish, S.loc);
+    const value = fish.base * valueMult() * (perfect ? perfectMult() : 1) * (fish.golden ? 10 : 1) * hourMult() * (fish.isNew ? 5 : 1);
+    total += value;
     if (fish.golden) S.goldens++;
     if (!best || fish.rarity + (fish.golden ? 0.5 : 0) > best.rarity + (best.golden ? 0.5 : 0)) best = Object.assign(fish, { value });
   }
@@ -767,8 +882,9 @@ function landCatch(perfect) {
     treasure = { name: TREASURES[Math.floor(Math.random() * TREASURES.length)], value: v };
     total += v; S.treasures++;
   }
-  earn(total);
+  earn(total); youEarned(total);
   S.catches += count; if (perfect) S.perfects++;
+  if (active('storm')) S.stormCatches += count;
   showLastCatch(best, total, count, perfect, treasure);
   return { fish: best, total, count, perfect, treasure, sonar };
 }
@@ -782,7 +898,7 @@ function crewTick(dt) {
     crewAcc -= 1; rolled++;
     const n = Math.random() < netChance() ? 2 : 1;
     for (let k = 0; k < n; k++) {
-      const fish = rollFish(S.loc); recordFish(fish, S.loc);
+      const fish = rollFish(S.loc); recordFish(fish, S.loc, true);
       total += fish.base * crewMult() * hourMult();
     }
   }
@@ -820,7 +936,7 @@ function buy(kind, id) {
     const c = d.cost(lvl);
     if (S.cash < c) break;
     S.cash -= c; store[id]++; bought++;
-  } while (kind === 'crew' && id === 'hands' && S.buyMax && bought < 1000);
+  } while (S.buyMax && d.max > 1 && bought < 1000);
   if (bought) {
     SND.buy(); renderPanel(); updateHeader();
     if (id === 'rod' && rodTier().name !== tierBefore) { banner(rodTier().name.toUpperCase(), 'NEW ROD', rodTier().color); SND.unlock(); burst(rodTip().x, rodTip().y, rodTier().color, 30); }
@@ -865,7 +981,7 @@ function retire() {
   const gain = pendingFame(); if (gain < 1) return;
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
   const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, monsters: S.monsters, catches: S.catches, perfects: S.perfects,
-    goldens: S.goldens, treasures: S.treasures, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
+    goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
   S = Object.assign(fresh(), keep);
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`, 'star');
@@ -882,6 +998,7 @@ const panel = $('panel');
 let activeTab = 'tackle', dispCash = 0;
 
 function updateHeader() {
+  $('youRate').textContent = money(youRate());
   $('rate').textContent = money(crewRate());
   $('fame').textContent = S.fame;
 }
@@ -902,11 +1019,12 @@ function itemHTML(kind, d, lvl) {
   else if (maxed) btn = `<button class="buy maxed" disabled>${d.max === 1 ? 'Owned' : 'Maxed'}</button>`;
   else {
     let label = money(cost);
-    if (kind === 'crew' && d.id === 'hands' && S.buyMax) {
+    if (S.buyMax && d.max > 1) {
       const n = maxAffordable(d, lvl);
       label = n > 0 ? `+${n} · ${money(sumCost(d, lvl, n))}` : money(cost);
     }
-    btn = `<button class="buy" data-kind="${kind}" data-id="${d.id}" data-cost="${cost}" id="buy-${d.id}">${label}</button>`;
+    const n = S.buyMax && d.max > 1 ? Math.min(maxAffordable(d, lvl), d.max - lvl) : 0;
+    btn = `<button class="buy" data-kind="${kind}" data-id="${d.id}" data-cost="${n > 0 ? sumCost(d, lvl, n) : cost}" id="buy-${d.id}">${label}</button>`;
   }
   const c = d.id === 'rod' ? rodTier(lvl).color : d.c;
   const bar = isFinite(d.max) && d.max > 1 ? `<div class="bar"><i style="width:${lvl / d.max * 100}%"></i></div>` : '';
@@ -922,9 +1040,21 @@ function specialHTML(d, isAbility) {
     <div class="head"><span class="name">${d.name}</span>${isAbility ? `<span class="lvl">Key ${ABILITIES.indexOf(d) + 1}</span>` : ''}</div>
     <div class="desc">${d.desc}</div>${btn}</div>`;
 }
+function segHTML() { return `<div class="seg" role="group" aria-label="Buy amount"><button data-buymax="0" aria-pressed="${!S.buyMax}">×1</button><button data-buymax="1" aria-pressed="${S.buyMax}">Max</button></div>`; }
+function refreshMaxLabels() {
+  if (!S.buyMax || (activeTab !== 'tackle' && activeTab !== 'crew')) return;
+  panel.querySelectorAll('button[data-kind="up"], button[data-kind="crew"]').forEach(b => {
+    const defs = b.dataset.kind === 'up' ? UPGRADES : CREW, store = b.dataset.kind === 'up' ? S.up : S.crew;
+    const d = defs.find(x => x.id === b.dataset.id); if (!d || d.max <= 1) return;
+    const lvl = store[d.id], n = maxAffordable(d, lvl);
+    const label = n > 0 ? `+${n} · ${money(sumCost(d, lvl, n))}` : money(d.cost(lvl));
+    if (b.textContent !== label) b.textContent = label;
+    b.dataset.cost = n > 0 ? sumCost(d, lvl, n) : d.cost(lvl);
+  });
+}
 function maxAffordable(d, lvl) {
   let n = 0, total = 0;
-  while (n < 1000) { const c = d.cost(lvl + n); if (total + c > S.cash) break; total += c; n++; }
+  while (n < 1000 && lvl + n < d.max) { const c = d.cost(lvl + n); if (total + c > S.cash) break; total += c; n++; }
   return n;
 }
 function sumCost(d, lvl, n) { let t = 0; for (let i = 0; i < n; i++) t += d.cost(lvl + i); return t; }
@@ -932,11 +1062,11 @@ function sumCost(d, lvl, n) { let t = 0; for (let i = 0; i < n; i++) t += d.cost
 function renderPanel() {
   let h = '';
   if (activeTab === 'tackle') {
-    h += `<p class="note">Better tackle makes every fish worth more and brings rarer fish to the hook. Your rod changes look as it levels up.</p>`;
+    h += `<div class="row"><p class="note">Better tackle makes every fish worth more and brings rarer fish to the hook.</p>${segHTML()}</div>`;
     h += UPGRADES.map(d => itemHTML('up', d, S.up[d.id])).join('');
   } else if (activeTab === 'crew') {
     h += `<div class="row"><p class="note">Deckhands fish at your current water nonstop, and keep working at ${has('captain') ? 'full' : 'half'} speed while you're away (up to 8 hours).</p>
-      <div class="seg" role="group" aria-label="Hire amount"><button data-buymax="0" aria-pressed="${!S.buyMax}">×1</button><button data-buymax="1" aria-pressed="${S.buyMax}">Max</button></div></div>`;
+      ${segHTML()}</div>`;
     h += CREW.map(d => itemHTML('crew', d, S.crew[d.id])).join('');
   } else if (activeTab === 'specials') {
     h += `<h3>${icon('spark', 'style="width:20px;height:20px;color:var(--gold)"')}Abilities <small>Buy once, fire whenever they're charged</small></h3>`;
@@ -961,10 +1091,12 @@ function renderPanel() {
     });
   } else if (activeTab === 'log') {
     const found = Object.keys(S.log).length, all = LOCS.length * 6;
+    h += `<p class="note">Your first catch of each species pays ×5. Logging every species at a water adds +10% income forever.</p>`;
     h += `<div class="row"><h3>Species logged: ${found} / ${all}</h3><span class="note">${fmt(S.catches)} landed · ${fmt(S.perfects)} perfect · ${fmt(S.goldens)} golden · ${fmt(S.treasures)} treasures</span></div>
       <div class="progress"><i style="width:${found / all * 100}%"></i></div>`;
     LOCS.forEach((L, li) => {
-      h += `<div class="logloc"><h3>${L.name} <small>${L.depth} · ${L.temp}</small></h3><div class="fishgrid">`;
+      const comp = L.fish.every((f, fi) => S.log[li + ':' + fi]);
+      h += `<div class="logloc"><h3>${L.name} <small>${L.depth} · ${L.temp}${comp ? ' · <span style="color:var(--kelp)">Complete +10%</span>' : ''}</small></h3><div class="fishgrid">`;
       L.fish.forEach((f, fi) => {
         const e = S.log[li + ':' + fi];
         h += e ? `<div class="fishchip" style="--rc:${RARITY_C[f[1]]}"><b>${f[0]}</b><span>${RARITY[f[1]]} · ${fmt(e.n)} caught<br>Best: ${kg(e.best)}</span></div>`
@@ -981,6 +1113,16 @@ function renderPanel() {
              : `<div class="fishchip unknown"><b>???</b><span>Legend of ${LOCS[li].name}</span></div>`;
     });
     h += `</div></div>`;
+  } else if (activeTab === 'goals') {
+    const done = goalsDone(), wc = watersComplete();
+    h += `<div class="item" style="--c:var(--gold)"><div class="tile">${icon('trophy')}</div>
+      <div class="head"><span class="name">${done} / ${GOALS.length} goals</span><span class="lvl">Income ×${trophyMult().toFixed(2)}</span></div>
+      <div class="desc">Every goal pays cash and adds +1.5% income forever. Logging every species at a water adds +10% more (${wc}/${LOCS.length} waters complete). Goals stay when you retire.</div><span></span></div>`;
+    const open = GOALS.filter(g => !S.goals[g.id]).sort((a, b) => goalProgress(b) - goalProgress(a));
+    const closed = GOALS.filter(g => S.goals[g.id]);
+    h += `<h3>In progress</h3>`;
+    h += open.map(g => { const show = g.key === 'earn' ? money : fmt; return `<div class="goal"><span class="gi">${icon(g.icon)}</span><span class="gname">${g.name}</span><span class="gnum">${show(Math.min(g.get(), g.target))} / ${show(g.target)}</span><span class="gbar"><i style="width:${(goalProgress(g) * 100).toFixed(1)}%"></i></span></div>`; }).join('');
+    if (closed.length) h += `<h3>Completed <small>${closed.length}</small></h3>` + closed.map(g => `<div class="goal done"><span class="gi">${icon('trophy')}</span><span class="gname">${g.name}</span><span class="gnum">Done</span></div>`).join('');
   } else if (activeTab === 'retire') {
     const gain = pendingFame();
     const nextAt = (gain + 1) ** 2 * 1e9;
@@ -1019,6 +1161,7 @@ function refreshAffordability() {
 }
 
 function renderSkillbar() {
+  $('skillbar').hidden = !ABILITIES.some(d => has(d.id));
   $('skillbar').innerHTML = ABILITIES.map((d, i) => `<button class="skill ${has(d.id) ? '' : 'locked'}" data-skill="${d.id}" ${has(d.id) ? '' : 'data-locked="1"'} style="--c:${d.c}" title="${d.name}: ${d.desc}${has(d.id) ? '' : ' Tap to see it in the Specials tab.'}">
     <span class="ic"><span>${icon(d.icon)}</span></span><span class="nm">${d.short}<small id="sk-${d.id}">${has(d.id) ? 'Ready' : 'Unlock ' + money(d.cost)}</small></span><kbd>${i + 1}</kbd></button>`).join('');
   updateSkillbar();
@@ -1036,6 +1179,7 @@ function updateSkillbar() {
     const sm = $('sk-' + d.id); if (sm && sm.textContent !== label) sm.textContent = label;
   });
 }
+$('goalbar').addEventListener('click', () => document.querySelector('#tabs [data-tab="goals"]').click());
 $('skillbar').addEventListener('click', e => {
   const b = e.target.closest('[data-skill]'); if (!b) return;
   if (b.dataset.locked) { document.querySelector('#tabs [data-tab="specials"]').click(); return; } // not bought yet: open the shop
@@ -1230,6 +1374,9 @@ const SND = (() => {
     coin() { if (!ok() || ac.currentTime - lastCoin < 1.4) return; lastCoin = ac.currentTime; tone(1976, ac.currentTime, 0.12, { type: 'sine', vol: 0.025 }); tone(2637, ac.currentTime + 0.06, 0.15, { type: 'sine', vol: 0.02 }); },
     buy() { if (!ok()) return; const t = ac.currentTime; tone(988, t, 0.1, { type: 'square', vol: 0.05, cutoff: 3000 }); tone(1319, t + 0.07, 0.22, { type: 'square', vol: 0.05, cutoff: 3000 }); noise(t, 0.12, { vol: 0.04, type: 'highpass', from: 5000, to: 5000 }); },
     unlock() { if (!ok()) return; const t = ac.currentTime; [67, 71, 74, 79, 83].forEach((m, i) => tone(mtof(m), t + i * 0.07, 0.5, { type: 'square', vol: 0.05, cutoff: 2800 })); noise(t, 0.6, { vol: 0.06, type: 'highpass', from: 4000, to: 9000 }); },
+    miss() { if (!ok()) return; const t = ac.currentTime; noise(t, 0.25, { vol: 0.12, type: 'lowpass', from: 1500, to: 300 }); tone(300, t, 0.25, { type: 'triangle', vol: 0.1, glide: 140 }); },
+    nibble() { if (!ok()) return; tone(420, ac.currentTime, 0.07, { type: 'sine', vol: 0.06, glide: 300 }); },
+    goal() { if (!ok()) return; const t = ac.currentTime + 0.05; [76, 79, 84, 88].forEach((m, i) => tone(mtof(m), t + i * 0.08, 0.35, { type: 'triangle', vol: 0.08 })); tone(mtof(96), t + 0.34, 0.6, { type: 'sine', vol: 0.05 }); },
     deny() { if (!ok()) return; tone(160, ac.currentTime, 0.15, { type: 'square', vol: 0.04, cutoff: 800 }); },
     discover() { if (!ok()) return; const t = ac.currentTime + 0.5; [67, 72, 76, 79].forEach((m, i) => tone(mtof(m + 12), t + i * 0.09, 0.4, { type: 'sine', vol: 0.08 })); },
     fanfare() { if (!ok()) return; const t = ac.currentTime; [[60, 0], [64, 0.15], [67, 0.3], [72, 0.45], [67, 0.6], [72, 0.75]].forEach(([m, d], i) => tone(mtof(m + 12), t + d, i === 5 ? 0.8 : 0.18, { type: 'square', vol: 0.06, cutoff: 2500 })); },
@@ -1347,6 +1494,32 @@ $('devCashForm').addEventListener('submit', e => {
   S.cash = v; $('devCash').value = ''; toast(`Cash set to ${money(v)}.`, 'spark', '#b98cff'); SND.buy(); updateHeader(); save();
 });
 
+// Backup codes: the save as base64 JSON.
+const encodeSave = () => btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function decodeSave(code) { return JSON.parse(decodeURIComponent(escape(atob(code.trim())))); }
+let importArmed = false;
+function backupMsg(text, cls = '') { $('backupMsg').textContent = text; $('backupMsg').className = 'code-msg ' + cls; }
+$('exportBtn').addEventListener('click', async () => {
+  save(); const ta = $('saveCode'); ta.hidden = false; ta.readOnly = true; ta.value = encodeSave(); $('importRow').hidden = true; importArmed = false;
+  try { await navigator.clipboard.writeText(ta.value); backupMsg('Backup code copied. Paste it somewhere safe.', 'ok'); }
+  catch (e) { ta.focus(); ta.select(); backupMsg('Select the code above and copy it.', ''); }
+});
+$('importBtn').addEventListener('click', () => {
+  const ta = $('saveCode'); ta.hidden = false; ta.readOnly = false; ta.value = ''; ta.placeholder = 'Paste a backup code here'; ta.focus();
+  $('importRow').hidden = false; importArmed = false; $('importGo').textContent = 'Load this backup'; backupMsg('');
+});
+$('importCancel').addEventListener('click', () => { $('saveCode').hidden = true; $('importRow').hidden = true; importArmed = false; backupMsg(''); });
+$('importGo').addEventListener('click', () => {
+  let data;
+  try { data = decodeSave($('saveCode').value); if (typeof data !== 'object' || typeof data.cash !== 'number') throw 0; }
+  catch (e) { backupMsg("That doesn't look like a Bobber & Brine backup code. Copy the whole code and try again.", 'bad'); return; }
+  if (!importArmed) { importArmed = true; $('importGo').textContent = 'Tap again to replace your save'; backupMsg(`This backup has ${money(data.cash)} and ${Object.keys(data.log || {}).length} species. Loading it replaces your current progress.`, ''); return; }
+  S = merge(data); dispCash = S.cash; save();
+  resetCast(); onLocChange(); renderPanel(); renderSkillbar(); syncSettings(); syncToggles(); SND.apply();
+  $('saveCode').hidden = true; $('importRow').hidden = true; importArmed = false;
+  backupMsg('Backup loaded.', 'ok'); toast('Backup loaded.', 'book', '#5fe08a');
+});
+
 /* ---------- Scene ---------- */
 const cv = $('sea'), ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
@@ -1446,14 +1619,25 @@ function banner(text, sub, color) { bannerObj = { text, sub, color, life: 2.4, m
 const cast = { state: 'idle', t: 0, wait: 0, x: 0, y: 0, tx: 0, ty: 0, autoT: -1, reel: null, fight: null };
 function resetCast() { if (cast.state === 'fight') SND.setFight(false); Object.assign(cast, { state: 'idle', t: 0, autoT: -1, reel: null, fight: null }); updateAction(); }
 function doAction() {
+  if (cast.state === 'wait') return tooEarly();
   if (cast.state === 'idle') startCast();
   else if (cast.state === 'bite') reelIn(true);
   else if (cast.state === 'fight') fightTap();
 }
+// Reeling in before the bite spooks the fish: the line comes back empty.
+function tooEarly() {
+  S.early++;
+  ripples.push({ x: cast.x, y: cast.y, r: 4, life: 1 }); splash(cast.x, cast.y, 6);
+  floaters.push({ x: cast.x, y: cast.y - 24, text: 'Too early!', color: '#ff8a65', life: 1.3, size: 18 });
+  SND.miss();
+  if (S.early <= 2) toast('<b>Too early!</b> The fish swam off. Wait for the bobber to dip and the <b>!</b> to appear, then tap.', 'hook', '#ff8a65');
+  cast.state = 'empty'; cast.t = 0; cast.nib = 0;
+  updateAction();
+}
 function startCast() {
   cast.state = 'cast'; cast.t = 0; cast.autoT = -1;
   cast.tx = W * (0.5 + Math.random() * 0.3); cast.ty = dockY() + 8 + Math.random() * (H - dockY() - 40);
-  cast.wait = biteTime() * (0.7 + Math.random() * 0.6) * (active('chum') ? 0.15 : 1);
+  cast.wait = biteTime() * (0.7 + Math.random() * 0.6) * (active('chum') ? 0.15 : 1); cast.nib = 0;
   SND.cast();
   updateAction();
 }
@@ -1476,7 +1660,7 @@ function reelIn(perfect) {
 }
 function updateAction() {
   const b = $('action');
-  const map = { idle: 'Cast line', cast: 'Casting…', wait: 'Waiting for a bite…', bite: 'REEL IT IN!', reel: 'Landing it…' };
+  const map = { idle: 'Cast line', cast: 'Casting…', wait: 'Wait for the bite…', bite: 'REEL IT IN!', reel: 'Landing it…', empty: 'Too early!' };
   const text = cast.state === 'fight' ? `TAP TAP TAP! ${Math.max(0, Math.round(cast.fight.meter))}%` : map[cast.state];
   if (b.textContent !== text) b.textContent = text;
   b.dataset.state = cast.state === 'fight' ? 'fight' : cast.state === 'bite' ? 'bite' : cast.state === 'idle' ? 'idle' : 'wait';
@@ -1513,7 +1697,7 @@ function winFight() {
   const f = cast.fight, m = MONSTERS[f.loc];
   const weight = m.kg * (0.85 + Math.random() * 0.4);
   const value = monsterValue(f.loc);
-  earn(value); S.catches++;
+  earn(value); youEarned(value); S.catches++;
   const prev = S.monsters[f.loc];
   S.monsters[f.loc] = prev ? { n: prev.n + 1, best: Math.max(prev.best, weight) } : { n: 1, best: weight };
   const fish = { name: m.name, rarity: 4, weight, monster: true };
@@ -1562,7 +1746,14 @@ function stepCast(dt) {
     if (p >= 1) { cast.state = 'wait'; cast.t = 0; SND.plop(); ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); splash(cast.x, cast.y, 6); updateAction(); }
   } else if (cast.state === 'wait') {
     cast.x = cast.tx; cast.y = cast.ty;
-    if (cast.t >= cast.wait && (Math.random() < monsterChance() || window.__bbForceMonster)) { window.__bbForceMonster = false; startFight(); }
+    // fake nibbles tempt you to reel in too early
+    if (cast.nib > 0) cast.nib -= dt;
+    else if (cast.t > 0.4 && cast.wait - cast.t > 0.45 && Math.random() < dt * 0.9) { cast.nib = 0.3; SND.nibble(); ripples.push({ x: cast.x, y: cast.y + 2, r: 2, life: 0.5 }); }
+    const legends = Object.keys(S.monsters).length;
+    if (cast.t >= cast.wait) S.sinceMonster++;
+    // odds climb the longer you go without a monster, and your first one is guaranteed by bite 120
+    const monster = cast.t >= cast.wait && (window.__bbForceMonster || Math.random() < monsterChance() * (1 + S.sinceMonster / 300) || (legends === 0 && S.sinceMonster >= 120));
+    if (monster) { window.__bbForceMonster = false; S.sinceMonster = 0; startFight(); }
     else if (cast.t >= cast.wait) { cast.state = 'bite'; cast.t = 0; SND.bite(); ripples.push({ x: cast.x, y: cast.y, r: 3, life: 1 }); updateAction(); }
   } else if (cast.state === 'bite') {
     if (cast.t >= (active('chum') ? 1.6 : 1.1)) reelIn(false);
@@ -1577,6 +1768,8 @@ function stepCast(dt) {
       cast.state = 'idle'; cast.t = 0; updateAction();
       if (S.up.holder && S.autoCast) cast.autoT = 0.35;
     }
+  } else if (cast.state === 'empty') {
+    if (cast.t >= 0.45) { cast.state = 'idle'; cast.t = 0; updateAction(); if (S.up.holder && S.autoCast) cast.autoT = 0.9; }
   } else if (cast.state === 'idle' && cast.autoT >= 0) {
     cast.autoT -= dt; if (cast.autoT < 0) startCast();
   }
@@ -1968,7 +2161,8 @@ function draw(time) {
     ctx.quadraticCurveTo((tip.x + lx) / 2 + Math.sin(t * 60) * 2, (tip.y + ly) / 2 + Math.sin(t * 55) * 2, lx, ly); ctx.stroke();
   } else if (cast.state !== 'idle') {
     let bx = cast.x, by = cast.y;
-    if (cast.state === 'wait') by += Math.sin(t * 3) * 1.5 * amp;
+    if (cast.state === 'wait') by += Math.sin(t * 3) * 1.5 * amp + (cast.nib > 0 ? Math.sin(cast.nib / 0.3 * Math.PI) * 3.5 : 0);
+    if (cast.state === 'empty') { const p = Math.min(1, cast.t / 0.45); bx = cast.tx + (tip.x - cast.tx) * p; by = cast.ty + (tip.y + 20 - cast.ty) * p - Math.sin(p * Math.PI) * 30; }
     if (cast.state === 'bite') by += 5 + Math.sin(t * 25) * 3;
     if (cast.state === 'reel') {
       const f = cast.reel.fish;
@@ -2072,6 +2266,12 @@ function draw(time) {
   drawFloaters(true);
   if (fightF) drawFightHUD(fightF, t);
   drawBanner();
+  if (S.catches < 5 && (cast.state === 'wait' || cast.state === 'bite')) {
+    const txt = cast.state === 'wait' ? "Wait… don't tap until you see the !" : 'NOW! Tap to reel in!';
+    ctx.font = `${cast.state === 'bite' ? 20 : 16}px "Lilita One", sans-serif`; ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(4,16,24,0.7)'; ctx.strokeText(txt, W / 2, H - 16);
+    ctx.fillStyle = cast.state === 'bite' ? '#ffd25a' : '#ffffff'; ctx.fillText(txt, W / 2, H - 16); ctx.textAlign = 'left';
+  }
   if (cast.state === 'idle' && cast.autoT < 0) {
     ctx.font = '19px "Lilita One", sans-serif'; ctx.textAlign = 'center';
     const yy = dy + 32 + Math.sin(t * 3) * 3 * amp;
@@ -2149,13 +2349,13 @@ function frame(nowT) {
     earn(crewRate() * (has('captain') ? 1 : 0.5) * Math.min(dt, 8 * 3600)); dt = 0;
   }
   crewTick(dt);
-  stepCast(dtFrame);
+  if ($('settings').hidden) stepCast(dtFrame); // the game pauses while Settings is open (your crew keeps working)
   draw(nowT);
   tickCash(dtFrame);
   uiTimer += dtFrame; saveTimer += dtFrame;
   if (uiTimer > 0.2) {
     uiTimer = 0; stormTick(); updateHeader(); refreshAffordability(); updateSkillbar(); updateEffects();
-    if (S.buyMax && activeTab === 'crew') { const b = $('buy-hands'); if (b) { const d = CREW[0]; const n = maxAffordable(d, S.crew.hands); b.textContent = n > 0 ? `+${n} · ${money(sumCost(d, S.crew.hands, n))}` : money(d.cost(S.crew.hands)); } }
+    refreshMaxLabels(); refreshAffordability(); checkGoals();
     if (activeTab === 'retire' && !retireArmed && !resetArmed && Math.random() < 0.2) renderPanel();
     if (boats.length !== Math.min(S.crew.hands, 7)) layoutBoats();
   }
@@ -2168,13 +2368,14 @@ function start(hotData) {
   if (saved) {
     S = saved;
     if (!(hotData && hotData.S)) {
-      const away = Math.min(8 * 3600, (Date.now() - (S.lastSave || Date.now())) / 1000);
+      const rawAway = (Date.now() - (S.lastSave || Date.now())) / 1000;
+      const away = Math.min(8 * 3600, rawAway);
       const gained = crewRate() * (has('captain') ? 1 : 0.5) * away;
-      if (gained > 0 && away > 30) { earn(gained); setTimeout(() => toast(`Welcome back. Your crew earned <b>${money(gained)}</b> while you were away.`, 'crew', '#3fc8b8'), 400); }
+      if (gained > 0 && away > 30) { earn(gained); setTimeout(() => toast(`Welcome back. Your crew earned <b>${money(gained)}</b> while you were away.${rawAway > 8 * 3600 ? ' They stop after 8 hours, so check in more often to earn more.' : ''}`, 'crew', '#3fc8b8'), 400); }
     }
   }
   dispCash = S.cash;
-  resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings();
+  resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings(); checkGoals();
   window.addEventListener('resize', resize);
   window.addEventListener('beforeunload', save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); SND.pause(); } else SND.resume(); });

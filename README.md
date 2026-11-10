@@ -2,10 +2,11 @@
 
 An idle fishing game in a single HTML file. Open `index.html` in a browser to play.
 
-- **Cast** by tapping the water (or pressing Space). Reel in while the bobber dips for a perfect catch worth ×2.
+- **Cast** by tapping the water (or pressing Space). Wait for the bobber to dip and the **!** to appear, then tap for a perfect catch. Tapping before the bite (watch out for fake nibbles) spooks the fish and the line comes back empty.
+- **Goals**: 52 milestones (fish landed, perfect catches, species, earnings, rod level, crew, waters, legends, storms, golden fish, treasure). Each pays cash and +1.5% income forever; logging every species at a water adds +10%. Your first catch of each species pays ×5.
 - **Rod Holder** recasts for you and has an on/off switch once you own it.
 - **Tackle** upgrades raise catch value, bite speed, rare-fish odds and double-catch chance. A basic rod mostly catches common fish; every Rod level makes rarer fish bite more often.
-- **Legends**: about 1 bite in 1,000 is a monster worth 40× that water's best fish. Tap fast to fill the tension meter within 10 seconds or the line snaps.
+- **Legends**: about 1 bite in 1,000 is a monster (the odds climb the longer you go without one, and your first is guaranteed by bite 120) worth 40× that water's best fish. Tap fast to fill the tension meter within 10 seconds or the line snaps.
 - **Crew** deckhands fish for you nonstop, and keep working at half speed for up to 8 hours while you're away.
 - **Specials**: four abilities you fire yourself (Chum Bucket, Sonar Ping, Golden Hour, Feeding Frenzy; keys 1–4) and seven permanent charms (Lucky Bobber, Treasure Hook, Golden Scales, Storm Chaser, Captain's Log, Monster Magnet, Titanium Line).
 - **Storms** roll in every few minutes: rain, lightning and better odds on rare fish while they last.
@@ -15,4 +16,4 @@ An idle fishing game in a single HTML file. Open `index.html` in a browser to pl
 
 **Settings** (gear button): master, music and effects volume; screen shake, flashes and floating numbers on/off; a code box; and wipe save. Redeeming the developer code turns on a developer panel with free money, maxed upgrades, unlocks, storms, monsters and Fame.
 
-Progress saves automatically in your browser's local storage.
+Progress saves automatically in your browser's local storage. Settings → Backup copies a backup code you can load on another device.
