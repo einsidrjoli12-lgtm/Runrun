@@ -13,4 +13,6 @@ An idle fishing game in a single HTML file. Open `index.html` in a browser to pl
 - **Music and sound**: synthesized live in the browser, with a different tune for each water. Toggle them in the header.
 - **Retire** after earning $1B to earn Fame stars (+10% income each) and start a new career.
 
+**Settings** (gear button): master, music and effects volume; screen shake, flashes and floating numbers on/off; a code box; and wipe save. Redeeming the developer code turns on a developer panel with free money, maxed upgrades, unlocks, storms, monsters and Fame.
+
 Progress saves automatically in your browser's local storage.

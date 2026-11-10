@@ -34,6 +34,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
 body {
   background:
@@ -115,6 +116,52 @@ header.top {
 .tog svg { width: 18px; height: 18px; }
 .tog[aria-pressed="true"] { color: var(--fg); background: var(--glass-3); border-color: var(--edge-hi); }
 .tog[aria-pressed="false"]::after { content: ""; position: absolute; width: 22px; height: 2px; background: var(--danger); transform: rotate(-45deg); border-radius: 2px; }
+
+.dev-badge { display: none; padding: 3px 9px; border-radius: 999px; font: 900 .7rem var(--body); letter-spacing: .8px; color: #1a0630; background: linear-gradient(180deg, #e2c4ff, var(--violet)); box-shadow: 0 0 14px rgba(185, 140, 255, .6); }
+.dev-on .dev-badge { display: inline-block; }
+
+/* ---- settings window ---- */
+.modal {
+  position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: rgba(2, 10, 16, .6); backdrop-filter: blur(6px);
+}
+.sheet {
+  width: min(540px, 100%); max-height: 100%; min-width: 0; overflow-y: auto; overscroll-behavior: contain;
+  border-radius: 22px; padding: 18px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr);
+  background: linear-gradient(180deg, rgba(24, 66, 88, .97), rgba(8, 28, 40, .98));
+  border: 1px solid var(--edge-hi); box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+  animation: tin .25s cubic-bezier(.2, 1.4, .4, 1);
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.sheet-head h2 { margin: 0; font: 400 1.5rem var(--display); letter-spacing: .5px; display: flex; align-items: center; gap: 10px; }
+.sheet-head h2 svg { width: 24px; height: 24px; color: var(--buoy); }
+.close { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--edge); background: var(--glass); color: var(--fg); font: 900 1.1rem var(--body); cursor: pointer; }
+.group { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-radius: 16px; background: rgba(0, 0, 0, .2); border: 1px solid var(--edge); }
+.group h4 { margin: 0; font: 900 .74rem var(--body); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.slider { display: grid; grid-template-columns: 70px minmax(0, 1fr) 44px; align-items: center; gap: 10px; font-weight: 800; font-size: .9rem; }
+.slider output { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; min-width: 0; accent-color: var(--buoy); }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 800; font-size: .9rem; }
+.switch-row small { display: block; color: var(--muted); font-weight: 600; font-size: .8rem; }
+.switch { flex: none; width: 50px; height: 28px; border-radius: 999px; border: 1px solid var(--edge); background: #1b3a4a; position: relative; cursor: pointer; transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #cfe3e8; transition: transform .2s; }
+.switch[aria-checked="true"] { background: var(--kelp); }
+.switch[aria-checked="true"]::after { transform: translateX(22px); background: #fff; }
+.code-row { display: flex; gap: 8px; }
+.code-row input, .dev-row input {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--edge-hi); background: rgba(0, 0, 0, .3);
+  color: var(--fg); font: 800 .95rem var(--body); letter-spacing: 1px;
+}
+.code-row input:focus, .dev-row input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+.code-msg { min-height: 1.2em; font-size: .84rem; font-weight: 700; color: var(--muted); }
+.code-msg.ok { color: var(--kelp); } .code-msg.bad { color: var(--danger); }
+.dev { border-color: rgba(185, 140, 255, .5); background: linear-gradient(180deg, rgba(185, 140, 255, .12), rgba(0, 0, 0, .2)); box-shadow: 0 0 24px rgba(185, 140, 255, .15); }
+.dev h4 { color: var(--violet); }
+.dev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 8px; }
+.dev-grid .buy, .dev-row .buy { min-width: 0; font-size: .82rem; padding: 9px 8px; }
+.dev-row { display: flex; gap: 8px; }
+.buy.violet { background: linear-gradient(180deg, #e2c4ff, var(--violet) 55%, #8a5ce0); color: #1a0630; box-shadow: inset 0 2px 0 rgba(255,255,255,.5), 0 3px 0 #5a3a9a; }
 
 /* ---- main grid ---- */
 .game { flex: 1; min-height: 0; display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
@@ -321,6 +368,8 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div class="chip" title="Fame stars"><span data-icon="star" style="color:var(--gold)"></span><b id="fame">0</b></div>
     </div>
     <div class="toggles">
+      <span class="dev-badge" title="Developer mode is on">DEV</span>
+      <button class="tog" id="settingsBtn" aria-label="Settings" title="Settings"><span data-icon="gear"></span></button>
       <button class="tog" id="musicBtn" aria-pressed="true" aria-label="Music" title="Music"><span data-icon="note"></span></button>
       <button class="tog" id="sfxBtn" aria-pressed="true" aria-label="Sound effects" title="Sound effects"><span data-icon="speaker"></span></button>
     </div>
@@ -353,6 +402,53 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   </div>
 </div>
 <div class="toasts" id="toasts"></div>
+<div class="modal" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="settingsTitle"><span data-icon="gear"></span>Settings</h2><button class="close" id="closeSettings" aria-label="Close settings">✕</button></div>
+    <div class="group">
+      <h4>Sound</h4>
+      <label class="slider" for="volMaster">Master <input type="range" id="volMaster" min="0" max="100" step="1"><output id="volMasterOut"></output></label>
+      <label class="slider" for="volMusic">Music <input type="range" id="volMusic" min="0" max="100" step="1"><output id="volMusicOut"></output></label>
+      <label class="slider" for="volSfx">Effects <input type="range" id="volSfx" min="0" max="100" step="1"><output id="volSfxOut"></output></label>
+      <div class="switch-row"><span>Music<small>The background tunes and fight music</small></span><button class="switch" id="swMusic" role="switch"></button></div>
+      <div class="switch-row"><span>Sound effects<small>Splashes, coins, thunder and the rest</small></span><button class="switch" id="swSfx" role="switch"></button></div>
+    </div>
+    <div class="group">
+      <h4>Visuals</h4>
+      <div class="switch-row"><span>Screen shake<small>Camera shake during monster fights</small></span><button class="switch" id="swShake" role="switch"></button></div>
+      <div class="switch-row"><span>Screen flashes<small>Flashes for big catches, lightning and abilities</small></span><button class="switch" id="swFlash" role="switch"></button></div>
+      <div class="switch-row"><span>Floating numbers<small>The +$ amounts that pop up over the water</small></span><button class="switch" id="swNumbers" role="switch"></button></div>
+    </div>
+    <div class="group">
+      <h4>Code</h4>
+      <form class="code-row" id="codeForm" autocomplete="off"><input id="codeInput" type="password" placeholder="Enter a code" aria-label="Code" spellcheck="false"><button class="buy gold" type="submit">Redeem</button></form>
+      <div class="code-msg" id="codeMsg" aria-live="polite"></div>
+    </div>
+    <div class="group dev" id="devPanel" hidden>
+      <h4>Developer mode</h4>
+      <div class="dev-grid">
+        <button class="buy violet" data-dev="cash6">+ $1M</button>
+        <button class="buy violet" data-dev="cash9">+ $1B</button>
+        <button class="buy violet" data-dev="cash12">+ $1T</button>
+        <button class="buy violet" data-dev="cashx">Cash × 1,000</button>
+        <button class="buy violet" data-dev="maxup">Max all tackle</button>
+        <button class="buy violet" data-dev="crew">+100 deckhands</button>
+        <button class="buy violet" data-dev="waters">Unlock all waters</button>
+        <button class="buy violet" data-dev="specials">Unlock all specials</button>
+        <button class="buy violet" data-dev="cooldowns">Recharge abilities</button>
+        <button class="buy violet" data-dev="storm">Start a storm</button>
+        <button class="buy violet" data-dev="monster">Monster on next cast</button>
+        <button class="buy violet" data-dev="fame">+10 Fame</button>
+      </div>
+      <form class="dev-row" id="devCashForm" autocomplete="off"><input id="devCash" placeholder="Set cash, e.g. 5T or 2.5e15" aria-label="Set cash to" spellcheck="false"><button class="buy violet" type="submit">Set cash</button></form>
+      <button class="buy ghost" data-dev="off">Turn off developer mode</button>
+    </div>
+    <div class="group">
+      <h4>Save</h4>
+      <div class="switch-row"><span>Progress saves in this browser automatically.</span><button class="buy ghost" id="wipeBtn">Wipe save</button></div>
+    </div>
+  </div>
+</div>
 
 <script>
 (() => {
@@ -389,6 +485,7 @@ const ICONS = {
   note: '<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
   speaker: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
   storm: '<path d="M6 15a4 4 0 0 1 .5-8A6 6 0 0 1 18 8a3.5 3.5 0 0 1 0 7"/><path d="M12 13l-2 4h3l-2 4"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
   fish: '<path d="M2 12c3-5 9-6 13-2l5-3v10l-5-3c-4 4-10 3-13-2z"/><circle cx="7.5" cy="11" r="1"/>',
 };
 const icon = (name, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${ICONS[name] || ''}</svg>`;
@@ -509,7 +606,8 @@ const fresh = () => ({
   crew: { hands: 0, speed: 0, skill: 0 },
   sp: {}, cd: {}, until: {}, sonar: 0, nextStorm: 0,
   log: {}, monsters: {}, catches: 0, perfects: 0, goldens: 0, treasures: 0,
-  lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true,
+  lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true, dev: false,
+  set: { master: 80, musicVol: 60, sfxVol: 100, shake: true, flash: true, numbers: true },
 });
 let S = fresh();
 
@@ -521,6 +619,7 @@ function merge(data) {
   base.crew = Object.assign(fresh().crew, data.crew || {});
   base.unlocked = LOCS.map((_, i) => i === 0 || !!(data.unlocked && data.unlocked[i]));
   for (const k of ['log', 'monsters', 'sp', 'cd', 'until']) base[k] = data[k] || {};
+  base.set = Object.assign(fresh().set, data.set || {});
   return base;
 }
 function load() {
@@ -728,14 +827,14 @@ function retire() {
   const gain = pendingFame(); if (gain < 1) return;
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
   const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, monsters: S.monsters, catches: S.catches, perfects: S.perfects,
-    goldens: S.goldens, treasures: S.treasures, music: S.music, sfx: S.sfx, autoCast: S.autoCast };
+    goldens: S.goldens, treasures: S.treasures, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
   S = Object.assign(fresh(), keep);
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`, 'star');
 }
 function hardReset() {
   if (!resetArmed) { resetArmed = true; renderPanel(); return; }
-  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx, autoCast: S.autoCast }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
+  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast('Save wiped. Back to the farm pond.', 'wave');
 }
 
@@ -1002,9 +1101,10 @@ const SND = (() => {
   }
   function apply() {
     if (!ac) return;
-    const t = ac.currentTime;
-    musicBus.gain.setTargetAtTime(S.music ? 0.55 : 0, t, 0.25);
-    sfxBus.gain.setTargetAtTime(S.sfx ? 1 : 0, t, 0.05);
+    const t = ac.currentTime, v = S.set;
+    master.gain.setTargetAtTime(0.9 * (v.master / 100) ** 1.5, t, 0.05);
+    musicBus.gain.setTargetAtTime(S.music ? 0.7 * (v.musicVol / 100) ** 1.5 : 0, t, 0.15);
+    sfxBus.gain.setTargetAtTime(S.sfx ? 1.1 * (v.sfxVol / 100) ** 1.5 : 0, t, 0.05);
   }
   function tone(freq, t, dur, { type = 'triangle', vol = 0.2, bus = sfxBus, attack = 0.005, glide = 0, cutoff = 0 } = {}) {
     const o = ac.createOscillator(), g = ac.createGain();
@@ -1125,6 +1225,80 @@ $('musicBtn').addEventListener('click', () => { SND.init(); S.music = !S.music; 
 $('sfxBtn').addEventListener('click', () => { SND.init(); S.sfx = !S.sfx; SND.apply(); syncToggles(); save(); });
 // Browsers only allow audio after the player interacts, so start it on the first tap or key.
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => SND.init(), true));
+
+/* ---------- Settings & developer mode ---------- */
+// Only a SHA-256 hash of the developer code is stored here, so the code itself isn't in the page source.
+const DEV_HASH = 'f69f93b059cf27adbc6955fbd566186b26dbe19cacfa0ad1309dfb4eab058085';
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function openSettings() { syncSettings(); $('settings').hidden = false; $('codeMsg').textContent = ''; $('codeMsg').className = 'code-msg'; $('closeSettings').focus(); SND.click(); }
+function closeSettings() { if ($('settings').hidden) return; $('settings').hidden = true; wipeArmed = false; $('wipeBtn').textContent = 'Wipe save'; $('wipeBtn').classList.remove('danger'); save(); }
+function syncSettings() {
+  [['volMaster', 'master'], ['volMusic', 'musicVol'], ['volSfx', 'sfxVol']].forEach(([id, k]) => { $(id).value = S.set[k]; $(id + 'Out').textContent = S.set[k] + '%'; });
+  const sw = (id, on) => $(id).setAttribute('aria-checked', on);
+  sw('swMusic', S.music); sw('swSfx', S.sfx); sw('swShake', S.set.shake); sw('swFlash', S.set.flash); sw('swNumbers', S.set.numbers);
+  $('devPanel').hidden = !S.dev;
+  document.body.classList.toggle('dev-on', !!S.dev);
+}
+$('settingsBtn').addEventListener('click', openSettings);
+$('closeSettings').addEventListener('click', closeSettings);
+$('settings').addEventListener('click', e => { if (e.target.id === 'settings') closeSettings(); });
+[['volMaster', 'master'], ['volMusic', 'musicVol'], ['volSfx', 'sfxVol']].forEach(([id, k]) => {
+  $(id).addEventListener('input', () => { S.set[k] = +$(id).value; $(id + 'Out').textContent = S.set[k] + '%'; SND.init(); SND.apply(); });
+  $(id).addEventListener('change', () => { SND.click(); save(); });
+});
+const SWITCHES = { swMusic: () => { S.music = !S.music; }, swSfx: () => { S.sfx = !S.sfx; }, swShake: () => { S.set.shake = !S.set.shake; }, swFlash: () => { S.set.flash = !S.set.flash; }, swNumbers: () => { S.set.numbers = !S.set.numbers; } };
+Object.entries(SWITCHES).forEach(([id, fn]) => $(id).addEventListener('click', () => { fn(); SND.init(); SND.apply(); syncSettings(); syncToggles(); SND.click(); save(); }));
+let wipeArmed = false;
+$('wipeBtn').addEventListener('click', () => {
+  if (!wipeArmed) { wipeArmed = true; $('wipeBtn').textContent = 'Tap again to wipe'; $('wipeBtn').classList.add('danger'); return; }
+  resetArmed = true; hardReset(); closeSettings();
+});
+$('codeForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const code = $('codeInput').value.trim().toLowerCase(), msg = $('codeMsg');
+  if (!code) return;
+  let ok = false;
+  try { ok = (await sha256(code)) === DEV_HASH; } catch (err) { msg.textContent = 'Codes need a secure (https) page to check.'; msg.className = 'code-msg bad'; return; }
+  $('codeInput').value = '';
+  if (ok) {
+    S.dev = true; save(); syncSettings();
+    msg.textContent = S.dev ? 'Developer mode is on. Have fun.' : ''; msg.className = 'code-msg ok';
+    SND.unlock(); banner('DEVELOPER MODE', 'UNLOCKED', '#b98cff');
+  } else { msg.textContent = "That code didn't work. Check the spelling and try again."; msg.className = 'code-msg bad'; SND.deny(); }
+});
+function parseAmount(str) {
+  const m = String(str).trim().replace(/[$,\s]/g, '').match(/^(\d*\.?\d+(?:e\d+)?)([a-z]*)$/i);
+  if (!m) return NaN;
+  const mult = { '': 1, k: 1e3, m: 1e6, b: 1e9, t: 1e12, qa: 1e15, qi: 1e18, sx: 1e21, sp: 1e24, oc: 1e27, no: 1e30, dc: 1e33 }[m[2].toLowerCase()];
+  return mult === undefined ? NaN : parseFloat(m[1]) * mult;
+}
+function devAction(id) {
+  if (!S.dev) return;
+  const done = text => { toast(text, 'spark', '#b98cff'); SND.buy(); renderPanel(); renderSkillbar(); updateHeader(); save(); };
+  if (id.startsWith('cash') && id !== 'cashx') { const v = 10 ** +id.slice(4); S.cash += v; return done(`Added ${money(v)}.`); }
+  switch (id) {
+    case 'cashx': S.cash = Math.max(1, S.cash) * 1000; return done(`Cash is now ${money(S.cash)}.`);
+    case 'maxup': UPGRADES.forEach(d => { S.up[d.id] = d.max; }); CREW.forEach(d => { if (isFinite(d.max)) S.crew[d.id] = d.max; }); return done('Every tackle and crew upgrade is maxed.');
+    case 'crew': S.crew.hands += 100; layoutBoats(); return done('Hired 100 deckhands.');
+    case 'waters': S.unlocked = LOCS.map(() => true); return done('Every water is unlocked. Travel from the Waters tab.');
+    case 'specials': [...ABILITIES, ...CHARMS].forEach(d => { S.sp[d.id] = 1; }); return done('Every ability and charm is unlocked.');
+    case 'cooldowns': S.cd = {}; return done('All abilities are recharged.');
+    case 'storm': S.until.storm = now() + STORM_LEN * 1000; lightning = 1; SND.thunder(); return done('A storm rolls in.');
+    case 'monster': window.__bbForceMonster = true; closeSettings(); return done('A monster will take your next cast.');
+    case 'fame': S.fame += 10; return done(`Fame is now ${S.fame} ★.`);
+    case 'off': S.dev = false; syncSettings(); toast('Developer mode is off.', 'spark', '#b98cff'); save(); return;
+  }
+}
+$('devPanel').addEventListener('click', e => { const b = e.target.closest('[data-dev]'); if (b) devAction(b.dataset.dev); });
+$('devCashForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = parseAmount($('devCash').value);
+  if (!isFinite(v) || v < 0) { toast('Enter an amount like 5000, 2.5M, 7T or 1e18.', 'spark', '#ff8a65'); return; }
+  S.cash = v; $('devCash').value = ''; toast(`Cash set to ${money(v)}.`, 'spark', '#b98cff'); SND.buy(); updateHeader(); save();
+});
 
 /* ---------- Scene ---------- */
 const cv = $('sea'), ctx = cv.getContext('2d');
@@ -1263,6 +1437,7 @@ function updateAction() {
 $('action').addEventListener('click', doAction);
 cv.addEventListener('pointerdown', e => { e.preventDefault(); doAction(); });
 window.addEventListener('keydown', e => {
+  if (e.target instanceof HTMLInputElement || !$('settings').hidden) { if (e.key === 'Escape') closeSettings(); return; } // typing, or the settings window is open
   if (e.code === 'Space' && e.repeat && cast.state === 'fight') { e.preventDefault(); return; } // holding Space doesn't count as tapping
   if (e.code === 'Space' && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLInputElement)) { e.preventDefault(); doAction(); }
   if (!e.repeat && /^Digit[1-4]$/.test(e.code)) useAbility(ABILITIES[+e.code.slice(5) - 1].id);
@@ -1655,7 +1830,7 @@ function draw(time) {
     const hw = W / (2 * camZoom), hh = H / (2 * camZoom);
     let cx = W / 2 + ((W * 0.13 + fx) / 2 - W / 2) * k, cy = H / 2 + ((dy - 30 + fy) / 2 - H / 2) * k;
     cx = Math.max(hw, Math.min(W - hw, cx)); cy = Math.max(hh, Math.min(H - hh, cy));
-    const shake = fightF && !reduceMotion ? 2.5 : 0;
+    const shake = fightF && !reduceMotion && S.set.shake ? 2.5 : 0;
     ctx.translate(W / 2 + (Math.random() - 0.5) * shake, H / 2 + (Math.random() - 0.5) * shake);
     ctx.scale(camZoom, camZoom); ctx.translate(-cx, -cy);
   }
@@ -1841,6 +2016,7 @@ function draw(time) {
     ctx.strokeStyle = `rgba(92,214,255,${(1 - p) * 0.6})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(cast.tx, cast.ty + 6, p * 120, p * 40, 0, 0, 7); ctx.stroke();
   }
+  if (!S.set.flash) { flash = 0; lightning = Math.min(lightning, 0.35); }
   if (flash > 0) { ctx.fillStyle = flashColor; ctx.globalAlpha = Math.min(0.6, flash); ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; flash -= dtFrame * 1.8; }
   // soft vignette
   const vg = ctx.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.45, W / 2, H * 0.55, Math.max(W, H) * 0.8);
@@ -1857,6 +2033,7 @@ function draw(time) {
   }
 }
 function drawFloaters(screen) {
+  if (!S.set.numbers) return;
   ctx.textAlign = 'center';
   floaters.forEach(f => {
     if (!!f.screen !== screen) return;
@@ -1950,7 +2127,7 @@ function start(hotData) {
     }
   }
   dispCash = S.cash;
-  resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles();
+  resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings();
   window.addEventListener('resize', resize);
   window.addEventListener('beforeunload', save);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); SND.pause(); } else SND.resume(); });
