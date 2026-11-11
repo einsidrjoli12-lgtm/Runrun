@@ -136,6 +136,7 @@ header.top {
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sheet-head h2 { margin: 0; font: 400 1.5rem var(--display); letter-spacing: .5px; display: flex; align-items: center; gap: 10px; }
 .sheet-head h2 svg { width: 24px; height: 24px; color: var(--buoy); }
+.sheet-head h2 .ver { font: 800 .8rem var(--body); color: var(--muted); letter-spacing: .5px; padding: 3px 9px; border-radius: 999px; background: rgba(0,0,0,.25); border: 1px solid var(--edge); }
 .close { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--edge); background: var(--glass); color: var(--fg); font: 900 1.1rem var(--body); cursor: pointer; }
 .group { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 12px 14px; border-radius: 16px; background: rgba(0, 0, 0, .2); border: 1px solid var(--edge); }
 .group h4 { margin: 0; font: 900 .74rem var(--body); letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
@@ -474,7 +475,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <div class="toasts" id="toasts"></div>
 <div class="modal" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="sheet">
-    <div class="sheet-head"><h2 id="settingsTitle"><span data-icon="gear"></span>Settings</h2><button class="close" id="closeSettings" aria-label="Close settings">✕</button></div>
+    <div class="sheet-head"><h2 id="settingsTitle"><span data-icon="gear"></span>Settings <small class="ver" id="verTag"></small></h2><button class="close" id="closeSettings" aria-label="Close settings">✕</button></div>
     <div class="group">
       <h4>Sound</h4>
       <label class="slider" for="volMaster">Master <input type="range" id="volMaster" min="0" max="100" step="1"><output id="volMasterOut"></output></label>
@@ -524,6 +525,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <div class="group">
       <h4>Save</h4>
       <div class="switch-row"><span>Progress saves in this browser automatically.</span><button class="buy ghost" id="wipeBtn">Wipe save</button></div>
+      <div class="code-msg" id="verLine"></div>
     </div>
   </div>
 </div>
@@ -531,6 +533,9 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <script>
 (() => {
 'use strict';
+
+// Game version: bump this with every update you upload (shown in Settings, and stored in saves and backups).
+const VERSION = '1.0.1';
 
 /* ---------- Icons (24px stroke icons) ---------- */
 const ICONS = {
@@ -776,7 +781,7 @@ function load() {
   return null;
 }
 function save() {
-  S.lastSave = Date.now();
+  S.lastSave = Date.now(); S.version = VERSION;
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {}
 }
 
@@ -1432,6 +1437,8 @@ async function sha256(text) {
 function openSettings() { syncSettings(); $('settings').hidden = false; $('codeMsg').textContent = ''; $('codeMsg').className = 'code-msg'; $('closeSettings').focus(); SND.click(); }
 function closeSettings() { if ($('settings').hidden) return; $('settings').hidden = true; wipeArmed = false; $('wipeBtn').textContent = 'Wipe save'; $('wipeBtn').classList.remove('danger'); save(); }
 function syncSettings() {
+  $('verTag').textContent = 'v' + VERSION;
+  $('verLine').textContent = `Bobber & Brine v${VERSION}. Mention this version when you report a bug.`;
   [['volMaster', 'master'], ['volMusic', 'musicVol'], ['volSfx', 'sfxVol']].forEach(([id, k]) => { $(id).value = S.set[k]; $(id + 'Out').textContent = S.set[k] + '%'; });
   const sw = (id, on) => $(id).setAttribute('aria-checked', on);
   sw('swMusic', S.music); sw('swSfx', S.sfx); sw('swShake', S.set.shake); sw('swFlash', S.set.flash); sw('swNumbers', S.set.numbers);
