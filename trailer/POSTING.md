@@ -33,7 +33,7 @@ On TikTok you can keep the game audio, or add a trending sound and turn the orig
 >
 > Bobber & Brine is a free idle fishing game you play in your browser on desktop or phone. Start with a bamboo rod on a farm pond, upgrade your gear, hire a crew, and fish your way down to the Midnight Trench. Time your reel for perfect catches, ride out storms, and fight legendary monsters that can snap your line.
 >
-> ▶ Play free: (your itch.io link)
+> ▶ Play free: https://einarsgames.itch.io/bobberbrine
 >
 > #indiegame #fishinggame #idlegame
 
