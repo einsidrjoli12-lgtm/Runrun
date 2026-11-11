@@ -1,0 +1,368 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@800;900&display=swap">
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000;font-family:Nunito,sans-serif;color:#fff}
+canvas{position:absolute;inset:0}
+.ov{position:absolute;left:0;right:0;text-align:center;pointer-events:none;opacity:0;will-change:transform,opacity}
+.big{font:400 130px/0.95 'Lilita One',sans-serif;letter-spacing:3px;text-shadow:0 8px 0 rgba(0,0,0,.35),0 0 50px rgba(0,0,0,.5)}
+.mid{font:400 84px/1 'Lilita One',sans-serif;letter-spacing:2px;text-shadow:0 6px 0 rgba(0,0,0,.35),0 0 40px rgba(0,0,0,.6)}
+.small{font:900 40px Nunito,sans-serif;letter-spacing:6px;text-shadow:0 3px 14px rgba(0,0,0,.8)}
+.gold{color:#ffcf5a;text-shadow:0 8px 0 #8a5a00,0 0 60px rgba(255,190,60,.8)}
+.red{color:#ff5a3d;text-shadow:0 8px 0 #5a0d00,0 0 60px rgba(255,60,30,.9)}
+#end{position:absolute;inset:0;opacity:0;display:flex;flex-direction:column;align-items:center}
+#end .title{margin-top:250px;font:400 168px/0.92 'Lilita One',sans-serif;text-align:center;letter-spacing:3px;text-shadow:0 10px 0 rgba(0,0,0,.4),0 0 60px rgba(0,0,0,.5)}
+#end .title span{color:#ff6b3d}
+#end .tag{margin-top:26px;font:900 38px Nunito;letter-spacing:5px;color:#cfe8ee}
+#end .btn{position:absolute;top:1330px;padding:26px 64px;border-radius:999px;font:400 66px 'Lilita One',sans-serif;color:#2a0d03;background:linear-gradient(180deg,#ff9165,#ff6b3d 55%,#f0521f);box-shadow:0 10px 0 #c63f17,0 0 60px rgba(255,107,61,.7)}
+#end .search{position:absolute;top:1500px;font:900 40px Nunito;color:#eaf7f5;text-shadow:0 3px 14px rgba(0,0,0,.8)}
+#end .search b{color:#ffcf5a}
+#end img{position:absolute;top:1620px;height:150px}
+</style></head><body>
+<div class="ov small" id="t1" style="top:300px">TONIGHT THE SEA IS QUIET…</div>
+<div class="ov mid" id="t2" style="top:300px">WAIT FOR IT…</div>
+<div class="ov big gold" id="t3" style="top:260px">GOLDEN<br>FISH!</div>
+<div class="ov mid gold" id="t3b" style="top:540px">×10 VALUE</div>
+<div class="ov mid" id="t4" style="top:320px;color:#ffb3a3">1 IN 1000 CASTS…</div>
+<div class="ov big red" id="t5" style="top:250px">LEGEND<br>ON THE LINE</div>
+<div class="ov big" id="t6" style="top:250px">START SMALL.</div>
+<div class="ov big gold" id="t7" style="top:400px">FISH BIG.</div>
+<div id="end">
+  <div class="title">Bobber<br><span>&amp;</span> Brine</div>
+  <div class="tag">IDLE FISHING · FREE TO PLAY</div>
+  <div class="btn" id="btn">PLAY FREE</div>
+  <div class="search">Search <b>“Bobber &amp; Brine”</b> on itch.io</div>
+  <img src="logo.png">
+</div>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const W = 1080, H = 1920, FPS = 30, TOTAL = 21.5;
+// shot times
+const T = { cast: 3.6, release: 4.15, land: 4.75, bite: 6.4, leap: 7.0, leapEnd: 10.4, dark: 10.4, burst: 13.3, win: 14.6, end: 18.0 };
+let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ss = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.95;
+document.body.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, W / H, 0.05, 500);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(W / 2, H / 2), 0.45, 0.4, 0.9);
+composer.addPass(bloom); composer.addPass(new OutputPass());
+
+// ---------- sky ----------
+const skyMat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { top: { value: new THREE.Color('#050d1f') }, hor: { value: new THREE.Color('#1f5872') }, red: { value: 0 } },
+  vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+  fragmentShader: 'uniform vec3 top; uniform vec3 hor; uniform float red; varying vec3 vP; void main(){ float h = clamp(vP.y*2.2,0.,1.); vec3 c = mix(hor, top, pow(h,.6)); c = mix(c, vec3(.35,.04,.03)*(1.-h*.7), red*.8); gl_FragColor = vec4(c,1.); }' });
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(300, 32, 16), skyMat));
+const starG = new THREE.BufferGeometry(); const sp = [];
+for (let i = 0; i < 900; i++) { const a = rnd() * Math.PI * 2, e = 0.08 + rnd() * 1.3; sp.push(Math.cos(a) * Math.cos(e) * 280, Math.sin(e) * 280, Math.sin(a) * Math.cos(e) * 280); }
+starG.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.6, sizeAttenuation: false, fog: false, transparent: true });
+scene.add(new THREE.Points(starG, starMat));
+const moon = new THREE.Mesh(new THREE.SphereGeometry(9, 32, 16), new THREE.MeshBasicMaterial({ color: '#fff4d6', fog: false }));
+moon.position.set(-60, 75, -220); scene.add(moon);
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); const r = g.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(.25, 'rgba(255,255,255,.45)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+const sprite = (color, s, op = 1) => { const m = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity: op, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); m.scale.set(s, s, 1); return m; };
+const moonGlow = sprite('#9fd4ff', 90, .5); moonGlow.position.copy(moon.position); scene.add(moonGlow);
+scene.fog = new THREE.FogExp2('#123247', 0.018);
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight('#7fb4d4', '#0a1a24', 0.9); scene.add(hemi);
+const moonL = new THREE.DirectionalLight('#bcd8ff', .7); moonL.position.set(-30, 40, -60); scene.add(moonL);
+const lanternL = new THREE.PointLight('#ffb35a', 10, 12, 1.6); scene.add(lanternL);
+const fishL = new THREE.PointLight('#ffcf5a', 0, 10, 1.5); scene.add(fishL);
+const redL = new THREE.PointLight('#ff3a1a', 0, 30, 1.2); redL.position.set(0.8, 3, -7); scene.add(redL);
+const rimL = new THREE.DirectionalLight('#ffd0b0', 0); rimL.position.set(-10, 6, -20); scene.add(rimL);
+
+// ---------- water ----------
+const wGeo = new THREE.PlaneGeometry(160, 160, 150, 150); wGeo.rotateX(-Math.PI / 2);
+const wBase = wGeo.attributes.position.array.slice();
+const waterMat = new THREE.MeshStandardMaterial({ color: '#0e4a62', roughness: 0.78, metalness: 0.0, flatShading: true });
+const water = new THREE.Mesh(wGeo, waterMat); scene.add(water);
+const ripplesAt = []; // {x,z,t0,amp}
+function waveH(x, z, t) {
+  let h = Math.sin(x * 0.35 + t * 1.3) * 0.16 + Math.sin(z * 0.42 - t * 1.1) * 0.14 + Math.sin((x + z) * 0.9 + t * 2.1) * 0.05 + Math.sin((x - z) * 1.7 - t * 2.6) * 0.025;
+  for (const r of ripplesAt) { const d = Math.hypot(x - r.x, z - r.z), a = t - r.t0; if (a < 0 || a > 3) continue; const f = d - a * r.sp; if (Math.abs(f) < 1.6) h += Math.cos(f * 4) * r.amp * (1 - a / 3) * Math.exp(-f * f) / (1 + d * .3); }
+  return h;
+}
+function updateWater(t) {
+  const p = wGeo.attributes.position.array;
+  for (let i = 0; i < p.length; i += 3) p[i + 1] = waveH(wBase[i], wBase[i + 2], t);
+  wGeo.attributes.position.needsUpdate = true; wGeo.computeVertexNormals();
+}
+
+// ---------- materials ----------
+const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .7, flatShading: true, ...o });
+const wood = M('#7a4a2a'), wood2 = M('#5c3620'), white = M('#f4f1ea'), orange = M('#ff5a2a', { emissive: '#ff3a10', emissiveIntensity: .25 });
+
+// ---------- dock ----------
+const dock = new THREE.Group(); scene.add(dock);
+for (let i = 0; i < 12; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 0.42), i % 2 ? wood : wood2); b.position.set(0, 0.62, 2.0 + i * 0.47); b.rotation.y = (rnd() - .5) * .03; dock.add(b); }
+for (const x of [-1.2, 1.2]) for (let z = 2.1; z < 8; z += 1.8) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.11, .13, 2.2, 7), wood2); p.position.set(x, -0.3, z); dock.add(p); }
+const post = new THREE.Mesh(new THREE.CylinderGeometry(.06, .07, 1.7, 6), wood2); post.position.set(1.15, 1.45, 2.15); dock.add(post);
+const arm = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, .05), wood2); arm.position.set(.95, 2.27, 2.15); dock.add(arm);
+const lantern = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, .26, 6), new THREE.MeshStandardMaterial({ color: '#ffd27a', emissive: '#ffae40', emissiveIntensity: 1.6 }));
+lantern.position.set(.75, 2.08, 2.15); dock.add(lantern);
+const lGlow = sprite('#ffb04a', 1.1, .45); lGlow.position.copy(lantern.position); dock.add(lGlow);
+lanternL.position.set(.75, 2.0, 2.0);
+// trophy plaque (appears at the end)
+const plaque = new THREE.Group(); plaque.position.set(1.15, 1.25, 2.05);
+plaque.add(new THREE.Mesh(new THREE.BoxGeometry(.5, .34, .05), wood));
+dock.add(plaque);
+
+// ---------- fish builder ----------
+function makeFish(bodyMat, finMat, size = 1, eyeGlow = null) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.5, 14, 10), bodyMat); body.scale.set(1.25, .62, .38); g.add(body);
+  const tailPivot = new THREE.Group(); tailPivot.position.x = -.55; g.add(tailPivot);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.32, .5, 4), finMat); tail.rotation.z = -Math.PI / 2; tail.scale.set(1.2, 1, .25); tail.position.x = -.2; tailPivot.add(tail);
+  const dorsal = new THREE.Mesh(new THREE.ConeGeometry(.16, .4, 3), finMat); dorsal.position.set(-.05, .32, 0); dorsal.rotation.z = .5; dorsal.scale.z = .3; g.add(dorsal);
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), eyeGlow ? new THREE.MeshBasicMaterial({ color: eyeGlow }) : white); eye.position.set(.42, .07, s * .15); g.add(eye);
+    if (!eyeGlow) { const pu = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 4), M('#111')); pu.position.set(.47, .07, s * .19); g.add(pu); }
+    const fin = new THREE.Mesh(new THREE.ConeGeometry(.1, .28, 3), finMat); fin.position.set(.05, -.1, s * .2); fin.rotation.set(s * 1.1, 0, -1.9); fin.scale.z = .3; g.add(fin);
+  }
+  g.scale.setScalar(size); g.userData.tail = tailPivot; return g;
+}
+const goldMat = new THREE.MeshStandardMaterial({ color: '#ffc23a', metalness: .85, roughness: .25, emissive: '#ff9a10', emissiveIntensity: .25, flatShading: true });
+const goldFin = new THREE.MeshStandardMaterial({ color: '#ffe08a', metalness: .6, roughness: .3, emissive: '#ffb020', emissiveIntensity: .6, flatShading: true, side: THREE.DoubleSide });
+const gfish = makeFish(goldMat, goldFin, 1.1); gfish.visible = false; scene.add(gfish);
+const gGlow = sprite('#ffcf5a', 2.4, .3); gfish.add(gGlow);
+const monMat = M('#2c4652', { roughness: .5, emissive: '#3a0a05', emissiveIntensity: .4 });
+const monster = makeFish(monMat, M('#2a1a1a', { side: THREE.DoubleSide }), 6.5, '#ff3a1a'); monster.visible = false; scene.add(monster);
+// monster teeth
+for (let i = 0; i < 7; i++) for (const s of [-1, 1]) { const tooth = new THREE.Mesh(new THREE.ConeGeometry(.025, .09, 4), white); tooth.position.set(.6 - Math.abs(i - 3) * .012, s * .035 - .02, (i - 3) * .045); tooth.rotation.z = s > 0 ? Math.PI : 0; monster.add(tooth); }
+const eyeGlows = [-1, 1].map(s => { const e = sprite('#ff3a1a', .45, 1); e.position.set(.44, .08, s * .16); monster.add(e); return e; });
+
+// monster shadow
+const shTex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d'); const r = g.createRadialGradient(128, 64, 0, 128, 64, 128); r.addColorStop(0, 'rgba(0,0,0,.95)'); r.addColorStop(.5, 'rgba(0,0,0,.6)'); r.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = r; g.scale(1, .5); g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c); })();
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(9, 4), new THREE.MeshBasicMaterial({ map: shTex, transparent: true, depthWrite: false, opacity: 0, fog: false }));
+shadow.rotation.x = -Math.PI / 2; shadow.position.y = .25; scene.add(shadow);
+
+// ---------- angler ----------
+const angler = new THREE.Group(); angler.position.set(-.2, .68, 2.7); scene.add(angler);
+const coat = M('#f5c518'), skin = M('#f2b48c'), pants = M('#2b4a6a'), boot = M('#3a2a20');
+for (const s of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.09, .1, .55, 7), pants); leg.position.set(s * .12, .28, 0); angler.add(leg); const b = new THREE.Mesh(new THREE.BoxGeometry(.16, .1, .26), boot); b.position.set(s * .12, .04, -.04); angler.add(b); }
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(.22, .28, .62, 8), coat); torso.position.y = .86; angler.add(torso);
+const head = new THREE.Mesh(new THREE.SphereGeometry(.19, 12, 9), skin); head.position.y = 1.36; angler.add(head);
+const beard = new THREE.Mesh(new THREE.SphereGeometry(.15, 8, 6), M('#c9c2b5')); beard.position.set(0, 1.27, -.08); beard.scale.set(1, .8, .7); angler.add(beard);
+const hat = new THREE.Group(); hat.position.y = 1.5; angler.add(hat);
+const brim = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .04, 12), coat); hat.add(brim);
+const capT = new THREE.Mesh(new THREE.CylinderGeometry(.18, .21, .17, 10), coat); capT.position.y = .09; hat.add(capT);
+const crown = new THREE.Group(); crown.position.y = 1.5; crown.visible = false; angler.add(crown);
+const goldC = new THREE.MeshStandardMaterial({ color: '#ffcf3a', metalness: .9, roughness: .2, emissive: '#ffa000', emissiveIntensity: .5, flatShading: true });
+const band = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, .1, 10, 1, true), goldC); band.material.side = THREE.DoubleSide; crown.add(band);
+for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, sp2 = new THREE.Mesh(new THREE.ConeGeometry(.05, .14, 4), goldC); sp2.position.set(Math.cos(a) * .19, .11, Math.sin(a) * .19); crown.add(sp2); const gem = new THREE.Mesh(new THREE.SphereGeometry(.025, 6, 4), new THREE.MeshBasicMaterial({ color: ['#ff3a5a', '#5ac8ff', '#5fe08a', '#ff3a5a', '#c58cff'][i] })); gem.position.set(Math.cos(a) * .205, 0, Math.sin(a) * .205); crown.add(gem); }
+const armR = new THREE.Group(); armR.position.set(.24, 1.08, 0); angler.add(armR);
+const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(.07, .08, .45, 6), coat); sleeve.position.set(0, -.12, -.15); sleeve.rotation.x = 1.1; armR.add(sleeve);
+const hand = new THREE.Mesh(new THREE.SphereGeometry(.07, 6, 5), skin); hand.position.set(0, -.2, -.36); armR.add(hand);
+// rod: pivot at the hand, the rod points along -z (forward) then tilts up by rod.rotation.x
+const rod = new THREE.Group(); rod.position.set(0, -.2, -.36); armR.add(rod);
+const rodMesh = new THREE.Mesh(new THREE.CylinderGeometry(.012, .028, 2.8, 6), M('#3a2618')); rodMesh.rotation.x = -Math.PI / 2; rodMesh.position.z = -1.2; rod.add(rodMesh);
+const reel = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .06, 10), M('#aab4bb', { metalness: .8, roughness: .3 })); reel.rotation.z = Math.PI / 2; reel.position.set(0, -.06, .05); rod.add(reel);
+const tipObj = new THREE.Object3D(); tipObj.position.z = -2.6; rod.add(tipObj);
+
+// ---------- bobber ----------
+const bobber = new THREE.Group(); scene.add(bobber);
+const bTop = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), orange); bobber.add(bTop);
+const bBot = new THREE.Mesh(new THREE.SphereGeometry(.13, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), white); bobber.add(bBot);
+const stick = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .14, 5), orange); stick.position.y = .18; bobber.add(stick);
+const bGlow = sprite('#ff7a40', .5, .3); bGlow.position.y = .05; bobber.add(bGlow);
+const BOB = V(.6, 0, -5.5);
+// bang sign over the bobber
+const bang = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#ffcf5a'; g.beginPath(); g.arc(64, 64, 56, 0, 7); g.fill(); g.fillStyle = '#2a1600'; g.font = 'bold 96px sans-serif'; g.textAlign = 'center'; g.fillText('!', 64, 98); const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, fog: false })); s.scale.set(.45, .45, 1); return s; })();
+scene.add(bang);
+
+// fishing line
+const lineMat = new THREE.MeshBasicMaterial({ color: '#e8f4f8', transparent: true, opacity: .8 });
+let lineMesh = null;
+function setLine(a, b, sag) {
+  if (lineMesh) { scene.remove(lineMesh); lineMesh.geometry.dispose(); }
+  const mid = a.clone().lerp(b, .5); mid.y -= sag;
+  lineMesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(a, mid, b), 24, .006, 3), lineMat); scene.add(lineMesh);
+}
+
+// ---------- boats ----------
+const boats = [];
+const hullShape = new THREE.Shape(); hullShape.moveTo(-1, .35); hullShape.lineTo(1.15, .35); hullShape.lineTo(.8, -.15); hullShape.lineTo(-.85, -.15); hullShape.closePath();
+const hullGeo = new THREE.ExtrudeGeometry(hullShape, { depth: .7, bevelEnabled: false }); hullGeo.translate(0, 0, -.35);
+const boatCols = ['#d94a3a', '#2f7fbf', '#f2b134', '#5fae6e', '#e8e2d6', '#8a5fc8'];
+for (let i = 0; i < 16; i++) {
+  const b = new THREE.Group(), a = -2.4 + i * .22 + (rnd() - .5) * .1, r = 9 + (i % 4) * 4.5 + rnd() * 2;
+  b.add(new THREE.Mesh(hullGeo, M(boatCols[i % 6])));
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(.6, .4, .55), white); cabin.position.set(-.2, .55, 0); b.add(cabin);
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.3, 5), wood2); mast.position.set(.35, 1, 0); b.add(mast);
+  const lamp = sprite('#ffb04a', .9, .9); lamp.position.set(.35, 1.65, 0); b.add(lamp);
+  b.position.set(Math.cos(a) * r, 0, -2 + Math.sin(a) * r); b.rotation.y = rnd() * 6;
+  b.userData = { ph: rnd() * 6, rise: .08 * i }; b.visible = false; scene.add(b); boats.push(b);
+}
+
+// ---------- particles ----------
+function makeSpray(n, color, size) {
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(n * 3), 3));
+  const m = new THREE.PointsMaterial({ color, size, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, map: glowTex, fog: false });
+  const p = new THREE.Points(g, m); p.frustumCulled = false; p.userData.v = Array.from({ length: n }, () => [rnd() * 2 - 1, rnd(), rnd() * 2 - 1, rnd()]); scene.add(p); return p;
+}
+const spraySmall = makeSpray(120, '#cfefff', .12), sprayGold = makeSpray(200, '#ffd56a', .14), sprayBig = makeSpray(320, '#d8f2ff', .28), coinsP = makeSpray(160, '#ffcf3a', .22);
+function burst(p, t, t0, o, spd, up, life, g = 9.8) {
+  const pos = p.geometry.attributes.position.array, a = t - t0;
+  p.visible = a >= 0 && a < life; if (!p.visible) return;
+  p.userData.v.forEach(([x, y, z, k], i) => { const s = spd * (.4 + k * .6); pos[i * 3] = o.x + x * s * a; pos[i * 3 + 1] = Math.max(-.5, o.y + (up * (.5 + y) ) * a - .5 * g * a * a); pos[i * 3 + 2] = o.z + z * s * a; });
+  p.material.opacity = 1 - a / life; p.geometry.attributes.position.needsUpdate = true;
+}
+
+// ---------- camera path ----------
+function look(pos, tgt, fov = 50) { camera.position.copy(pos); camera.lookAt(tgt); camera.fov = fov; camera.updateProjectionMatrix(); }
+const shake = (amt, t) => V(Math.sin(t * 57) * amt, Math.sin(t * 43 + 1) * amt, Math.sin(t * 61 + 2) * amt);
+
+// ---------- overlays ----------
+const ov = id => document.getElementById(id);
+function show(id, t, a, b, { pop = true, dy = 0 } = {}) {
+  const el = ov(id), fi = ss(a, a + .25, t), fo = 1 - ss(b - .25, b, t), o = Math.min(fi, fo);
+  el.style.opacity = o; const s = pop ? (t < a + .3 ? .6 + .5 * ss(a, a + .22, t) - .1 * ss(a + .22, a + .3, t) : 1) : 1;
+  el.style.transform = `translateY(${(1 - fi) * 30 + dy}px) scale(${s})`;
+}
+
+// ---------- frame ----------
+window.SNDLOG = [];
+window.draw = function (f) {
+  const t = f / FPS; seed = 1;
+  ripplesAt.length = 0;
+  if (t > T.land) ripplesAt.push({ x: BOB.x, z: BOB.z, t0: T.land, amp: .25, sp: 2.2 });
+  if (t > T.bite) ripplesAt.push({ x: BOB.x, z: BOB.z, t0: T.bite, amp: .2, sp: 2.5 });
+  if (t > T.leap) ripplesAt.push({ x: BOB.x, z: BOB.z, t0: T.leap, amp: .5, sp: 3 });
+  if (t > T.burst) ripplesAt.push({ x: BOB.x, z: BOB.z - 1, t0: T.burst, amp: 1.6, sp: 4.5 });
+  if (t > T.burst + .3) ripplesAt.push({ x: BOB.x, z: BOB.z - 1, t0: T.burst + 1.6, amp: 1.0, sp: 4 });
+  updateWater(t);
+
+  // mood: red during the monster
+  const red = ss(T.dark, T.dark + 1.2, t) * (1 - ss(T.win - .2, T.win + .6, t));
+  skyMat.uniforms.red.value = red; scene.fog.color.set('#123247').lerp(new THREE.Color('#2a0806'), red * .8);
+  waterMat.color.set('#0e4a62').lerp(new THREE.Color('#2a1416'), red * .7);
+  redL.intensity = red * 35 * (0.8 + Math.sin(t * 9) * .2);
+  hemi.intensity = .65 - red * .3; rimL.intensity = monster.visible ? 3 : 0; starMat.opacity = 1 - red * .7;
+  lanternL.intensity = 10 + Math.sin(t * 7) * 1;
+
+  // ---- rod & cast ----
+  let rodA = .95; // radians up from forward
+  if (t > T.cast && t < T.release) rodA = lerp(.95, 2.3, ss(T.cast, T.cast + .35, t)) - (t > T.cast + .35 ? 2.0 * ss(T.cast + .35, T.release, t) : 0);
+  else if (t >= T.release && t < T.bite) rodA = .3 + .25 * ss(T.release, T.land + .4, t);
+  else if (t >= T.bite && t < T.leap + .3) rodA = lerp(.55, 1.4, ss(T.bite + .1, T.leap, t));
+  else if (t >= T.leap + .3 && t < T.dark) rodA = 1.2;
+  else if (t >= T.dark && t < T.win) rodA = .35 + Math.sin(t * 23) * .06 * ss(T.dark + 1.6, T.burst, t) + .7 * ss(T.burst, T.win - .2, t) - (t > T.burst - 1.2 && t < T.burst ? .2 : 0);
+  else if (t >= T.win) rodA = 1.3 + Math.sin(t * 2) * .05;
+  rod.rotation.x = rodA; armR.rotation.x = (rodA - .95) * .35;
+  angler.rotation.z = t > T.dark + 1.6 && t < T.win ? Math.sin(t * 19) * .05 : 0;
+  angler.position.z = 2.7 + (t > T.burst && t < T.win ? -.08 * Math.sin((t - T.burst) * 3) : 0);
+  scene.updateMatrixWorld(true);
+  const tip = tipObj.getWorldPosition(V(0, 0, 0));
+
+  // ---- bobber ----
+  let bp = V(0, 0, 0), showLine = true, sag = .2;
+  if (t < T.release) { bp.copy(tip).add(V(0, -.55, 0)); sag = 0.05; }
+  else if (t < T.land) { const u = (t - T.release) / (T.land - T.release); bp.copy(tip).lerp(BOB, u); bp.y += Math.sin(u * Math.PI) * 2.2; sag = .3 * u; }
+  else { const bob = waveH(BOB.x, BOB.z, t); bp.copy(BOB); bp.y = bob + .02 + Math.sin(t * 3) * .02; if (t > T.bite && t < T.leap) bp.y -= .14 * Math.abs(Math.sin((t - T.bite) * 12)); if (t > T.dark + 1.6 && t < T.burst) { bp.y -= .2; bp.x += Math.sin(t * 13) * .08; } sag = .45; }
+  bobber.position.copy(bp); bobber.visible = !(t > T.leap && t < T.dark) && !(t > T.burst && t < T.win);
+  bobber.rotation.z = t > T.land ? Math.sin(t * 2.3) * .15 : t * 6;
+  bang.visible = (t > T.bite && t < T.leap) || (t > T.dark + 1.6 && t < T.burst);
+  bang.position.copy(bp).add(V(0, .55 + Math.sin(t * 10) * .04, 0)); bang.material.color.set(t > T.dark ? '#ff6a4a' : '#ffffff');
+  bang.scale.setScalar(t > T.dark ? .7 : .45);
+  if (showLine && bobber.visible) setLine(tip, bp.clone().add(V(0, .2, 0)), sag); else if (lineMesh) lineMesh.visible = false;
+
+  // ---- golden fish leap ----
+  const lu = clamp((t - T.leap) / (T.leapEnd - T.leap));
+  const slow = u => u < .2 ? u / .2 * .35 : u < .75 ? .35 + (u - .2) / .55 * .3 : .65 + (u - .75) / .25 * .35; // slow motion in the middle
+  gfish.visible = t > T.leap && t < T.leapEnd;
+  if (gfish.visible) {
+    const s = slow(lu), x = lerp(BOB.x, BOB.x - 2.2, s), y = -0.3 + Math.sin(s * Math.PI) * 3.0, z = lerp(BOB.z, BOB.z + 1.2, s);
+    gfish.position.set(x, y, z);
+    const vy = Math.cos(s * Math.PI); gfish.rotation.set(.3, Math.PI - .5, Math.atan2(vy * 3, 2.2) * -1 + Math.PI * 0);
+    gfish.rotation.z = -Math.atan2(vy * 3, 2.2);
+    gfish.userData.tail.rotation.y = Math.sin(t * 22) * .5;
+    fishL.position.copy(gfish.position); fishL.intensity = 10;
+  } else fishL.intensity = 0;
+  burst(spraySmall, t, T.land, BOB, 1.2, 1.6, 1.1);
+  burst(sprayGold, t, T.leap, V(BOB.x, 0, BOB.z), 2.2, 4.5, 2.4, 4);
+  if (t > T.leap + 1.2 && t < T.leapEnd) { // sparkle trail around the fish
+    const pos = sprayGold.geometry.attributes.position.array; sprayGold.visible = true; sprayGold.material.opacity = .9;
+    sprayGold.userData.v.forEach(([x, y, z, k], i) => { const a = (t * .7 + k) % 1; pos[i * 3] = gfish.position.x + x * .9 + a * 1.4; pos[i * 3 + 1] = gfish.position.y + y * .8 - .4 - a * .6; pos[i * 3 + 2] = gfish.position.z + z * .9; });
+    sprayGold.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // ---- monster ----
+  const sa = clamp((t - T.dark - .6) / (T.burst - T.dark - .6));
+  shadow.material.opacity = (t > T.dark + .3 && t < T.burst + .2 ? .8 * ss(T.dark + .3, T.dark + 1.3, t) : 0);
+  { const ang = sa * Math.PI * 2.4, r = lerp(4.5, .8, sa); shadow.position.set(BOB.x + Math.cos(ang) * r, .25, BOB.z - 1 + Math.sin(ang) * r); shadow.rotation.z = -ang - Math.PI / 2; }
+  monster.visible = t > T.burst - .1 && t < T.win + .2;
+  if (monster.visible) {
+    const u = clamp((t - T.burst) / 1.25), y = -3.5 + Math.sin(Math.min(u, 1) * Math.PI * .62) * 9.5 - (u > .8 ? (u - .8) * 6 : 0);
+    monster.position.set(BOB.x + .3, y, BOB.z - 1.2); monster.rotation.set(0, -1.0, 1.0 - u * .8);
+    monster.userData.tail.rotation.y = Math.sin(t * 14) * .45;
+  }
+  burst(sprayBig, t, T.burst, V(BOB.x, 0, BOB.z - 1), 4.5, 9, 2.4, 9);
+
+  // ---- win / boats / crown / coins ----
+  hat.visible = t < T.win; crown.visible = t >= T.win;
+  boats.forEach(b => { const a = t - T.win - b.userData.rise; b.visible = a > 0; b.position.y = -1.2 + 1.2 * ss(0, .6, a) + Math.sin(t * 1.4 + b.userData.ph) * .08; b.rotation.z = Math.sin(t * 1.1 + b.userData.ph) * .05; });
+  { const pos = coinsP.geometry.attributes.position.array, a = t - T.win; coinsP.visible = a > 0 && t < T.end + .5; coinsP.material.opacity = 1 - ss(T.end - .5, T.end + .5, t);
+    coinsP.userData.v.forEach(([x, y, z, k], i) => { const fall = ((a * (1.2 + k) + y * 6) % 6); pos[i * 3] = x * 5; pos[i * 3 + 1] = 6 - fall; pos[i * 3 + 2] = 1 + z * 4; }); coinsP.geometry.attributes.position.needsUpdate = true; }
+
+  // ---- camera ----
+  let cp, ct, fov = 50;
+  if (t < T.cast) { // glide low over the waves toward the dock
+    const u = ss(0, T.cast, t); cp = V(lerp(6, 2.2, u), lerp(1.2, 2.1, u), lerp(-16, 6.2, u)); ct = V(lerp(0, .2, u), lerp(1.4, 1.5, u), lerp(2, 1.5, u)); fov = 52;
+    // keep it from cutting through the angler: arc around the side
+    cp.x += Math.sin(u * Math.PI) * 4;
+  } else if (t < T.leap) { // over the shoulder, then push toward the bobber
+    const u = ss(T.cast, T.leap, t); cp = V(lerp(-1.5, -.5, u), lerp(2.5, 1.0, u), lerp(5.2, -2.0, u)); ct = V(lerp(.2, BOB.x, u), lerp(1.2, .1, u), lerp(-2, BOB.z, u)); fov = lerp(55, 44, u);
+  } else if (t < T.dark) { // orbit the golden fish
+    const u = ss(T.leap, T.leapEnd, t), ang = lerp(-.9, .9, u), fp = gfish.visible ? gfish.position.clone() : V(BOB.x - 1, 1.5, BOB.z);
+    const c = V(BOB.x - 1.1, 1.3, BOB.z + .6); cp = V(c.x + Math.sin(ang) * 6.5, lerp(.7, 1.9, u), c.z + Math.cos(ang) * 6.5); ct = c.clone().lerp(fp, .5).add(V(0, .4, 0)); fov = 46;
+  } else if (t < T.burst) { // high and looking down at the circling shadow
+    const u = ss(T.dark, T.burst, t); cp = V(lerp(5, 3.5, u), lerp(7, 5.2, u), lerp(-1, -.6, u)); ct = V(BOB.x, 0, BOB.z - .8); fov = 50;
+    cp.add(shake(.04 * u, t));
+  } else if (t < T.win) { // low, the monster bursts out
+    const u = ss(T.burst, T.win, t); cp = V(lerp(8.5, 9.5, u), lerp(.9, 1.4, u), lerp(5.5, 6.5, u)); ct = V(BOB.x, lerp(1.5, 3.8, ss(T.burst, T.burst + .8, t)), BOB.z - 1); fov = 56;
+    cp.add(shake(.22 * (1 - u), t));
+  } else if (t < T.end) { // pull up and back: crown, boats, coins
+    const u = ss(T.win, T.end, t); const v = ss(T.win + .8, T.end, t); cp = V(lerp(-1.5, -4.5, u), lerp(1.75, 5, u), lerp(1.2, 9.5, u)); ct = V(lerp(-.2, -.3, v), lerp(1.9, 1.2, v), lerp(2.7, -1, v)); fov = lerp(40, 55, u);
+  } else { // end card: hero bobber close-up
+    const u = ss(T.end, TOTAL, t); cp = V(BOB.x + lerp(1.4, 1.1, u), lerp(.55, .45, u), BOB.z + lerp(2.3, 1.8, u)); ct = V(BOB.x, .32, BOB.z); fov = 40;
+  }
+  look(cp, ct, fov);
+  if (t >= T.end) { bobber.visible = true; bobber.scale.setScalar(1.9); bobber.rotation.y = t * .8; if (lineMesh) lineMesh.visible = false; bang.visible = false; } else bobber.scale.setScalar(1);
+  bloom.strength = .45 + red * .2 + (t > T.leap && t < T.leapEnd ? .2 : 0);
+
+  // ---- flashes / overlays ----
+  const flash = Math.max(Math.exp(-(t - T.leap) * 6) * (t >= T.leap ? .8 : 0), Math.exp(-(t - T.burst) * 5) * (t >= T.burst ? .9 : 0), Math.exp(-(t - T.win) * 5) * (t >= T.win ? .6 : 0));
+  document.body.style.filter = '';
+  ov('flash').style.opacity = flash; ov('flash').style.background = t >= T.burst && t < T.win ? '#ff5a3d' : '#fff7d6';
+  composer.render();
+  show('t1', t, .5, 3.3, { pop: false });
+  show('t2', t, 4.9, 6.9, { pop: false });
+  show('t3', t, 7.2, 10.2); show('t3b', t, 7.6, 10.2);
+  show('t4', t, 10.9, 12.9, { pop: false });
+  show('t5', t, 13.4, 14.9);
+  show('t6', t, 14.9, 17.8); show('t7', t, 15.9, 17.8);
+  const e = ss(T.end + .1, T.end + .6, t); ov('end').style.opacity = e; ov('end').style.transform = `scale(${lerp(1.08, 1, e)})`;
+  ov('btn').style.transform = `scale(${1 + Math.max(0, Math.sin((t - T.end) * 5)) * .05 * e})`;
+  return t;
+};
+const fl = document.createElement('div'); fl.id = 'flash'; fl.style.cssText = 'position:absolute;inset:0;opacity:0;pointer-events:none;mix-blend-mode:screen'; document.body.appendChild(fl);
+document.fonts.ready.then(() => { window.READY = { total: TOTAL, fps: FPS, T }; });
+</script>
+</body></html>
