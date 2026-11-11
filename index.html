@@ -1277,12 +1277,12 @@ function renderPanel() {
       for (const k of items) {
         const own = !!S.owned[k.id], on = cur === k.id, c = skinCol(k);
         const pill = k.rarity === 'code' ? `${k.plat} exclusive` : k.rarity === 'trophy' ? 'Trophy' : RARITY_NAMES[k.rarity];
-        const how = k.rarity === 'code' ? `Free with the code <b>${k.code}</b> in Settings → Code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
+        const how = k.rarity === 'code' ? `${k.plat} exclusive: follow <b>EinarsGames</b> on ${k.plat} to get the code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
         let btn;
         if (on) btn = '<button class="buy maxed" disabled>Equipped</button>';
         else if (own) btn = `<button class="buy" data-skin-equip="${slot}:${k.id}">Equip</button>`;
         else if (typeof k.rarity === 'number') btn = `<button class="buy gold pbuy" data-skin-buy="${k.id}" data-pcost="${SKIN_PRICE[k.rarity]}"><i class="pearl"></i>${SKIN_PRICE[k.rarity].toLocaleString('en-US')}</button>`;
-        else btn = `<button class="buy" disabled>${k.rarity === 'code' ? 'Code' : 'Locked'}</button>`;
+        else btn = `<button class="buy" disabled>${k.rarity === 'code' ? 'Exclusive' : 'Locked'}</button>`;
         h += `<div class="item ${on ? 'equipped' : ''}" style="--c:${c}"><div class="tile skin-tile">${skinSwatch(slot, k.id)}</div><div class="head"><span class="name">${k.name}</span><span class="rpill" style="--c:${c}">${pill}</span></div><div class="desc">${own ? 'Owned.' : how}</div>${btn}</div>`;
       }
     }
