@@ -42,9 +42,9 @@ The whole shop costs **9,240 pearls**, a long-term collection goal.
 
 | Code | Skin | Type |
 |---|---|---|
-| `TIKTOK` | Neon Bobber (TikTok cyan and pink, glowing) | Bobber |
-| `INSTA` | Sunset Rod (Instagram gradient) | Rod wrap |
-| `YOUTUBE` | Red Captain's Cap (with a gold anchor) | Hat |
+| `BOBBERTOK` | Neon Bobber (TikTok cyan and pink, glowing) | Bobber |
+| `REELGRAM` | Sunset Rod (Instagram gradient) | Rod wrap |
+| `TUBEFISH` | Red Captain's Cap (with a gold anchor) | Hat |
 
 ### Pearl Shop
 

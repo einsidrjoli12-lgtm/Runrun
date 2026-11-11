@@ -820,19 +820,19 @@ const RARITY_NAMES = ['Common', 'Rare', 'Epic', 'Legendary'], RARITY_COL = ['#c3
 const SLOTS = [['bobber', 'Bobbers', 'Classic Bobber'], ['rod', 'Rod wraps', 'Tier colours'], ['hat', 'Hats', "Fisher's Hat"], ['pet', 'Dock companions', 'None'], ['lantern', 'Lanterns', 'Classic Lantern'], ['boat', 'Crew boats', 'Classic Boats'], ['trophy', 'Trophies', 'None']];
 const SKINS = [
   ['lime', 'Lime Bobber', 'bobber', 0], ['ocean', 'Ocean Bobber', 'bobber', 0], ['watermelon', 'Watermelon Bobber', 'bobber', 1], ['glow', 'Glow Bobber', 'bobber', 2], ['duck', 'Rubber Duck', 'bobber', 2], ['golden', 'Golden Bobber', 'bobber', 3],
-  ['neon', 'Neon Bobber', 'bobber', 'code', 'TIKTOK', 'TikTok', '#25f4ee'],
+  ['neon', 'Neon Bobber', 'bobber', 'code', 'BOBBERTOK', 'TikTok', '#25f4ee'],
   ['forest', 'Forest Wrap', 'rod', 0], ['candy', 'Candy Stripe', 'rod', 1], ['ice', 'Ice Rod', 'rod', 2], ['lava', 'Lava Rod', 'rod', 3],
-  ['sunset', 'Sunset Rod', 'rod', 'code', 'INSTA', 'Instagram', '#e1306c'],
+  ['sunset', 'Sunset Rod', 'rod', 'code', 'REELGRAM', 'Instagram', '#e1306c'],
   ['beanie', 'Beanie', 'hat', 0], ['bucket', 'Bucket Hat', 'hat', 0], ['hood', 'Rain Hood', 'hat', 1], ['pirate', 'Pirate Hat', 'hat', 2], ['crown', 'Crown', 'hat', 3],
-  ['captain', "Red Captain's Cap", 'hat', 'code', 'YOUTUBE', 'YouTube', '#ff3b3b'],
+  ['captain', "Red Captain's Cap", 'hat', 'code', 'TUBEFISH', 'YouTube', '#ff3b3b'],
   ['frog', 'Frog', 'pet', 1], ['gull', 'Seagull', 'pet', 1], ['cat', 'Cat', 'pet', 2], ['otter', 'Otter', 'pet', 3],
   ['teal', 'Teal Lantern', 'lantern', 0], ['pink', 'Pink Lantern', 'lantern', 0], ['fireflies', 'Fireflies', 'lantern', 1],
   ['red', 'Red Fleet', 'boat', 0], ['sunny', 'Sunny Fleet', 'boat', 1], ['royal', 'Royal Fleet', 'boat', 2],
   ['mossback', 'Mossback Trophy', 'trophy', 'trophy', 0], ['marlin', 'Marlin Trophy', 'trophy', 'trophy', 4], ['leviathan', 'Leviathan Trophy', 'trophy', 'trophy', 5],
 ].map(([id, name, slot, rarity, a, b, c]) => ({ id, name, slot, rarity, code: rarity === 'code' ? a : null, plat: b, pcol: c, legend: rarity === 'trophy' ? a : null }));
 const SKIN = Object.fromEntries(SKINS.map(k => [k.id, k]));
-// sha256 of the lower-case platform codes
-const CODE_HASH = { '5beeafeac2e27eae5d4ba62590257718673461b2af52383ef7e3a53c7df14306': 'neon', '1c1b3acb877a19945abf4a6d7aef1be60ca834cd599e4b75d5dff774ab4bac17': 'sunset', '24e6654bfd1ab85bebb1f721a4be46e6fdb9ea8974d14442d3aaecd1f971fcbb': 'captain' };
+// sha256 of the lower-case platform codes (the codes themselves are not stored)
+const CODE_HASH = { 'cc3c09c9841b9cc09f37cad4413c2de2f3c6d0331d82d9a6364c750cc4a9510b': 'neon', '8982991afdbf987d0c054a681fd330cb1d50f7efc8f3f20aeba586272d82480c': 'sunset', '3cdfe484837bd394dd97267e1409104ff3cb216ae9419392dc18c48b9785b2a3': 'captain' };
 const skinCol = k => k.rarity === 'code' ? k.pcol : k.rarity === 'trophy' ? '#ff8a4c' : RARITY_COL[k.rarity];
 const skinOn = slot => { const id = S.equip[slot]; return id && S.owned[id] ? id : null; };
 function gainPearls(n) { if (n <= 0) return; S.pearls += n; S.pearlsTotal += n; const el = document.getElementById('pearls'); if (el) el.textContent = fmt(S.pearls); }
