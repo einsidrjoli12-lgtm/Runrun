@@ -586,7 +586,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <li><b>Pearls</b> 🫧, a new currency for cosmetics. Earn them from perfect catches, new species, rare fish, goals, legends and a <b>daily bonus</b>. Pearls never reset.</li>
       <li>A new <b>Skins</b> tab: bobbers, rod wraps, hats, dock companions, lanterns and crew boats, from Common to Legendary.</li>
       <li><b>Trophies</b> for your dock when you land Old Mossback, Grandfather Marlin and The Leviathan.</li>
-      <li><b>Platform codes</b>: follow EinarsGames on TikTok, Instagram and YouTube for codes that unlock exclusive skins. Enter them in Settings → Code.</li>
+      <li><b>Platform codes</b>: follow <b>Bobber &amp; Brine</b> on TikTok and <b>Bobber &amp; Brine Game</b> on Instagram and YouTube for codes that unlock exclusive skins. Enter them in Settings → Code.</li>
       <li>Earlier: <b>personal records</b>, a title screen and How to play (v1.1).</li>
     </ul>
     <p class="code-msg" style="margin:0">Your save carried over. Happy fishing!</p>
@@ -1277,7 +1277,7 @@ function renderPanel() {
       for (const k of items) {
         const own = !!S.owned[k.id], on = cur === k.id, c = skinCol(k);
         const pill = k.rarity === 'code' ? `${k.plat} exclusive` : k.rarity === 'trophy' ? 'Trophy' : RARITY_NAMES[k.rarity];
-        const how = k.rarity === 'code' ? `${k.plat} exclusive: follow <b>EinarsGames</b> on ${k.plat} to get the code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
+        const how = k.rarity === 'code' ? `${k.plat} exclusive: follow <b>${{ TikTok: 'Bobber &amp; Brine', Instagram: 'Bobber &amp; Brine Game', YouTube: 'Bobber &amp; Brine Game' }[k.plat]}</b> on ${k.plat} to get the code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
         let btn;
         if (on) btn = '<button class="buy maxed" disabled>Equipped</button>';
         else if (own) btn = `<button class="buy" data-skin-equip="${slot}:${k.id}">Equip</button>`;
