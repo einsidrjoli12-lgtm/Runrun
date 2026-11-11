@@ -20,7 +20,7 @@ On TikTok you can keep the game audio, or add a trending sound and turn the orig
 
 ## TikTok / Shorts caption
 
-> I made a fishing game where a 700 kg marlin can break your line 🎣 Bobber & Brine, free to play in your browser (link in bio)
+> I made a fishing game where a 700 kg marlin can break your line 🎣 Bobber & Brine, free to play in your browser. Search “Bobber & Brine” on itch.io
 >
 > #indiegame #gamedev #fishing #idlegame #browsergame #cozygames #indiedev #fishinggame
 
@@ -39,6 +39,6 @@ On TikTok you can keep the game audio, or add a trending sound and turn the orig
 
 ## Tips
 
-- Pin a comment with the itch.io link on YouTube, and put it in your TikTok bio, since TikTok captions can't hold clickable links.
+- Pin a comment with the itch.io link on YouTube. On TikTok, tell people to search “Bobber & Brine” on itch.io, in the caption and in your bio text.
 - Post the vertical version to TikTok, Shorts and Reels on the same day.
 - The first 2 seconds decide whether people keep watching, so the vertical trailer opens on the monster fight.
