@@ -496,6 +496,41 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .toast:nth-last-child(n+3) { display: none; }
 }
 @media (max-width: 919px) { .tabs button .long { display: none; } .goalbar { padding: 4px 10px; font-size: .74rem; } }
+
+/* phones: a calmer layout. One header row of stats, small scene labels, icon-only abilities, toasts at the top */
+@media (max-width: 919px) {
+  .loc-badge, .effects { transition: opacity .2s; }
+  .scene.bannering .loc-badge, .scene.bannering .effects { opacity: 0; }
+  .wrap { padding-bottom: 16px; }
+  .copy { font-size: 9px; bottom: max(3px, env(safe-area-inset-bottom, 0px)); }
+  .toasts { top: calc(var(--hdr, 80px) + 6px); bottom: auto; left: 50%; right: auto; transform: translateX(-50%); width: max-content; }
+  .toast:nth-last-child(n+2) { display: none; }
+}
+@media (max-width: 520px) {
+  header.top { padding: 6px 6px 6px 10px; gap: 6px 8px; }
+  .brand { font-size: 1.15rem; gap: 7px; } .brand svg { width: 24px; height: 24px; }
+  #musicBtn, #sfxBtn { display: none; }
+  .tog { width: 30px; height: 30px; } .tog svg { width: 16px; height: 16px; }
+  .you-chip { display: none; }
+  .fame-chip.zero { display: none; }
+  .stats { justify-content: space-between; }
+  .cash { font-size: 1.15rem; }
+  .loc-badge { left: 8px; top: 8px; padding: 3px 9px 3px 6px; gap: 5px; font-size: .68rem; }
+  .loc-badge i { width: 7px; height: 7px; }
+  .loc-badge small { display: none; }
+  .effects { right: 8px; top: 8px; gap: 4px; }
+  .fx-chip { padding: 2px 7px; gap: 4px; font-size: .64rem; }
+  .fx-chip svg { width: 11px; height: 11px; }
+  .fx-chip .xl { display: none; }
+  .skillbar { gap: 6px; }
+  .skill { justify-content: center; gap: 5px; padding: 3px 4px; }
+  .skill .ic { width: 22px; height: 22px; }
+  .skill .nm { font-size: 0; }
+  .skill .nm small { font-size: .66rem; color: var(--fg); }
+  .goalbar { padding: 3px 10px; }
+  .action { padding: 7px 14px; font-size: 1.05rem; }
+}
+@media (max-width: 400px) { .tabs button { font-size: .6rem; letter-spacing: -.2px; } }
 </style>
 </head>
 <body>
@@ -509,10 +544,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </div>
     <div class="stats">
       <div class="cash-chip"><div class="coin">$</div><div class="cash" id="cash">$0</div></div>
-      <div class="chip" title="Your fishing income per second (last minute)"><span data-icon="hook"></span><b id="youRate">$0</b>/s</div>
+      <div class="chip you-chip" title="Your fishing income per second (last minute)"><span data-icon="hook"></span><b id="youRate">$0</b>/s</div>
       <div class="chip" title="Crew income per second"><span data-icon="crew"></span><b id="rate">$0</b>/s</div>
       <div class="chip pchip" id="pearlChip" title="Pearls: spend them in the Skins tab"><i class="pearl"></i><b id="pearls">0</b></div>
-      <div class="chip" title="Fame stars"><span data-icon="star" style="color:var(--gold)"></span><b id="fame">0</b></div>
+      <div class="chip fame-chip" id="fameChip" title="Fame stars"><span data-icon="star" style="color:var(--gold)"></span><b id="fame">0</b></div>
     </div>
     <div class="toggles">
       <span class="dev-badge" title="Developer mode is on">DEV</span>
@@ -1200,7 +1235,7 @@ function updateHeader() {
   $('pearls').textContent = fmt(S.pearls);
   $('youRate').textContent = money(youRate());
   $('rate').textContent = money(crewRate());
-  $('fame').textContent = S.fame;
+  $('fame').textContent = S.fame; $('fameChip').classList.toggle('zero', !S.fame);
 }
 function tickCash(dt) {
   if (S.cash < dispCash || Math.abs(S.cash - dispCash) < 0.01) dispCash = S.cash;
@@ -1440,13 +1475,14 @@ $('skillbar').addEventListener('click', e => {
 
 function updateEffects() {
   const chips = [];
-  if (active('storm')) chips.push(['storm', '#8fb4ff', `Storm ${Math.ceil(left('storm'))}s · rare ×${stormMult()}`]);
-  if (active('golden')) chips.push(['sun', '#ffcf5a', `Golden Hour ${Math.ceil(left('golden'))}s`]);
+  if (active('storm')) chips.push(['storm', '#8fb4ff', `Storm ${Math.ceil(left('storm'))}s<span class="xl"> · rare</span> ×${stormMult()}`]);
+  if (active('golden')) chips.push(['sun', '#ffcf5a', `Golden<span class="xl"> Hour</span> ${Math.ceil(left('golden'))}s`]);
   if (active('chum')) chips.push(['chum', '#ff8a5c', `Chum ${Math.ceil(left('chum'))}s`]);
   if (active('frenzy')) chips.push(['frenzy', '#c58cff', `Frenzy ${Math.ceil(left('frenzy'))}s`]);
   if (S.sonar > 0) chips.push(['sonar', '#5cd6ff', `Sonar ×${S.sonar}`]);
   const html = chips.map(([i, c, t]) => `<div class="fx-chip" style="--c:${c}">${icon(i)}${t}</div>`).join('');
   const el = $('effects'); if (el.innerHTML !== html) el.innerHTML = html;
+  $('scene').classList.toggle('bannering', !!bannerObj); // hide the corner labels while a big banner shows
 }
 
 $('tabs').addEventListener('click', e => {
@@ -1814,6 +1850,7 @@ function resize() {
   stars = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.36, r: Math.random() * 1.3 + 0.3, p: Math.random() * 6 }));
   swimmers = Array.from({ length: 6 }, () => newSwimmer(true)); // re-place fish under the new horizon (e.g. after rotating a phone)
   buildScene();
+  document.documentElement.style.setProperty('--hdr', Math.round(document.querySelector('header.top').getBoundingClientRect().bottom) + 'px');
 }
 const horizon = () => H * 0.38;
 const dockY = () => H * 0.66;
@@ -2419,7 +2456,7 @@ function draw(time) {
   });
   if (S.crew.hands > 7) {
     ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font = '800 11px Nunito, sans-serif';
-    ctx.fillText('+' + fmt(S.crew.hands - 7) + ' more boats', W - 112, hz + 48);
+    if (W >= 520) ctx.fillText('+' + fmt(S.crew.hands - 7) + ' more boats', W - 112, hz + 48);
   }
   // fish leaping near crew boats (more during a frenzy)
   if (active('frenzy') && boats.length && Math.random() < dtFrame * 6) { const b = boats[Math.floor(Math.random() * boats.length)]; jumpers.push({ x: b.x + rnd(-20, 20), y: b.y + 6, t: 0, dir: Math.random() < 0.5 ? 1 : -1, size: 6 }); }
@@ -2645,7 +2682,7 @@ function drawBanner() {
   const age = b.max - b.life;
   const s = age < 0.25 ? 0.4 + (age / 0.25) * 0.75 : age < 0.4 ? 1.15 - (age - 0.25) / 0.15 * 0.15 : 1;
   const a = Math.min(1, b.life / 0.4);
-  ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, H * 0.3); ctx.scale(s, s);
+  ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, Math.max(H * 0.3, Math.min(64, H * 0.45))); ctx.scale(s, s);
   const bw = Math.min(W * 0.86, 460);
   const g = ctx.createLinearGradient(-bw / 2, 0, bw / 2, 0);
   g.addColorStop(0, 'rgba(4,14,22,0)'); g.addColorStop(0.2, 'rgba(4,14,22,0.75)'); g.addColorStop(0.8, 'rgba(4,14,22,0.75)'); g.addColorStop(1, 'rgba(4,14,22,0)');
