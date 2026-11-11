@@ -44,7 +44,7 @@ Also add the link under **Basic info → Links** (title: "Play Bobber & Brine fr
 >
 > All music and sound effects in the game are generated live in your browser.
 >
-> Made by Einar's Games: https://einarsgames.itch.io
+> Made by EinarGames: https://einarsgames.itch.io
 >
 > #indiegame #fishinggame #idlegame #browsergame #gamedev
 
