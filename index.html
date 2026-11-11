@@ -371,6 +371,68 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .bigstat { font-family: var(--display); font-size: 2.2rem; color: var(--gold); line-height: 1; text-shadow: 0 0 18px rgba(255, 207, 90, .45); }
 .section-note { padding: 10px 12px; border-radius: 14px; background: rgba(92, 214, 255, .08); border: 1px dashed rgba(92, 214, 255, .3); color: var(--muted); font-size: .84rem; }
 
+/* ---- title screen ---- */
+.title {
+  position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: radial-gradient(900px 600px at 50% 35%, rgba(92,214,255,.22), transparent 65%), linear-gradient(180deg, #123a52 0%, #071a26 60%, #04121b 100%);
+  cursor: pointer; transition: opacity .45s, transform .45s;
+}
+.title.leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.title .bob { width: clamp(84px, 14vh, 140px); filter: drop-shadow(0 10px 26px rgba(255,107,61,.55)); animation: tbob 2.4s ease-in-out infinite; }
+@keyframes tbob { 50% { transform: translateY(-10px) rotate(-5deg); } }
+.title .ripple { width: clamp(150px, 26vh, 260px); height: 24px; margin-top: -18px; border-radius: 50%; border: 3px solid rgba(200,240,255,.35); animation: tr 2.4s ease-in-out infinite; }
+@keyframes tr { 50% { transform: scale(1.15); opacity: .5; } }
+.title h1 { margin: 0; font: 400 clamp(46px, 11vw, 104px)/1 var(--display); letter-spacing: 1px; color: #fff; text-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 40px rgba(0,0,0,.4); }
+.title h1 span { color: var(--buoy); }
+.title .tag { color: var(--gold); font-weight: 900; letter-spacing: 5px; text-transform: uppercase; font-size: clamp(12px, 2.2vw, 17px); }
+.title .start {
+  margin-top: 18px; font: 400 clamp(22px, 4vw, 32px) var(--display); letter-spacing: 1px; color: #2a0d03; border: 0; cursor: pointer;
+  padding: 16px 44px; border-radius: 18px; background: linear-gradient(180deg, #ff9165, var(--buoy) 55%, #f0521f);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.45), 0 6px 0 var(--buoy-deep), 0 0 40px rgba(255,107,61,.45); animation: tpulse 1.1s ease-in-out infinite;
+}
+@keyframes tpulse { 50% { transform: scale(1.06); box-shadow: inset 0 2px 0 rgba(255,255,255,.45), 0 6px 0 var(--buoy-deep), 0 0 60px rgba(255,107,61,.7); } }
+.title .foot { position: absolute; left: 0; right: 0; bottom: max(18px, env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.title .ver { color: var(--muted); font: 800 .8rem var(--body); letter-spacing: 1px; }
+.studio { display: inline-flex; align-items: center; gap: 10px; }
+.studio img { width: 40px; height: 40px; }
+.studio b { font: 400 1.5rem var(--display); color: #fff; letter-spacing: .5px; }
+.studio b span { color: var(--buoy); }
+@media (prefers-reduced-motion: reduce) { .title .bob, .title .ripple, .title .start { animation: none; } }
+@media (max-height: 560px) { .title { gap: 8px; } .title .start { margin-top: 6px; padding: 12px 34px; } .title .foot { position: static; margin-top: 10px; } }
+
+/* ---- info sheets (how to play, what's new) and records ---- */
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: st; }
+.steps li { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; align-items: start; font-weight: 700; font-size: .92rem; line-height: 1.4; }
+.steps li::before { counter-increment: st; content: counter(st); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--buoy); color: #2a0d03; font: 400 1.05rem var(--display); }
+.steps b { color: var(--gold); }
+.news { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-weight: 700; font-size: .92rem; line-height: 1.4; }
+.news b { color: var(--gold); }
+.sheet .cta { width: 100%; font-size: 1.05rem; padding: 13px; }
+.credits { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; text-align: center; }
+.credits .studio img { width: 56px; height: 56px; }
+.credits .studio b { font-size: 1.9rem; }
+.credits p { margin: 0; color: var(--muted); font-weight: 800; }
+.recs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 8px; }
+.rec { padding: 10px 12px; border-radius: 12px; background: var(--glass-2); border: 1px solid var(--edge); min-width: 0; }
+.rec small { display: block; color: var(--muted); font-weight: 800; font-size: .72rem; letter-spacing: .6px; text-transform: uppercase; }
+.rec b { display: block; font: 400 1.15rem var(--display); letter-spacing: .3px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec span { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.counts { display: flex; flex-wrap: wrap; gap: 6px; }
+.counts span { padding: 5px 10px; border-radius: 999px; background: var(--glass-2); border: 1px solid var(--edge); font-weight: 800; font-size: .8rem; color: var(--muted); }
+.counts b { color: var(--gold); }
+.fast { display: grid; gap: 4px; }
+.fast div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 12px; border-radius: 10px; background: var(--glass); font-weight: 800; font-size: .84rem; }
+.fast div span:last-child { color: var(--gold); font-variant-numeric: tabular-nums; }
+.fast div.none span:last-child { color: var(--muted); }
+/* itch.io's 960x600 embed (and other narrow desktops): fit all seven tabs */
+@media (min-width: 920px) and (max-width: 1180px) {
+  .tabs { padding: 6px; gap: 2px; }
+  .tabs button { flex: 1 1 0; min-width: 0; padding: 6px 2px; font-size: .64rem; letter-spacing: 0; }
+  .tabs button svg { width: 18px; height: 18px; }
+  .tabs button .long { display: none; }
+}
+
 .toasts { position: fixed; z-index: 20; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; pointer-events: none; max-width: min(360px, calc(100vw - 24px)); }
 .toast { display: flex; gap: 10px; align-items: flex-start; background: rgba(6, 22, 32, .92); border: 1px solid var(--edge-hi); padding: 10px 14px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.5), 0 0 20px color-mix(in srgb, var(--tc, var(--gold)) 25%, transparent); animation: tin .3s cubic-bezier(.2, 1.4, .4, 1); font-weight: 700; backdrop-filter: blur(8px); }
 .toast svg { width: 20px; height: 20px; flex: none; color: var(--tc, var(--gold)); margin-top: 1px; }
@@ -473,6 +535,43 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   </div>
 </div>
 <div class="toasts" id="toasts"></div>
+<div class="title" id="title" role="dialog" aria-label="Bobber &amp; Brine title screen">
+  <svg class="bob" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2v8" stroke="#eaf7f5" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="22" r="12" fill="#fff"/><path d="M8 22a12 12 0 0 1 24 0z" fill="#ff6b3d"/><rect x="18" y="8" width="4" height="4" rx="1" fill="#ff6b3d"/><ellipse cx="15" cy="17" rx="3" ry="2" fill="#fff" opacity=".5"/></svg>
+  <div class="ripple"></div>
+  <h1>Bobber <span>&amp;</span> Brine</h1>
+  <div class="tag">Cast a line. Hook a legend.</div>
+  <button class="start" id="startBtn">Tap to start</button>
+  <div class="foot"><span class="studio"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii00IC00IDEwOCAxMTIiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJmYWNlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZiNjg1Ii8+PHN0b3Agb2Zmc2V0PSIuNDUiIHN0b3AtY29sb3I9IiNmZjdhNDUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlMjQ2MWMiLz48L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYjgzNjBmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjN2QyMTA4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ibGlnaHQiIGN4PSIyOCUiIGN5PSIyMiUiIHI9Ijc1JSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii40NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Imdsb3NzIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii41NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGV0dGVyIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZlN2Q4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiOCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNmZmNmNWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmMGEyMWEiLz48L2xpbmVhckdyYWRpZW50PgogICAgPHBhdHRlcm4gaWQ9ImRvdHMiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjMiIGN5PSIzIiByPSIuOSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjEzIi8+PC9wYXR0ZXJuPgogICAgPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj48ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iNCIgc3RkRGV2aWF0aW9uPSIzLjUiIGZsb29kLWNvbG9yPSIjM2ExMDA0IiBmbG9vZC1vcGFjaXR5PSIuNDUiLz48L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3ciIHg9Ii02MCUiIHk9Ii02MCUiIHdpZHRoPSIyMjAlIiBoZWlnaHQ9IjIyMCUiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNCIgcmVzdWx0PSJiIi8+PGZlTWVyZ2U+PGZlTWVyZ2VOb2RlIGluPSJiIi8+PGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIi8+PC9mZU1lcmdlPjwvZmlsdGVyPgogICAgPGNsaXBQYXRoIGlkPSJjbGlwIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxnIGZpbHRlcj0idXJsKCNzaGFkb3cpIj4KICAgIDxyZWN0IHg9IjIiIHk9IjgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2Jhc2UpIi8+ICAgICAgICAgICAgPCEtLSB0aGljayBidXR0b24gYmFzZSAtLT4KICAgIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2ZhY2UpIi8+CiAgICA8ZyBjbGlwLXBhdGg9InVybCgjY2xpcCkiPgogICAgICA8cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9InVybCgjZG90cykiLz4KICAgICAgPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSJ1cmwoI2xpZ2h0KSIvPgogICAgICA8cGF0aCBkPSJNMiAyIEg5OCBWNDAgUTUwIDU2IDIgNDAgWiIgZmlsbD0idXJsKCNnbG9zcykiIG9wYWNpdHk9Ii41NSIvPiAgIDwhLS0gZ2xvc3N5IHRvcCAtLT4KICAgIDwvZz4KICAgIDxyZWN0IHg9IjMuNSIgeT0iMy41IiB3aWR0aD0iOTMiIGhlaWdodD0iOTMiIHJ4PSIyNC41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmQyYjgiIHN0cm9rZS1vcGFjaXR5PSIuNyIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8L2c+CiAgPCEtLSBleHRydWRlZCBFOiBkYXJrIGxheWVycyBzdGVwcGluZyBkb3duLXJpZ2h0LCB0aGVuIHRoZSBicmlnaHQgZmFjZSAtLT4KICA8ZyBmaWxsPSIjOWUyYzBhIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIuNCAyLjQpIj48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSIxMyIgaGVpZ2h0PSI1NCIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iNjMiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS42IDEuNikiPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjEzIiBoZWlnaHQ9IjU0IiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSI2MyIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjwvZz48L2c+CiAgPGcgZmlsbD0iIzllMmMwYSIgc3Ryb2tlPSIjOWUyYzBhIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHBhdGggZD0iTTQ2IDQwLjUgTDcwIDQ5IEw0NiA1Ny41IFoiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvZz4KICA8ZyBmaWxsPSJ1cmwoI2xldHRlcikiIHN0cm9rZT0iI2M4NGExYyIgc3Ryb2tlLXdpZHRoPSIuOCI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPgogIDxnIGZpbHRlcj0idXJsKCNnbG93KSI+PGcgZmlsbD0idXJsKCNnb2xkKSIgc3Ryb2tlPSIjZmZjZjVhIj48cGF0aCBkPSJNNDYgNDAuNSBMNzAgNDkgTDQ2IDU3LjUgWiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9nPjwvZz4KICA8cGF0aCBkPSJNNDkuNSA0NSBMNTggNDgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjc1Ii8+CiAgPHJlY3QgeD0iMjkuNSIgeT0iMjQiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPgogIDxwYXRoIGQ9Ik04NCAxMCBRODUuMDggMTQuOTIgOTAgMTYgUTg1LjA4IDE3LjA4IDg0IDIyIFE4Mi45MiAxNy4wOCA3OCAxNiBRODIuOTIgMTQuOTIgODQgMTBaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjk1Ii8+PHBhdGggZD0iTTkwIDI1IFE5MC41NCAyNy40NiA5MyAyOCBROTAuNTQgMjguNTQgOTAgMzEgUTg5LjQ2IDI4LjU0IDg3IDI4IFE4OS40NiAyNy40NiA5MCAyNVoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOCIvPjxwYXRoIGQ9Ik0xNCA3OS41IFExNC44MSA4My4xOSAxOC41IDg0IFExNC44MSA4NC44MSAxNCA4OC41IFExMy4xOSA4NC44MSA5LjUgODQgUTEzLjE5IDgzLjE5IDE0IDc5LjVaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjc1Ii8+Cjwvc3ZnPg==" alt=""><b>Einars<span>Games</span></b></span><div class="ver" id="titleVer"></div></div>
+</div>
+<div class="modal" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="helpTitle"><span data-icon="hook"></span>How to play</h2><button class="close" data-close="help" aria-label="Close">✕</button></div>
+    <ol class="steps">
+      <li><span><b>Tap the water</b> (or press Space) to cast your line.</span></li>
+      <li><span>Wait for the bobber to dip and the <b>!</b> to appear, then tap for a <b>perfect catch</b>. Tap too early and the fish swims off.</span></li>
+      <li><span>Every fish earns money. Spend it in the shop on <b>tackle</b>, a <b>crew</b> that fishes for you, <b>specials</b> and new <b>waters</b>.</span></li>
+      <li><span>Sometimes a <b>legendary monster</b> bites. Tap as fast as you can to fill the meter before it snaps your line.</span></li>
+      <li><span>Finish <b>goals</b> for permanent income bonuses, and <b>retire</b> once you've earned $1B to start a stronger career.</span></li>
+      <li><span>Keys <b>1–4</b> fire your abilities. Your progress saves automatically.</span></li>
+    </ol>
+    <button class="buy cta" data-close="help">Let's fish!</button>
+  </div>
+</div>
+<div class="modal" id="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.1</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <ul class="news">
+      <li><b>Title screen</b> with a Tap to start button. Music starts right away.</li>
+      <li><b>Personal records</b> at the top of the Logbook: biggest catch, heaviest legend, best career, play time, catch counts and your fastest time to each water.</li>
+      <li><b>New record!</b> pop-ups when you reach a water faster than ever. Records stay when you retire.</li>
+      <li><b>How to play</b> guide, in Settings any time.</li>
+      <li><b>Credits</b> and this What's new list, also in Settings.</li>
+      <li>Shop tabs now <b>fit on itch.io</b>, so Retire is no longer cut off.</li>
+    </ul>
+    <p class="code-msg" style="margin:0">Your save carried over. Happy fishing!</p>
+    <button class="buy cta" data-close="news">Got it</button>
+  </div>
+</div>
 <div class="modal" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
   <div class="sheet">
     <div class="sheet-head"><h2 id="settingsTitle"><span data-icon="gear"></span>Settings <small class="ver" id="verTag"></small></h2><button class="close" id="closeSettings" aria-label="Close settings">✕</button></div>
@@ -523,10 +622,15 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div class="code-msg" id="backupMsg" aria-live="polite"></div>
     </div>
     <div class="group">
+      <h4>Help</h4>
+      <div class="dev-row"><button class="buy" id="helpBtn" type="button">How to play</button><button class="buy ghost" id="newsBtn" type="button">What's new</button></div>
+    </div>
+    <div class="group">
       <h4>Save</h4>
       <div class="switch-row"><span>Progress saves in this browser automatically.</span><button class="buy ghost" id="wipeBtn">Wipe save</button></div>
       <div class="code-msg" id="verLine"></div>
     </div>
+    <div class="group credits"><span class="studio"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii00IC00IDEwOCAxMTIiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJmYWNlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZiNjg1Ii8+PHN0b3Agb2Zmc2V0PSIuNDUiIHN0b3AtY29sb3I9IiNmZjdhNDUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlMjQ2MWMiLz48L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYjgzNjBmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjN2QyMTA4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ibGlnaHQiIGN4PSIyOCUiIGN5PSIyMiUiIHI9Ijc1JSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii40NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Imdsb3NzIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii41NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGV0dGVyIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZlN2Q4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiOCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNmZmNmNWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmMGEyMWEiLz48L2xpbmVhckdyYWRpZW50PgogICAgPHBhdHRlcm4gaWQ9ImRvdHMiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjMiIGN5PSIzIiByPSIuOSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjEzIi8+PC9wYXR0ZXJuPgogICAgPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj48ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iNCIgc3RkRGV2aWF0aW9uPSIzLjUiIGZsb29kLWNvbG9yPSIjM2ExMDA0IiBmbG9vZC1vcGFjaXR5PSIuNDUiLz48L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3ciIHg9Ii02MCUiIHk9Ii02MCUiIHdpZHRoPSIyMjAlIiBoZWlnaHQ9IjIyMCUiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNCIgcmVzdWx0PSJiIi8+PGZlTWVyZ2U+PGZlTWVyZ2VOb2RlIGluPSJiIi8+PGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIi8+PC9mZU1lcmdlPjwvZmlsdGVyPgogICAgPGNsaXBQYXRoIGlkPSJjbGlwIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxnIGZpbHRlcj0idXJsKCNzaGFkb3cpIj4KICAgIDxyZWN0IHg9IjIiIHk9IjgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2Jhc2UpIi8+ICAgICAgICAgICAgPCEtLSB0aGljayBidXR0b24gYmFzZSAtLT4KICAgIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2ZhY2UpIi8+CiAgICA8ZyBjbGlwLXBhdGg9InVybCgjY2xpcCkiPgogICAgICA8cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9InVybCgjZG90cykiLz4KICAgICAgPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSJ1cmwoI2xpZ2h0KSIvPgogICAgICA8cGF0aCBkPSJNMiAyIEg5OCBWNDAgUTUwIDU2IDIgNDAgWiIgZmlsbD0idXJsKCNnbG9zcykiIG9wYWNpdHk9Ii41NSIvPiAgIDwhLS0gZ2xvc3N5IHRvcCAtLT4KICAgIDwvZz4KICAgIDxyZWN0IHg9IjMuNSIgeT0iMy41IiB3aWR0aD0iOTMiIGhlaWdodD0iOTMiIHJ4PSIyNC41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmQyYjgiIHN0cm9rZS1vcGFjaXR5PSIuNyIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8L2c+CiAgPCEtLSBleHRydWRlZCBFOiBkYXJrIGxheWVycyBzdGVwcGluZyBkb3duLXJpZ2h0LCB0aGVuIHRoZSBicmlnaHQgZmFjZSAtLT4KICA8ZyBmaWxsPSIjOWUyYzBhIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIuNCAyLjQpIj48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSIxMyIgaGVpZ2h0PSI1NCIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iNjMiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS42IDEuNikiPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjEzIiBoZWlnaHQ9IjU0IiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSI2MyIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjwvZz48L2c+CiAgPGcgZmlsbD0iIzllMmMwYSIgc3Ryb2tlPSIjOWUyYzBhIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHBhdGggZD0iTTQ2IDQwLjUgTDcwIDQ5IEw0NiA1Ny41IFoiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvZz4KICA8ZyBmaWxsPSJ1cmwoI2xldHRlcikiIHN0cm9rZT0iI2M4NGExYyIgc3Ryb2tlLXdpZHRoPSIuOCI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPgogIDxnIGZpbHRlcj0idXJsKCNnbG93KSI+PGcgZmlsbD0idXJsKCNnb2xkKSIgc3Ryb2tlPSIjZmZjZjVhIj48cGF0aCBkPSJNNDYgNDAuNSBMNzAgNDkgTDQ2IDU3LjUgWiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9nPjwvZz4KICA8cGF0aCBkPSJNNDkuNSA0NSBMNTggNDgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjc1Ii8+CiAgPHJlY3QgeD0iMjkuNSIgeT0iMjQiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPgogIDxwYXRoIGQ9Ik04NCAxMCBRODUuMDggMTQuOTIgOTAgMTYgUTg1LjA4IDE3LjA4IDg0IDIyIFE4Mi45MiAxNy4wOCA3OCAxNiBRODIuOTIgMTQuOTIgODQgMTBaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjk1Ii8+PHBhdGggZD0iTTkwIDI1IFE5MC41NCAyNy40NiA5MyAyOCBROTAuNTQgMjguNTQgOTAgMzEgUTg5LjQ2IDI4LjU0IDg3IDI4IFE4OS40NiAyNy40NiA5MCAyNVoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOCIvPjxwYXRoIGQ9Ik0xNCA3OS41IFExNC44MSA4My4xOSAxOC41IDg0IFExNC44MSA4NC44MSAxNCA4OC41IFExMy4xOSA4NC44MSA5LjUgODQgUTEzLjE5IDgzLjE5IDE0IDc5LjVaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjc1Ii8+Cjwvc3ZnPg==" alt=""><b>Einars<span>Games</span></b></span><p>Created by EinarsGames</p></div>
   </div>
 </div>
 
@@ -535,7 +639,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 'use strict';
 
 // Game version: bump this with every update you upload (shown in Settings, and stored in saves and backups).
-const VERSION = '1.0.1';
+const VERSION = '1.1';
 
 /* ---------- Icons (24px stroke icons) ---------- */
 const ICONS = {
@@ -760,6 +864,8 @@ const fresh = () => ({
   crew: { hands: 0, speed: 0, skill: 0 },
   sp: {}, cd: {}, until: {}, sonar: 0, nextStorm: 0,
   log: {}, monsters: {}, catches: 0, perfects: 0, goldens: 0, treasures: 0, stormCatches: 0, early: 0, sinceMonster: 0, goals: {},
+  careerTime: 0, seenHelp: false, seenVer: '',
+  rec: { bestCatch: null, bestLegend: null, bestCareer: 0, fastest: {} },
   lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true, dev: false,
   set: { master: 80, musicVol: 60, sfxVol: 100, shake: true, flash: true, numbers: true },
 });
@@ -774,6 +880,13 @@ function merge(data) {
   base.unlocked = LOCS.map((_, i) => i === 0 || !!(data.unlocked && data.unlocked[i]));
   for (const k of ['log', 'monsters', 'sp', 'cd', 'until', 'goals']) base[k] = data[k] || {};
   base.set = Object.assign(fresh().set, data.set || {});
+  base.rec = Object.assign(fresh().rec, data.rec || {}); base.rec.fastest = base.rec.fastest || {};
+  // saves from before records: rebuild what we can from the logbook and legends
+  if (!data.rec) {
+    for (const [k, e] of Object.entries(base.log)) { const [li, fi] = k.split(':').map(Number), f = LOCS[li] && LOCS[li].fish[fi]; if (f && (!base.rec.bestCatch || e.best > base.rec.bestCatch.w)) base.rec.bestCatch = { w: e.best, name: f[0] }; }
+    for (const [li, e] of Object.entries(base.monsters)) if (MONSTERS[li] && (!base.rec.bestLegend || e.best > base.rec.bestLegend.w)) base.rec.bestLegend = { w: e.best, name: MONSTERS[li].name };
+    base.rec.bestCareer = base.runEarned || 0;
+  }
   return base;
 }
 function load() {
@@ -795,6 +908,7 @@ function fmt(n) {
   return (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : Math.floor(n)) + SUFFIX[i];
 }
 const money = n => '$' + fmt(n);
+const fmtTime = sec => { sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s2 = sec % 60; return h ? `${h}h ${m}m` : m ? `${m}m ${s2}s` : `${s2}s`; };
 const fx = n => n < 1000 ? (n < 10 ? n.toFixed(2) : n.toFixed(1)) : fmt(n);
 const pct = n => (Math.min(1, n) * 100).toFixed(n < 0.1 ? 1 : 0) + '%';
 const kg = w => w < 1 ? Math.round(w * 1000) + ' g' : w.toFixed(w < 10 ? 2 : 1) + ' kg';
@@ -881,6 +995,7 @@ function landCatch(perfect) {
     const fish = rollFish(S.loc, sonar ? 2 : 0);
     fish.golden = has('scales') && Math.random() < 1 / 60;
     fish.isNew = recordFish(fish, S.loc);
+    if (!S.rec.bestCatch || fish.weight > S.rec.bestCatch.w) S.rec.bestCatch = { w: fish.weight, name: fish.name };
     const value = fish.base * valueMult() * (perfect ? perfectMult() : 1) * (fish.golden ? 10 : 1) * hourMult() * (fish.isNew ? 5 : 1);
     total += value;
     if (fish.golden) S.goldens++;
@@ -960,6 +1075,12 @@ function unlockOrTravel(i) {
   if (unlockArmed !== i) { unlockArmed = i; SND.click(); renderPanel(); return; } // first tap asks for confirmation
   unlockArmed = -1;
   S.unlocked[i] = true; S.loc = i; S.cash = 0; dispCash = 0;
+  const prevBest = S.rec.fastest[i], took = S.careerTime;
+  if (!prevBest || took < prevBest) S.rec.fastest[i] = took;
+  if (prevBest && took < prevBest) setTimeout(() => {
+    banner('NEW RECORD!', `${LOCS[i].name.toUpperCase()} IN ${fmtTime(took)}`, '#5fe08a'); SND.goal();
+    toast(`<b>New record!</b> You reached ${LOCS[i].name} in ${fmtTime(took)}, beating ${fmtTime(prevBest)}.`, 'trophy', '#5fe08a');
+  }, 2600);
   S.crew = { hands: 0, speed: 0, skill: 0 }; crewAcc = 0; layoutBoats();
   SND.fanfare();
   toast(`You unlocked <b>${LOCS[i].name}</b>. Your cash and crew start fresh, and you can now hire up to ${crewCap('hands')} deckhands.`, 'wave', LOCS[i].color);
@@ -996,8 +1117,9 @@ let retireArmed = false, resetArmed = false;
 function retire() {
   const gain = pendingFame(); if (gain < 1) return;
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
+  S.rec.bestCareer = Math.max(S.rec.bestCareer, S.runEarned);
   const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, monsters: S.monsters, catches: S.catches, perfects: S.perfects,
-    goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
+    goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, rec: S.rec, seenHelp: S.seenHelp, seenVer: S.seenVer, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
   S = Object.assign(fresh(), keep);
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`, 'star');
@@ -1106,6 +1228,16 @@ function renderPanel() {
         <div class="desc">${L.desc} Fish from ${money(L.fish[0][2] * PRICE)}; the ${best[0]} is worth ${money(best[2] * PRICE)}+. Legend: ${S.monsters[i] ? MONSTERS[i].name : '???'}.${!open ? `<br><b style="color:${unlockArmed === i ? 'var(--danger)' : 'var(--gold)'}">Unlocking resets your cash and crew to zero.</b> Tackle, specials, goals and Fame stay. Crew cap here: ${crewCap('hands', i)} deckhands.` : ''}</div>${btn}</div>`;
     });
   } else if (activeTab === 'log') {
+    const R = S.rec, legendsLanded = Object.values(S.monsters).reduce((a, e) => a + e.n, 0);
+    h += `<h3>${icon('trophy', 'style="width:20px;height:20px;color:var(--gold)"')}Personal records <small>Kept when you retire</small></h3>
+      <div class="recs">
+        <div class="rec"><small>Biggest catch</small><b>${R.bestCatch ? kg(R.bestCatch.w) : '—'}</b><span>${R.bestCatch ? R.bestCatch.name : 'Land a fish to set it'}</span></div>
+        <div class="rec"><small>Heaviest legend</small><b>${R.bestLegend ? kg(R.bestLegend.w) : '—'}</b><span>${R.bestLegend ? R.bestLegend.name : 'No legend landed yet'}</span></div>
+        <div class="rec"><small>Best career</small><b>${money(Math.max(R.bestCareer, S.runEarned))}</b><span>Most earned in one career</span></div>
+        <div class="rec"><small>Play time this career</small><b>${fmtTime(S.careerTime)}</b><span>Career ${S.retires + 1}</span></div>
+      </div>
+      <div class="counts"><span>Legends <b>${fmt(legendsLanded)}</b></span><span>Fish <b>${fmt(S.catches)}</b></span><span>Perfect <b>${fmt(S.perfects)}</b></span><span>Golden <b>${fmt(S.goldens)}</b></span><span>Treasure <b>${fmt(S.treasures)}</b></span></div>
+      <div class="fast">${LOCS.slice(1).map((L, k) => { const v = R.fastest[k + 1]; return `<div class="${v ? '' : 'none'}"><span>Fastest to ${L.name}</span><span>${v ? fmtTime(v) : '—'}</span></div>`; }).join('')}</div>`;
     const found = Object.keys(S.log).length, all = LOCS.length * 6;
     h += `<p class="note">Your first catch of each species pays ×5. Logging every species at a water adds +10% income forever.</p>`;
     h += `<div class="row"><h3>Species logged: ${found} / ${all}</h3><span class="note">${fmt(S.catches)} landed · ${fmt(S.perfects)} perfect · ${fmt(S.goldens)} golden · ${fmt(S.treasures)} treasures</span></div>
@@ -1435,6 +1567,13 @@ async function sha256(text) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 function openSettings() { syncSettings(); $('settings').hidden = false; $('codeMsg').textContent = ''; $('codeMsg').className = 'code-msg'; $('closeSettings').focus(); SND.click(); }
+const anyModal = () => !started || !$('settings').hidden || !$('help').hidden || !$('news').hidden;
+function openSheet(id) { $(id).hidden = false; SND.click(); $(id).querySelector('.close').focus(); }
+function closeSheet(id) { if ($(id).hidden) return; $(id).hidden = true; if (id === 'help') S.seenHelp = true; if (id === 'news') S.seenVer = VERSION; save(); }
+document.addEventListener('click', e => { const b = e.target.closest('[data-close]'); if (b) closeSheet(b.dataset.close); });
+['help', 'news'].forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
+$('helpBtn').addEventListener('click', () => { closeSettings(); openSheet('help'); });
+$('newsBtn').addEventListener('click', () => { closeSettings(); openSheet('news'); });
 function closeSettings() { if ($('settings').hidden) return; $('settings').hidden = true; wipeArmed = false; $('wipeBtn').textContent = 'Wipe save'; $('wipeBtn').classList.remove('danger'); save(); }
 function syncSettings() {
   $('verTag').textContent = 'v' + VERSION;
@@ -1687,6 +1826,8 @@ function updateAction() {
 $('action').addEventListener('click', doAction);
 cv.addEventListener('pointerdown', e => { e.preventDefault(); doAction(); });
 window.addEventListener('keydown', e => {
+  if (!started) { if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); startGame(); } return; }
+  if (!$('help').hidden || !$('news').hidden) { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); closeSheet($('help').hidden ? 'news' : 'help'); } return; }
   if (e.target instanceof HTMLInputElement || !$('settings').hidden) { if (e.key === 'Escape') closeSettings(); return; } // typing, or the settings window is open
   if (e.code === 'Space' && e.repeat && cast.state === 'fight') { e.preventDefault(); return; } // holding Space doesn't count as tapping
   if (e.code === 'Space' && !(e.target instanceof HTMLButtonElement) && !(e.target instanceof HTMLInputElement)) { e.preventDefault(); doAction(); }
@@ -1717,6 +1858,7 @@ function winFight() {
   const weight = m.kg * (0.85 + Math.random() * 0.4);
   const value = monsterValue(f.loc);
   earn(value); youEarned(value); S.catches++;
+  if (!S.rec.bestLegend || weight > S.rec.bestLegend.w) S.rec.bestLegend = { w: weight, name: m.name };
   const prev = S.monsters[f.loc];
   S.monsters[f.loc] = prev ? { n: prev.n + 1, best: Math.max(prev.best, weight) } : { n: 1, best: weight };
   const fish = { name: m.name, rarity: 4, weight, monster: true };
@@ -2368,7 +2510,8 @@ function frame(nowT) {
     earn(crewRate() * (has('captain') ? 1 : 0.5) * Math.min(dt, 8 * 3600)); dt = 0;
   }
   crewTick(dt);
-  if ($('settings').hidden) stepCast(dtFrame); // the game pauses while Settings is open (your crew keeps working)
+  if (started && !document.hidden) S.careerTime += dtFrame;
+  if (!anyModal()) stepCast(dtFrame); // the game pauses while Settings is open (your crew keeps working)
   draw(nowT);
   tickCash(dtFrame);
   uiTimer += dtFrame; saveTimer += dtFrame;
@@ -2382,8 +2525,23 @@ function frame(nowT) {
   requestAnimationFrame(frame);
 }
 
+let started = false, returning = false;
+function startGame() {
+  if (started) return; started = true;
+  SND.init(); SND.apply();              // the tap gives the browser permission to play sound, so music starts now
+  const t = $('title'); t.classList.add('leaving'); setTimeout(() => t.remove(), 500);
+  setTimeout(() => {
+    if (returning && S.seenVer !== VERSION) openSheet('news');
+    else if (!returning && !S.seenHelp) openSheet('help');
+    S.seenVer = VERSION; save();
+  }, 380);
+}
 function start(hotData) {
   const saved = hotData && hotData.S ? merge(hotData.S) : load();
+  returning = !!(saved && (saved.catches > 0 || saved.version));
+  $('titleVer').textContent = 'v' + VERSION;
+  $('title').addEventListener('click', startGame);
+  if (hotData && hotData.S) { started = true; $('title').remove(); }
   if (saved) {
     S = saved;
     if (!(hotData && hotData.S)) {
@@ -2398,6 +2556,7 @@ function start(hotData) {
   resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings(); checkGoals();
   window.addEventListener('resize', resize);
   window.addEventListener('beforeunload', save);
+  setTimeout(() => { const b = $('startBtn'); if (b) b.focus(); }, 50);
   document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); SND.pause(); } else SND.resume(); });
   requestAnimationFrame(frame);
 }
