@@ -5,9 +5,13 @@
 | `bobber-and-brine-trailer-vertical.mp4` | TikTok, YouTube Shorts, Instagram Reels | 1080 × 1920 (9:16), 30 fps |
 | `bobber-and-brine-trailer-youtube.mp4` | YouTube (regular video), itch.io page, X | 1920 × 1080 (16:9), 30 fps |
 
-Both videos are **silent**. Add sound when you post. The captions are part of the video, so it works muted too.
+Both videos have the game's **music and sound effects** built in: the Farm Pond theme, the Legend on the Line fight theme, and the real in-game sounds (casts, bites, catch chimes, Golden Hour, rain, the monster hook, reel clicks and the victory fanfare). The captions are part of the video, so it also works muted.
 
-## Adding sound
+## Using a trending sound instead (optional)
+
+On TikTok you can keep the game audio, or add a trending sound and turn the original audio down under **Volume**. A trending sound can help reach, and the game audio underneath keeps the catches and the monster fight punchy.
+
+## Adding sound (only if you want different music)
 
 - **TikTok:** after you upload, tap **Sounds** and pick a trending track. Trending sounds help the video get shown. Upbeat lo-fi, sea shanties or anything with a strong drop works well with the monster fight at the end.
 - **YouTube Shorts:** tap **Add sound** in the Shorts editor.
