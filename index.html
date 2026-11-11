@@ -68,7 +68,7 @@ body {
 @keyframes rise { to { transform: translate(var(--sway), -110vh); } }
 
 .wrap {
-  position: relative; z-index: 1;
+  position: relative; z-index: 1; padding-bottom: 16px;
   max-width: 1240px; margin: 0 auto; height: 100%;
   padding-block: 12px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -105,6 +105,19 @@ header.top {
   background: var(--glass); border: 1px solid var(--edge); color: var(--muted); font-weight: 700; font-size: .86rem;
 }
 .chip b { color: var(--fg); }
+.pearl { width: 15px; height: 15px; flex: none; border-radius: 50%; display: inline-block; background: radial-gradient(circle at 35% 30%, #fff, #e6eef7 40%, #a9b8d6 75%, #8a97c4); box-shadow: 0 0 8px rgba(220,230,255,.7); }
+.pchip { cursor: pointer; }
+.copy { position: fixed; z-index: 5; left: 0; right: 0; bottom: max(2px, env(safe-area-inset-bottom, 0px)); text-align: center; font: 700 10px var(--body); color: rgba(146,181,189,.55); pointer-events: none; letter-spacing: .3px; }
+.skin-tile { background: linear-gradient(145deg, color-mix(in srgb, var(--c) 40%, #183a4c), #0d2534) !important; border: 2px solid var(--c); }
+.skin-tile svg { width: 34px !important; height: 34px !important; filter: none !important; }
+.item.equipped { border-color: var(--kelp); box-shadow: 0 0 18px rgba(95,224,138,.18); }
+.rpill { display: inline-block; padding: 1px 8px; border-radius: 999px; font: 900 .64rem var(--body); letter-spacing: .8px; text-transform: uppercase; color: #06131a; background: var(--c); vertical-align: 1px; }
+.pbuy { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.pearlbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: 16px; background: linear-gradient(90deg, rgba(220,230,255,.14), rgba(220,230,255,.04)); border: 1px solid rgba(220,230,255,.3); }
+.pearlbar b { font: 400 1.6rem var(--display); display: inline-flex; align-items: center; gap: 8px; }
+.pearlbar .pearl { width: 22px; height: 22px; }
+.pearlbar span { color: var(--muted); font-weight: 700; font-size: .82rem; max-width: 420px; }
+@media (max-width: 919px) { .wrap { padding-bottom: 12px; } }
 .chip svg { width: 16px; height: 16px; }
 .toggles { display: inline-flex; gap: 6px; }
 .stats { margin-left: auto; }
@@ -425,8 +438,13 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .fast div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 12px; border-radius: 10px; background: var(--glass); font-weight: 800; font-size: .84rem; }
 .fast div span:last-child { color: var(--gold); font-variant-numeric: tabular-nums; }
 .fast div.none span:last-child { color: var(--muted); }
-/* itch.io's 960x600 embed (and other narrow desktops): fit all seven tabs */
+@media (min-width: 920px) { .tabs button { flex: 1 1 0; min-width: 0; padding: 7px 2px; } }
+@media (max-width: 400px) { .chip { padding: 3px 6px; gap: 3px; } .stats { gap: 4px; } .cash-chip { padding: 2px 8px 2px 3px; } }
+/* itch.io's 960x600 embed (and other narrow desktops): fit all eight tabs and keep the header on one row */
 @media (min-width: 920px) and (max-width: 1180px) {
+  header.top { gap: 8px; padding: 6px 8px 6px 12px; } .brand { font-size: 1.35rem; gap: 8px; } .brand svg { width: 28px; height: 28px; }
+  .stats { gap: 5px; } .chip { padding: 4px 8px; font-size: .74rem; gap: 4px; } .chip svg { width: 13px; height: 13px; } .cash { font-size: 1.35rem; } .coin { width: 20px; height: 20px; }
+  .cash-chip { padding: 2px 10px 2px 4px; } .tog { width: 30px; height: 30px; } .toggles { gap: 4px; }
   .tabs { padding: 6px; gap: 2px; }
   .tabs button { flex: 1 1 0; min-width: 0; padding: 6px 2px; font-size: .64rem; letter-spacing: 0; }
   .tabs button svg { width: 18px; height: 18px; }
@@ -493,6 +511,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <div class="cash-chip"><div class="coin">$</div><div class="cash" id="cash">$0</div></div>
       <div class="chip" title="Your fishing income per second (last minute)"><span data-icon="hook"></span><b id="youRate">$0</b>/s</div>
       <div class="chip" title="Crew income per second"><span data-icon="crew"></span><b id="rate">$0</b>/s</div>
+      <div class="chip pchip" id="pearlChip" title="Pearls: spend them in the Skins tab"><i class="pearl"></i><b id="pearls">0</b></div>
       <div class="chip" title="Fame stars"><span data-icon="star" style="color:var(--gold)"></span><b id="fame">0</b></div>
     </div>
     <div class="toggles">
@@ -523,6 +542,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
         <button role="tab" data-tab="tackle" aria-selected="true"><span data-icon="hook"></span>Tackle</button>
         <button role="tab" data-tab="crew" aria-selected="false"><span data-icon="crew"></span>Crew</button>
         <button role="tab" data-tab="specials" aria-selected="false"><span data-icon="spark"></span>Specials</button>
+        <button role="tab" data-tab="skins" aria-selected="false"><span data-icon="hat"></span>Skins</button>
         <button role="tab" data-tab="waters" aria-selected="false"><span data-icon="wave"></span>Waters</button>
         <button role="tab" data-tab="goals" aria-selected="false"><span data-icon="trophy"></span>Goals</button>
         <button role="tab" data-tab="log" aria-selected="false"><span data-icon="book"></span><span>Log<span class="long">book</span></span></button>
@@ -534,6 +554,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </section>
   </div>
 </div>
+<div class="copy">© 2026 EinarsGames. All rights reserved.</div>
 <div class="toasts" id="toasts"></div>
 <div class="title" id="title" role="dialog" aria-label="Bobber &amp; Brine title screen">
   <svg class="bob" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2v8" stroke="#eaf7f5" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="22" r="12" fill="#fff"/><path d="M8 22a12 12 0 0 1 24 0z" fill="#ff6b3d"/><rect x="18" y="8" width="4" height="4" rx="1" fill="#ff6b3d"/><ellipse cx="15" cy="17" rx="3" ry="2" fill="#fff" opacity=".5"/></svg>
@@ -541,7 +562,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   <h1>Bobber <span>&amp;</span> Brine</h1>
   <div class="tag">Cast a line. Hook a legend.</div>
   <button class="start" id="startBtn">Tap to start</button>
-  <div class="foot"><span class="studio"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii00IC00IDEwOCAxMTIiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJmYWNlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZiNjg1Ii8+PHN0b3Agb2Zmc2V0PSIuNDUiIHN0b3AtY29sb3I9IiNmZjdhNDUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlMjQ2MWMiLz48L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYjgzNjBmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjN2QyMTA4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ibGlnaHQiIGN4PSIyOCUiIGN5PSIyMiUiIHI9Ijc1JSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii40NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Imdsb3NzIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii41NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGV0dGVyIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZlN2Q4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiOCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNmZmNmNWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmMGEyMWEiLz48L2xpbmVhckdyYWRpZW50PgogICAgPHBhdHRlcm4gaWQ9ImRvdHMiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjMiIGN5PSIzIiByPSIuOSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjEzIi8+PC9wYXR0ZXJuPgogICAgPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj48ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iNCIgc3RkRGV2aWF0aW9uPSIzLjUiIGZsb29kLWNvbG9yPSIjM2ExMDA0IiBmbG9vZC1vcGFjaXR5PSIuNDUiLz48L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3ciIHg9Ii02MCUiIHk9Ii02MCUiIHdpZHRoPSIyMjAlIiBoZWlnaHQ9IjIyMCUiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNCIgcmVzdWx0PSJiIi8+PGZlTWVyZ2U+PGZlTWVyZ2VOb2RlIGluPSJiIi8+PGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIi8+PC9mZU1lcmdlPjwvZmlsdGVyPgogICAgPGNsaXBQYXRoIGlkPSJjbGlwIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxnIGZpbHRlcj0idXJsKCNzaGFkb3cpIj4KICAgIDxyZWN0IHg9IjIiIHk9IjgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2Jhc2UpIi8+ICAgICAgICAgICAgPCEtLSB0aGljayBidXR0b24gYmFzZSAtLT4KICAgIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2ZhY2UpIi8+CiAgICA8ZyBjbGlwLXBhdGg9InVybCgjY2xpcCkiPgogICAgICA8cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9InVybCgjZG90cykiLz4KICAgICAgPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSJ1cmwoI2xpZ2h0KSIvPgogICAgICA8cGF0aCBkPSJNMiAyIEg5OCBWNDAgUTUwIDU2IDIgNDAgWiIgZmlsbD0idXJsKCNnbG9zcykiIG9wYWNpdHk9Ii41NSIvPiAgIDwhLS0gZ2xvc3N5IHRvcCAtLT4KICAgIDwvZz4KICAgIDxyZWN0IHg9IjMuNSIgeT0iMy41IiB3aWR0aD0iOTMiIGhlaWdodD0iOTMiIHJ4PSIyNC41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmQyYjgiIHN0cm9rZS1vcGFjaXR5PSIuNyIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8L2c+CiAgPCEtLSBleHRydWRlZCBFOiBkYXJrIGxheWVycyBzdGVwcGluZyBkb3duLXJpZ2h0LCB0aGVuIHRoZSBicmlnaHQgZmFjZSAtLT4KICA8ZyBmaWxsPSIjOWUyYzBhIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIuNCAyLjQpIj48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSIxMyIgaGVpZ2h0PSI1NCIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iNjMiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS42IDEuNikiPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjEzIiBoZWlnaHQ9IjU0IiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSI2MyIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjwvZz48L2c+CiAgPGcgZmlsbD0iIzllMmMwYSIgc3Ryb2tlPSIjOWUyYzBhIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHBhdGggZD0iTTQ2IDQwLjUgTDcwIDQ5IEw0NiA1Ny41IFoiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvZz4KICA8ZyBmaWxsPSJ1cmwoI2xldHRlcikiIHN0cm9rZT0iI2M4NGExYyIgc3Ryb2tlLXdpZHRoPSIuOCI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPgogIDxnIGZpbHRlcj0idXJsKCNnbG93KSI+PGcgZmlsbD0idXJsKCNnb2xkKSIgc3Ryb2tlPSIjZmZjZjVhIj48cGF0aCBkPSJNNDYgNDAuNSBMNzAgNDkgTDQ2IDU3LjUgWiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9nPjwvZz4KICA8cGF0aCBkPSJNNDkuNSA0NSBMNTggNDgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjc1Ii8+CiAgPHJlY3QgeD0iMjkuNSIgeT0iMjQiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPgogIDxwYXRoIGQ9Ik04NCAxMCBRODUuMDggMTQuOTIgOTAgMTYgUTg1LjA4IDE3LjA4IDg0IDIyIFE4Mi45MiAxNy4wOCA3OCAxNiBRODIuOTIgMTQuOTIgODQgMTBaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjk1Ii8+PHBhdGggZD0iTTkwIDI1IFE5MC41NCAyNy40NiA5MyAyOCBROTAuNTQgMjguNTQgOTAgMzEgUTg5LjQ2IDI4LjU0IDg3IDI4IFE4OS40NiAyNy40NiA5MCAyNVoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOCIvPjxwYXRoIGQ9Ik0xNCA3OS41IFExNC44MSA4My4xOSAxOC41IDg0IFExNC44MSA4NC44MSAxNCA4OC41IFExMy4xOSA4NC44MSA5LjUgODQgUTEzLjE5IDgzLjE5IDE0IDc5LjVaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjc1Ii8+Cjwvc3ZnPg==" alt=""><b>Einars<span>Games</span></b></span><div class="ver" id="titleVer"></div></div>
+  <div class="foot"><span class="studio"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii00IC00IDEwOCAxMTIiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJmYWNlIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZiNjg1Ii8+PHN0b3Agb2Zmc2V0PSIuNDUiIHN0b3AtY29sb3I9IiNmZjdhNDUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlMjQ2MWMiLz48L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJiYXNlIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjYjgzNjBmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjN2QyMTA4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ibGlnaHQiIGN4PSIyOCUiIGN5PSIyMiUiIHI9Ijc1JSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii40NSIvPjxzdG9wIG9mZnNldD0iLjYiIHN0b3AtY29sb3I9IiNmZmYiIHN0b3Atb3BhY2l0eT0iMCIvPjwvcmFkaWFsR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9Imdsb3NzIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmIiBzdG9wLW9wYWNpdHk9Ii41NSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibGV0dGVyIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZmZmZmZmIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZmZlN2Q4Ii8+PC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZ29sZCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ZmZjNiOCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNmZmNmNWEiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmMGEyMWEiLz48L2xpbmVhckdyYWRpZW50PgogICAgPHBhdHRlcm4gaWQ9ImRvdHMiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxjaXJjbGUgY3g9IjMiIGN5PSIzIiByPSIuOSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjEzIi8+PC9wYXR0ZXJuPgogICAgPGZpbHRlciBpZD0ic2hhZG93IiB4PSItMzAlIiB5PSItMzAlIiB3aWR0aD0iMTYwJSIgaGVpZ2h0PSIxNzAlIj48ZmVEcm9wU2hhZG93IGR4PSIwIiBkeT0iNCIgc3RkRGV2aWF0aW9uPSIzLjUiIGZsb29kLWNvbG9yPSIjM2ExMDA0IiBmbG9vZC1vcGFjaXR5PSIuNDUiLz48L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9Imdsb3ciIHg9Ii02MCUiIHk9Ii02MCUiIHdpZHRoPSIyMjAlIiBoZWlnaHQ9IjIyMCUiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIuNCIgcmVzdWx0PSJiIi8+PGZlTWVyZ2U+PGZlTWVyZ2VOb2RlIGluPSJiIi8+PGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIi8+PC9mZU1lcmdlPjwvZmlsdGVyPgogICAgPGNsaXBQYXRoIGlkPSJjbGlwIj48cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxnIGZpbHRlcj0idXJsKCNzaGFkb3cpIj4KICAgIDxyZWN0IHg9IjIiIHk9IjgiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2Jhc2UpIi8+ICAgICAgICAgICAgPCEtLSB0aGljayBidXR0b24gYmFzZSAtLT4KICAgIDxyZWN0IHg9IjIiIHk9IjIiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSJ1cmwoI2ZhY2UpIi8+CiAgICA8ZyBjbGlwLXBhdGg9InVybCgjY2xpcCkiPgogICAgICA8cmVjdCB4PSIyIiB5PSIyIiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIGZpbGw9InVybCgjZG90cykiLz4KICAgICAgPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiBmaWxsPSJ1cmwoI2xpZ2h0KSIvPgogICAgICA8cGF0aCBkPSJNMiAyIEg5OCBWNDAgUTUwIDU2IDIgNDAgWiIgZmlsbD0idXJsKCNnbG9zcykiIG9wYWNpdHk9Ii41NSIvPiAgIDwhLS0gZ2xvc3N5IHRvcCAtLT4KICAgIDwvZz4KICAgIDxyZWN0IHg9IjMuNSIgeT0iMy41IiB3aWR0aD0iOTMiIGhlaWdodD0iOTMiIHJ4PSIyNC41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmQyYjgiIHN0cm9rZS1vcGFjaXR5PSIuNyIgc3Ryb2tlLXdpZHRoPSIxLjYiLz4KICA8L2c+CiAgPCEtLSBleHRydWRlZCBFOiBkYXJrIGxheWVycyBzdGVwcGluZyBkb3duLXJpZ2h0LCB0aGVuIHRoZSBicmlnaHQgZmFjZSAtLT4KICA8ZyBmaWxsPSIjOWUyYzBhIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIuNCAyLjQpIj48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSIxMyIgaGVpZ2h0PSI1NCIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iMjIiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48cmVjdCB4PSIyNyIgeT0iNjMiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMyIgcng9IjUiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMS42IDEuNikiPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjEzIiBoZWlnaHQ9IjU0IiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSIyMiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjxyZWN0IHg9IjI3IiB5PSI2MyIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjEzIiByeD0iNSIvPjwvZz48L2c+CiAgPGcgZmlsbD0iIzllMmMwYSIgc3Ryb2tlPSIjOWUyYzBhIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzLjIgMy4yKSI+PHBhdGggZD0iTTQ2IDQwLjUgTDcwIDQ5IEw0NiA1Ny41IFoiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvZz4KICA8ZyBmaWxsPSJ1cmwoI2xldHRlcikiIHN0cm9rZT0iI2M4NGExYyIgc3Ryb2tlLXdpZHRoPSIuOCI+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iMTMiIGhlaWdodD0iNTQiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjIyIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PHJlY3QgeD0iMjciIHk9IjYzIiB3aWR0aD0iNDYiIGhlaWdodD0iMTMiIHJ4PSI1Ii8+PC9nPgogIDxnIGZpbHRlcj0idXJsKCNnbG93KSI+PGcgZmlsbD0idXJsKCNnb2xkKSIgc3Ryb2tlPSIjZmZjZjVhIj48cGF0aCBkPSJNNDYgNDAuNSBMNzAgNDkgTDQ2IDU3LjUgWiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9nPjwvZz4KICA8cGF0aCBkPSJNNDkuNSA0NSBMNTggNDgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjc1Ii8+CiAgPHJlY3QgeD0iMjkuNSIgeT0iMjQiIHdpZHRoPSIzOCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOSIvPgogIDxwYXRoIGQ9Ik04NCAxMCBRODUuMDggMTQuOTIgOTAgMTYgUTg1LjA4IDE3LjA4IDg0IDIyIFE4Mi45MiAxNy4wOCA3OCAxNiBRODIuOTIgMTQuOTIgODQgMTBaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjk1Ii8+PHBhdGggZD0iTTkwIDI1IFE5MC41NCAyNy40NiA5MyAyOCBROTAuNTQgMjguNTQgOTAgMzEgUTg5LjQ2IDI4LjU0IDg3IDI4IFE4OS40NiAyNy40NiA5MCAyNVoiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOCIvPjxwYXRoIGQ9Ik0xNCA3OS41IFExNC44MSA4My4xOSAxOC41IDg0IFExNC44MSA4NC44MSAxNCA4OC41IFExMy4xOSA4NC44MSA5LjUgODQgUTEzLjE5IDgzLjE5IDE0IDc5LjVaIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjc1Ii8+Cjwvc3ZnPg==" alt=""><b>Einars<span>Games</span></b></span><div class="ver" id="titleVer"></div><div class="ver">© 2026 EinarsGames. All rights reserved.</div></div>
 </div>
 <div class="modal" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="sheet">
@@ -552,6 +573,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <li><span>Every fish earns money. Spend it in the shop on <b>tackle</b>, a <b>crew</b> that fishes for you, <b>specials</b> and new <b>waters</b>.</span></li>
       <li><span>Sometimes a <b>legendary monster</b> bites. Tap as fast as you can to fill the meter before it snaps your line.</span></li>
       <li><span>Finish <b>goals</b> for permanent income bonuses, and <b>retire</b> once you've earned $1B to start a stronger career.</span></li>
+      <li><span>Perfect catches, new fish, goals and legends earn <b>pearls</b>. Spend them on looks in the <b>Skins</b> tab.</span></li>
       <li><span>Keys <b>1–4</b> fire your abilities. Your progress saves automatically.</span></li>
     </ol>
     <button class="buy cta" data-close="help">Let's fish!</button>
@@ -559,14 +581,13 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </div>
 <div class="modal" id="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
   <div class="sheet">
-    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.1</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
     <ul class="news">
-      <li><b>Title screen</b> with a Tap to start button. Music starts right away.</li>
-      <li><b>Personal records</b> at the top of the Logbook: biggest catch, heaviest legend, best career, play time, catch counts and your fastest time to each water.</li>
-      <li><b>New record!</b> pop-ups when you reach a water faster than ever. Records stay when you retire.</li>
-      <li><b>How to play</b> guide, in Settings any time.</li>
-      <li><b>Credits</b> and this What's new list, also in Settings.</li>
-      <li>Shop tabs now <b>fit on itch.io</b>, so Retire is no longer cut off.</li>
+      <li><b>Pearls</b> 🫧, a new currency for cosmetics. Earn them from perfect catches, new species, rare fish, goals, legends and a <b>daily bonus</b>. Pearls never reset.</li>
+      <li>A new <b>Skins</b> tab: bobbers, rod wraps, hats, dock companions, lanterns and crew boats, from Common to Legendary.</li>
+      <li><b>Trophies</b> for your dock when you land Old Mossback, Grandfather Marlin and The Leviathan.</li>
+      <li><b>Platform codes</b>: follow EinarsGames on TikTok, Instagram and YouTube for codes that unlock exclusive skins. Enter them in Settings → Code.</li>
+      <li>Earlier: <b>personal records</b>, a title screen and How to play (v1.1).</li>
     </ul>
     <p class="code-msg" style="margin:0">Your save carried over. Happy fishing!</p>
     <button class="buy cta" data-close="news">Got it</button>
@@ -609,6 +630,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
         <button class="buy violet" data-dev="storm">Start a storm</button>
         <button class="buy violet" data-dev="monster">Monster on next cast</button>
         <button class="buy violet" data-dev="fame">+10 Fame</button>
+        <button class="buy violet" data-dev="pearls">+1,000 pearls</button>
       </div>
       <form class="dev-row" id="devCashForm" autocomplete="off"><input id="devCash" placeholder="Set cash, e.g. 5T or 2.5e15" aria-label="Set cash to" spellcheck="false"><button class="buy violet" type="submit">Set cash</button></form>
       <button class="buy ghost" data-dev="off">Turn off developer mode</button>
@@ -639,7 +661,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 'use strict';
 
 // Game version: bump this with every update you upload (shown in Settings, and stored in saves and backups).
-const VERSION = '1.1';
+const VERSION = '1.2';
 
 /* ---------- Icons (24px stroke icons) ---------- */
 const ICONS = {
@@ -793,6 +815,35 @@ const CHARMS = [
 ];
 const STORM_LEN = 45; // seconds
 
+// Cosmetics. rarity 0-3 = Common, Rare, Epic, Legendary (bought with pearls); 'code' = platform code; 'trophy' = land a legend.
+const RARITY_NAMES = ['Common', 'Rare', 'Epic', 'Legendary'], RARITY_COL = ['#c3d2d6', '#5cb8ff', '#c58cff', '#ffcf5a'], SKIN_PRICE = [60, 180, 450, 1200];
+const SLOTS = [['bobber', 'Bobbers', 'Classic Bobber'], ['rod', 'Rod wraps', 'Tier colours'], ['hat', 'Hats', "Fisher's Hat"], ['pet', 'Dock companions', 'None'], ['lantern', 'Lanterns', 'Classic Lantern'], ['boat', 'Crew boats', 'Classic Boats'], ['trophy', 'Trophies', 'None']];
+const SKINS = [
+  ['lime', 'Lime Bobber', 'bobber', 0], ['ocean', 'Ocean Bobber', 'bobber', 0], ['watermelon', 'Watermelon Bobber', 'bobber', 1], ['glow', 'Glow Bobber', 'bobber', 2], ['duck', 'Rubber Duck', 'bobber', 2], ['golden', 'Golden Bobber', 'bobber', 3],
+  ['neon', 'Neon Bobber', 'bobber', 'code', 'TIKTOK', 'TikTok', '#25f4ee'],
+  ['forest', 'Forest Wrap', 'rod', 0], ['candy', 'Candy Stripe', 'rod', 1], ['ice', 'Ice Rod', 'rod', 2], ['lava', 'Lava Rod', 'rod', 3],
+  ['sunset', 'Sunset Rod', 'rod', 'code', 'INSTA', 'Instagram', '#e1306c'],
+  ['beanie', 'Beanie', 'hat', 0], ['bucket', 'Bucket Hat', 'hat', 0], ['hood', 'Rain Hood', 'hat', 1], ['pirate', 'Pirate Hat', 'hat', 2], ['crown', 'Crown', 'hat', 3],
+  ['captain', "Red Captain's Cap", 'hat', 'code', 'YOUTUBE', 'YouTube', '#ff3b3b'],
+  ['frog', 'Frog', 'pet', 1], ['gull', 'Seagull', 'pet', 1], ['cat', 'Cat', 'pet', 2], ['otter', 'Otter', 'pet', 3],
+  ['teal', 'Teal Lantern', 'lantern', 0], ['pink', 'Pink Lantern', 'lantern', 0], ['fireflies', 'Fireflies', 'lantern', 1],
+  ['red', 'Red Fleet', 'boat', 0], ['sunny', 'Sunny Fleet', 'boat', 1], ['royal', 'Royal Fleet', 'boat', 2],
+  ['mossback', 'Mossback Trophy', 'trophy', 'trophy', 0], ['marlin', 'Marlin Trophy', 'trophy', 'trophy', 4], ['leviathan', 'Leviathan Trophy', 'trophy', 'trophy', 5],
+].map(([id, name, slot, rarity, a, b, c]) => ({ id, name, slot, rarity, code: rarity === 'code' ? a : null, plat: b, pcol: c, legend: rarity === 'trophy' ? a : null }));
+const SKIN = Object.fromEntries(SKINS.map(k => [k.id, k]));
+// sha256 of the lower-case platform codes
+const CODE_HASH = { '5beeafeac2e27eae5d4ba62590257718673461b2af52383ef7e3a53c7df14306': 'neon', '1c1b3acb877a19945abf4a6d7aef1be60ca834cd599e4b75d5dff774ab4bac17': 'sunset', '24e6654bfd1ab85bebb1f721a4be46e6fdb9ea8974d14442d3aaecd1f971fcbb': 'captain' };
+const skinCol = k => k.rarity === 'code' ? k.pcol : k.rarity === 'trophy' ? '#ff8a4c' : RARITY_COL[k.rarity];
+const skinOn = slot => { const id = S.equip[slot]; return id && S.owned[id] ? id : null; };
+function gainPearls(n) { if (n <= 0) return; S.pearls += n; S.pearlsTotal += n; const el = document.getElementById('pearls'); if (el) el.textContent = fmt(S.pearls); }
+function unlockSkin(id, how) {
+  const k = SKIN[id]; if (S.owned[id]) return false;
+  S.owned[id] = 1; S.equip[k.slot] = id;
+  SND.unlock(); banner(k.name.toUpperCase(), how, skinCol(k));
+  toast(`<b>${k.name}</b> unlocked and equipped${how === 'UNLOCKED' ? '' : ' (' + how.toLowerCase() + ')'}. Change it any time in the Skins tab.`, 'hat', skinCol(k));
+  if (activeTab === 'skins') renderPanel(); save(); return true;
+}
+
 // Goals: lifetime milestones. Each one pays cash (about a minute of your income) and +1.5% income forever.
 // Completing every species at a water adds +10% income forever. Both survive retiring.
 const GOALS = [];
@@ -829,8 +880,8 @@ function checkGoals() {
     if (S.goals[g.id] || g.get() < g.target) return;
     S.goals[g.id] = 1;
     const reward = Math.max(GOAL_FLOOR[g.tier] || 0, 60 * (youRate() + crewRate()));
-    earn(reward);
-    toast(`<b>Goal complete:</b> ${g.name}<br>+${money(reward)} and +1.5% income forever`, 'trophy', '#ffcf5a');
+    earn(reward); gainPearls(10);
+    toast(`<b>Goal complete:</b> ${g.name}<br>+${money(reward)}, +10 pearls and +1.5% income forever`, 'trophy', '#ffcf5a');
     SND.goal();
     if (activeTab === 'goals') renderPanel();
   });
@@ -865,6 +916,7 @@ const fresh = () => ({
   sp: {}, cd: {}, until: {}, sonar: 0, nextStorm: 0,
   log: {}, monsters: {}, catches: 0, perfects: 0, goldens: 0, treasures: 0, stormCatches: 0, early: 0, sinceMonster: 0, goals: {},
   careerTime: 0, seenHelp: false, seenVer: '',
+  pearls: 0, pearlsTotal: 0, owned: {}, equip: {}, lastDaily: '',
   rec: { bestCatch: null, bestLegend: null, bestCareer: 0, fastest: {} },
   lastSave: Date.now(), buyMax: false, music: true, sfx: true, autoCast: true, dev: false,
   set: { master: 80, musicVol: 60, sfxVol: 100, shake: true, flash: true, numbers: true },
@@ -878,7 +930,7 @@ function merge(data) {
   base.up = Object.assign(fresh().up, data.up || {});
   base.crew = Object.assign(fresh().crew, data.crew || {});
   base.unlocked = LOCS.map((_, i) => i === 0 || !!(data.unlocked && data.unlocked[i]));
-  for (const k of ['log', 'monsters', 'sp', 'cd', 'until', 'goals']) base[k] = data[k] || {};
+  for (const k of ['log', 'monsters', 'sp', 'cd', 'until', 'goals', 'owned', 'equip']) base[k] = data[k] || {};
   base.set = Object.assign(fresh().set, data.set || {});
   base.rec = Object.assign(fresh().rec, data.rec || {}); base.rec.fastest = base.rec.fastest || {};
   // saves from before records: rebuild what we can from the logbook and legends
@@ -976,7 +1028,7 @@ function recordFish(fish, locIdx, quiet = false) {
       toast(`New species: <b style="color:${RARITY_C[fish.rarity]}">${fish.name}</b> (${RARITY[fish.rarity]}). First catch pays ×5!`, 'book', RARITY_C[fish.rarity]);
     }
     if (watersComplete() > before) {
-      banner(LOCS[locIdx].name.toUpperCase() + ' COMPLETE', 'EVERY SPECIES LOGGED · +10% INCOME FOREVER', LOCS[locIdx].color);
+      banner(LOCS[locIdx].name.toUpperCase() + ' COMPLETE', 'EVERY SPECIES LOGGED · +10% INCOME · +50 PEARLS', LOCS[locIdx].color); gainPearls(50);
       toast(`You logged every species in <b>${LOCS[locIdx].name}</b>. +10% income forever.`, 'book', LOCS[locIdx].color); SND.goal();
     }
     if (activeTab === 'log' || activeTab === 'goals') renderPanel();
@@ -990,7 +1042,7 @@ function recordFish(fish, locIdx, quiet = false) {
 function landCatch(perfect) {
   const sonar = S.sonar > 0; if (sonar) S.sonar--;
   const count = Math.random() < netChance() ? 2 : 1;
-  let total = 0, best = null;
+  let total = 0, best = null, pearlsFromFish = 0;
   for (let k = 0; k < count; k++) {
     const fish = rollFish(S.loc, sonar ? 2 : 0);
     fish.golden = has('scales') && Math.random() < 1 / 60;
@@ -999,6 +1051,8 @@ function landCatch(perfect) {
     const value = fish.base * valueMult() * (perfect ? perfectMult() : 1) * (fish.golden ? 10 : 1) * hourMult() * (fish.isNew ? 5 : 1);
     total += value;
     if (fish.golden) S.goldens++;
+    fish.pearls = (fish.rarity === 3 && Math.random() < .25 ? 3 : 0) + (fish.rarity === 4 ? 8 : 0) + (fish.isNew ? 5 : 0);
+    pearlsFromFish += fish.pearls;
     if (!best || fish.rarity + (fish.golden ? 0.5 : 0) > best.rarity + (best.golden ? 0.5 : 0)) best = Object.assign(fish, { value });
   }
   let treasure = null;
@@ -1007,11 +1061,18 @@ function landCatch(perfect) {
     treasure = { name: TREASURES[Math.floor(Math.random() * TREASURES.length)], value: v };
     total += v; S.treasures++;
   }
+  // pearls: perfect catches (6%, 12% in storms), epic fish (25%: 3), legendary fish (8), new species (5), daily first perfect (10)
+  let pearls = 0, daily = false;
+  if (perfect && Math.random() < (active('storm') ? .12 : .06)) pearls += 1;
+  if (perfect) { const today = new Date().toDateString(); if (S.lastDaily !== today) { S.lastDaily = today; pearls += 10; daily = true; } }
+  pearls += pearlsFromFish;
+  gainPearls(pearls);
+  if (daily) toast('<b>Daily bonus:</b> +10 pearls for your first perfect catch today. See you tomorrow!', 'gem', '#e6eef7');
   earn(total); youEarned(total);
   S.catches += count; if (perfect) S.perfects++;
   if (active('storm')) S.stormCatches += count;
   showLastCatch(best, total, count, perfect, treasure);
-  return { fish: best, total, count, perfect, treasure, sonar };
+  return { fish: best, total, count, perfect, treasure, sonar, pearls };
 }
 
 function crewTick(dt) {
@@ -1119,7 +1180,7 @@ function retire() {
   if (!retireArmed) { retireArmed = true; renderPanel(); return; }
   S.rec.bestCareer = Math.max(S.rec.bestCareer, S.runEarned);
   const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, monsters: S.monsters, catches: S.catches, perfects: S.perfects,
-    goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, rec: S.rec, seenHelp: S.seenHelp, seenVer: S.seenVer, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
+    goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, rec: S.rec, seenHelp: S.seenHelp, seenVer: S.seenVer, pearls: S.pearls, pearlsTotal: S.pearlsTotal, owned: S.owned, equip: S.equip, lastDaily: S.lastDaily, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
   S = Object.assign(fresh(), keep);
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`, 'star');
@@ -1136,6 +1197,7 @@ const panel = $('panel');
 let activeTab = 'tackle', dispCash = 0;
 
 function updateHeader() {
+  $('pearls').textContent = fmt(S.pearls);
   $('youRate').textContent = money(youRate());
   $('rate').textContent = money(crewRate());
   $('fame').textContent = S.fame;
@@ -1206,6 +1268,24 @@ function renderPanel() {
     h += `<div class="row"><p class="note">Deckhands fish nonstop, even while you're away (${has('captain') ? 'full' : 'half'} speed, up to 8 hours). Crew limits rise with each new water you unlock, and unlocking one resets your crew.</p>
       ${segHTML()}</div>`;
     h += CREW.map(d => itemHTML('crew', d, S.crew[d.id])).join('');
+  } else if (activeTab === 'skins') {
+    h += `<div class="pearlbar"><b><i class="pearl"></i>${fmt(S.pearls)} pearls</b><span>Earn pearls by fishing yourself: perfect catches, new species, rare fish, goals, legends and a daily bonus. Skins are just for looks and you keep them forever.</span></div>`;
+    for (const [slot, title, defName] of SLOTS) {
+      const items = SKINS.filter(k => k.slot === slot), cur = skinOn(slot);
+      h += `<h3>${title} <small>${items.filter(k => S.owned[k.id]).length}/${items.length} owned</small></h3>`;
+      h += `<div class="item ${!cur ? 'equipped' : ''}" style="--c:#7fa8b8"><div class="tile skin-tile">${skinSwatch(slot, null)}</div><div class="head"><span class="name">${defName}</span></div><div class="desc">The original look.</div>${!cur ? '<button class="buy maxed" disabled>Equipped</button>' : `<button class="buy ghost" data-skin-equip="${slot}:">Equip</button>`}</div>`;
+      for (const k of items) {
+        const own = !!S.owned[k.id], on = cur === k.id, c = skinCol(k);
+        const pill = k.rarity === 'code' ? `${k.plat} exclusive` : k.rarity === 'trophy' ? 'Trophy' : RARITY_NAMES[k.rarity];
+        const how = k.rarity === 'code' ? `Free with the code <b>${k.code}</b> in Settings → Code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
+        let btn;
+        if (on) btn = '<button class="buy maxed" disabled>Equipped</button>';
+        else if (own) btn = `<button class="buy" data-skin-equip="${slot}:${k.id}">Equip</button>`;
+        else if (typeof k.rarity === 'number') btn = `<button class="buy gold pbuy" data-skin-buy="${k.id}" data-pcost="${SKIN_PRICE[k.rarity]}"><i class="pearl"></i>${SKIN_PRICE[k.rarity].toLocaleString('en-US')}</button>`;
+        else btn = `<button class="buy" disabled>${k.rarity === 'code' ? 'Code' : 'Locked'}</button>`;
+        h += `<div class="item ${on ? 'equipped' : ''}" style="--c:${c}"><div class="tile skin-tile">${skinSwatch(slot, k.id)}</div><div class="head"><span class="name">${k.name}</span><span class="rpill" style="--c:${c}">${pill}</span></div><div class="desc">${own ? 'Owned.' : how}</div>${btn}</div>`;
+      }
+    }
   } else if (activeTab === 'specials') {
     h += `<h3>${icon('spark', 'style="width:20px;height:20px;color:var(--gold)"')}Abilities <small>Buy once, fire whenever they're charged</small></h3>`;
     h += ABILITIES.map(d => specialHTML(d, true)).join('');
@@ -1288,8 +1368,31 @@ function renderPanel() {
   panel.innerHTML = h;
   refreshAffordability();
 }
+function skinSwatch(slot, id) {
+  const sv = b => `<svg viewBox="0 0 40 40" aria-hidden="true">${b}</svg>`;
+  if (slot === 'bobber') {
+    if (id === 'duck') return sv('<ellipse cx="19" cy="25" rx="13" ry="8" fill="#ffd23f"/><circle cx="26" cy="15" r="6.5" fill="#ffd23f"/><path d="M31 14 L37 16 L31 18Z" fill="#ff8a1f"/><circle cx="28" cy="13.5" r="1.3" fill="#132029"/>');
+    const c = { lime: ['#7fe04f', '#fff'], ocean: ['#3f8cff', '#fff'], watermelon: ['#2f9a46', '#ff5d73'], glow: ['#b6ff7a', '#efffe0'], golden: ['#ffcf5a', '#fff1b8'], neon: ['#25f4ee', '#fe2c55'] }[id] || ['#ff6b3d', '#fff'];
+    return sv(`<rect x="19" y="4" width="2.4" height="10" fill="#f4fbfd"/><path d="M8 24a12 12 0 0 0 24 0z" fill="${c[1]}"/><path d="M8 24a12 12 0 0 1 24 0z" fill="${c[0]}"/><ellipse cx="15" cy="19" rx="2.6" ry="1.6" fill="#fff" opacity=".6"/>`);
+  }
+  if (slot === 'rod') {
+    const st = id === 'sunset' ? 'url(#gs)' : id === 'lava' ? 'url(#gl)' : ({ forest: '#2f8a4a', candy: '#fff', ice: '#c8f3ff' }[id] || '#ff8a4c');
+    return sv(`<defs><linearGradient id="gs"><stop offset="0" stop-color="#feda75"/><stop offset=".5" stop-color="#d62976"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient><linearGradient id="gl"><stop offset="0" stop-color="#5a1a08"/><stop offset=".5" stop-color="#ff5a1f"/><stop offset="1" stop-color="#ffd23f"/></linearGradient></defs><path d="M6 34 Q12 8 34 6" fill="none" stroke="${st}" stroke-width="4" stroke-linecap="round"/>${id === 'candy' ? '<path d="M6 34 Q12 8 34 6" fill="none" stroke="#e8483c" stroke-width="4" stroke-dasharray="4 4"/>' : ''}`);
+  }
+  if (slot === 'hat') {
+    const H = { beanie: '<path d="M10 24a10 10 0 0 1 20 0z" fill="#e8483c"/><rect x="9" y="22" width="22" height="5" fill="#b8322a"/><circle cx="20" cy="11" r="3.5" fill="#fff"/>', bucket: '<path d="M12 26 L14 13 H26 L28 26Z" fill="#c9b27a"/><ellipse cx="20" cy="26" rx="15" ry="3.5" fill="#a8915a"/>', hood: '<path d="M8 30a12 12 0 0 1 24 0z" fill="#ffd23f"/><circle cx="20" cy="27" r="6" fill="#132029"/>',
+      pirate: '<path d="M3 26 Q20 0 37 26 Q20 18 3 26Z" fill="#1a1a1a"/><circle cx="20" cy="17" r="3" fill="#fff"/>', crown: '<path d="M8 28 V12 L14 19 L20 9 L26 19 L32 12 V28Z" fill="#ffcf5a"/><circle cx="20" cy="23" r="2.4" fill="#e8483c"/>', captain: '<path d="M8 24 Q8 10 20 10 Q32 10 32 24Z" fill="#ff3b3b"/><rect x="8" y="22" width="24" height="4" fill="#fff"/><ellipse cx="26" cy="28" rx="11" ry="3" fill="#1a1a1a"/><path d="M20 13v8M17 15h6" stroke="#ffcf5a" stroke-width="1.6"/>' }[id];
+    return sv(H || '<path d="M4 26 L36 26 L20 10Z" fill="#c7d6dc"/>');
+  }
+  if (slot === 'pet') return id ? `<span style="font-size:26px;line-height:1">${{ frog: '🐸', gull: '🐦', cat: '🐱', otter: '🦦' }[id]}</span>` : sv('<path d="M10 30h20" stroke="#7fa8b8" stroke-width="3" stroke-linecap="round"/>');
+  if (slot === 'lantern') { const c = { teal: '#50f0dc', pink: '#ff6ebe', fireflies: '#ffbe5a' }[id] || '#ffbe5a'; return sv(`<circle cx="20" cy="18" r="14" fill="${c}" opacity=".25"/><rect x="15" y="12" width="10" height="12" rx="2" fill="${c}"/><rect x="19" y="24" width="2" height="12" fill="#c7d6dc"/>${id === 'fireflies' ? '<circle cx="7" cy="9" r="1.8" fill="#e8ff8a"/><circle cx="33" cy="12" r="1.8" fill="#e8ff8a"/><circle cx="31" cy="30" r="1.8" fill="#e8ff8a"/>' : ''}`); }
+  if (slot === 'boat') { const c = { red: '#d83a2e', sunny: '#ffc93c', royal: '#1f3a8a' }[id] || '#5d7a88'; return sv(`<path d="M4 22 H36 L30 30 H10Z" fill="${c}"/>${id === 'royal' ? '<rect x="4" y="21" width="32" height="2" fill="#ffcf5a"/><path d="M12 6 V21 M12 6 L20 9 L12 12" stroke="#ffcf5a" stroke-width="2" fill="#ffcf5a"/>' : ''}<circle cx="21" cy="14" r="3" fill="#c7d6dc"/>`); }
+  if (slot === 'trophy') { const c = { mossback: '#6f7d3c', marlin: '#3a7bd5', leviathan: '#c9a2ff' }[id]; return id ? sv(`<rect x="4" y="9" width="32" height="20" rx="4" fill="#8a5a2b"/><ellipse cx="20" cy="19" rx="10" ry="5" fill="${c}"/><path d="M10 19 L4 14 V24Z" fill="${c}"/>`) : sv('<rect x="6" y="11" width="28" height="18" rx="4" fill="none" stroke="#7fa8b8" stroke-width="2" stroke-dasharray="4 3"/>'); }
+  return '';
+}
 function refreshAffordability() {
-  panel.querySelectorAll('button[data-cost]').forEach(b => {
+  panel.querySelectorAll('button[data-pcost]').forEach(b => { b.disabled = S.pearls < +b.dataset.pcost; const it = b.closest('.item'); if (it) it.classList.toggle('can', !b.disabled); });
+  panel.querySelectorAll('button[data-cost]:not([data-pcost])').forEach(b => {
     b.disabled = S.cash < +b.dataset.cost;
     const it = b.closest('.item'); if (it) it.classList.toggle('can', !b.disabled);
   });
@@ -1298,6 +1401,7 @@ function refreshAffordability() {
     tackle: UPGRADES.some(d => S.up[d.id] < d.max && S.cash >= d.cost(S.up[d.id])),
     crew: CREW.some(d => S.crew[d.id] < d.max && S.cash >= d.cost(S.crew[d.id])),
     specials: [...ABILITIES, ...CHARMS].some(d => !has(d.id) && S.cash >= d.cost),
+    skins: SKINS.some(k => typeof k.rarity === 'number' && !S.owned[k.id] && S.pearls >= SKIN_PRICE[k.rarity]),
     waters: LOCS.some((L, i) => i > 0 && !S.unlocked[i] && S.unlocked[i - 1] && S.cash >= L.cost),
   };
   document.querySelectorAll('#tabs button').forEach(b => {
@@ -1354,6 +1458,8 @@ $('tabs').addEventListener('click', e => {
 });
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.skinBuy) { const k = SKIN[b.dataset.skinBuy], c = SKIN_PRICE[k.rarity]; if (S.owned[k.id] || S.pearls < c) { SND.deny(); return; } S.pearls -= c; unlockSkin(k.id, 'UNLOCKED'); S.equip[k.slot] = k.id; renderPanel(); updateHeader(); save(); return; }
+  if (b.dataset.skinEquip !== undefined) { const [slot, id] = b.dataset.skinEquip.split(':'); S.equip[slot] = id || ''; SND.click(); if (slot === 'boat') layoutBoats(); renderPanel(); save(); return; }
   if (b.dataset.kind) buy(b.dataset.kind, b.dataset.id);
   else if (b.dataset.travel) unlockOrTravel(+b.dataset.travel);
   else if (b.dataset.toggle === 'autocast') { SND.click(); S.autoCast = !S.autoCast; if (!S.autoCast) cast.autoT = -1; renderPanel(); save(); }
@@ -1585,6 +1691,7 @@ function syncSettings() {
   document.body.classList.toggle('dev-on', !!S.dev);
 }
 $('settingsBtn').addEventListener('click', openSettings);
+$('pearlChip').addEventListener('click', () => document.querySelector('#tabs [data-tab="skins"]').click());
 $('expandShop').addEventListener('click', () => {
   const on = !document.body.classList.contains('shop-full');
   document.body.classList.toggle('shop-full', on);
@@ -1612,8 +1719,15 @@ $('codeForm').addEventListener('submit', async e => {
   const code = $('codeInput').value.trim().toLowerCase(), msg = $('codeMsg');
   if (!code) return;
   let ok = false;
-  try { ok = (await sha256(code)) === DEV_HASH; } catch (err) { msg.textContent = 'Codes need a secure (https) page to check.'; msg.className = 'code-msg bad'; return; }
+  let hash = '';
+  try { hash = await sha256(code); ok = hash === DEV_HASH; } catch (err) { msg.textContent = 'Codes need a secure (https) page to check.'; msg.className = 'code-msg bad'; return; }
   $('codeInput').value = '';
+  if (CODE_HASH[hash]) {
+    const k = SKIN[CODE_HASH[hash]];
+    if (S.owned[k.id]) { msg.textContent = `You already have the ${k.name}.`; msg.className = 'code-msg ok'; return; }
+    unlockSkin(k.id, k.plat.toUpperCase() + ' EXCLUSIVE'); S.equip[k.slot] = k.id; save();
+    msg.textContent = `${k.name} unlocked and equipped. Thanks for following on ${k.plat}!`; msg.className = 'code-msg ok'; return;
+  }
   if (ok) {
     S.dev = true; save(); syncSettings();
     msg.textContent = S.dev ? 'Developer mode is on. Have fun.' : ''; msg.className = 'code-msg ok';
@@ -1640,6 +1754,7 @@ function devAction(id) {
     case 'storm': S.until.storm = now() + STORM_LEN * 1000; lightning = 1; SND.thunder(); return done('A storm rolls in.');
     case 'monster': window.__bbForceMonster = true; closeSettings(); return done('A monster will take your next cast.');
     case 'fame': S.fame += 10; return done(`Fame is now ${S.fame} ★.`);
+    case 'pearls': gainPearls(1000); return done(`Pearls: ${fmt(S.pearls)}.`);
     case 'off': S.dev = false; syncSettings(); toast('Developer mode is off.', 'spark', '#b98cff'); save(); return;
   }
 }
@@ -1801,6 +1916,7 @@ function startCast() {
 }
 function reelIn(perfect) {
   const res = landCatch(perfect);
+  if (res.pearls) floaters.push({ x: cast.x, y: cast.y - 54, text: `+${res.pearls} pearl${res.pearls > 1 ? 's' : ''}`, color: '#eef3ff', life: 1.8, size: 15 });
   SND.catch(res.fish.rarity, perfect, res.fish.golden);
   if (res.treasure) SND.treasure();
   cast.state = 'reel'; cast.t = 0; cast.reel = res;
@@ -1860,6 +1976,10 @@ function winFight() {
   earn(value); youEarned(value); S.catches++;
   if (!S.rec.bestLegend || weight > S.rec.bestLegend.w) S.rec.bestLegend = { w: weight, name: m.name };
   const prev = S.monsters[f.loc];
+  gainPearls(40 + (prev ? 0 : 100));
+  setTimeout(() => floaters.push({ x: W / 2, y: H * .42 + 66, text: `+${40 + (prev ? 0 : 100)} pearls`, color: '#eef3ff', life: 2.4, size: 20, screen: true }), 50);
+  const trophyId = SKINS.find(k => k.legend === f.loc);
+  if (trophyId && !S.owned[trophyId.id]) setTimeout(() => unlockSkin(trophyId.id, 'TROPHY EARNED'), 2600);
   S.monsters[f.loc] = prev ? { n: prev.n + 1, best: Math.max(prev.best, weight) } : { n: 1, best: weight };
   const fish = { name: m.name, rarity: 4, weight, monster: true };
   cast.tx = f.fx; cast.ty = f.fy; cast.x = f.fx; cast.y = f.fy;
@@ -2195,6 +2315,47 @@ function drawProps(L, t, amp) {
   }
 }
 
+function drawHat(hx, hy, r, look) {
+  const top = hy - r * .6, c = ctx;
+  if (look === 'beanie') { c.fillStyle = '#e8483c'; c.beginPath(); c.arc(hx, top + r * .2, r * 1.05, Math.PI, 0); c.fill(); c.fillStyle = '#b8322a'; c.fillRect(hx - r * 1.1, top, r * 2.2, r * .45); c.fillStyle = '#fff'; c.beginPath(); c.arc(hx, top - r * 1.05, r * .38, 0, 7); c.fill(); }
+  if (look === 'bucket') { c.fillStyle = '#c9b27a'; c.beginPath(); c.moveTo(hx - r * .9, top + r * .3); c.lineTo(hx - r * .75, top - r * .9); c.lineTo(hx + r * .75, top - r * .9); c.lineTo(hx + r * .9, top + r * .3); c.fill(); c.fillStyle = '#a8915a'; c.beginPath(); c.ellipse(hx, top + r * .35, r * 1.6, r * .32, 0, 0, 7); c.fill(); }
+  if (look === 'hood') { c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(hx, hy, r * 1.3, Math.PI * 1.02, Math.PI * 1.98); c.lineTo(hx + r * 1.3, hy + r * .3); c.lineTo(hx - r * 1.3, hy + r * .3); c.fill(); }
+  if (look === 'pirate') { c.fillStyle = '#1a1a1a'; c.beginPath(); c.moveTo(hx - r * 2, top + r * .2); c.quadraticCurveTo(hx, top - r * 2.1, hx + r * 2, top + r * .2); c.quadraticCurveTo(hx, top - r * .3, hx - r * 2, top + r * .2); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(hx, top - r * .65, r * .3, 0, 7); c.fill(); }
+  if (look === 'crown') { c.fillStyle = '#ffcf5a'; c.beginPath(); c.moveTo(hx - r * 1.1, top + r * .3); c.lineTo(hx - r * 1.1, top - r * .9); c.lineTo(hx - r * .55, top - r * .3); c.lineTo(hx, top - r * 1.25); c.lineTo(hx + r * .55, top - r * .3); c.lineTo(hx + r * 1.1, top - r * .9); c.lineTo(hx + r * 1.1, top + r * .3); c.fill(); c.fillStyle = '#e8483c'; c.beginPath(); c.arc(hx, top - r * .05, r * .2, 0, 7); c.fill(); }
+  if (look === 'captain') { c.fillStyle = '#ff3b3b'; c.beginPath(); c.ellipse(hx, top - r * .25, r * 1.25, r * .7, 0, Math.PI, 0); c.fill(); c.fillRect(hx - r * 1.25, top - r * .3, r * 2.5, r * .5); c.fillStyle = '#fff'; c.fillRect(hx - r * 1.25, top + r * .05, r * 2.5, r * .2); c.fillStyle = '#1a1a1a'; c.beginPath(); c.ellipse(hx + r * .9, top + r * .32, r * .95, r * .2, 0, 0, 7); c.fill(); c.fillStyle = '#ffcf5a'; c.fillRect(hx - r * .08, top - r * .7, r * .16, r * .6); }
+}
+function drawBobberSkin(bx, by, look, t) {
+  const c = ctx, r = 6, y0 = by + 2;
+  if (look === 'duck') {
+    c.fillStyle = '#ffd23f'; c.beginPath(); c.ellipse(bx, y0, r * 1.15, r * .65, 0, 0, 7); c.fill(); c.beginPath(); c.arc(bx + r * .55, y0 - r * .75, r * .5, 0, 7); c.fill();
+    c.fillStyle = '#ff8a1f'; c.beginPath(); c.moveTo(bx + r, y0 - r * .8); c.lineTo(bx + r * 1.45, y0 - r * .65); c.lineTo(bx + r, y0 - r * .5); c.fill();
+    c.fillStyle = '#132029'; c.beginPath(); c.arc(bx + r * .7, y0 - r * .88, 1, 0, 7); c.fill(); return;
+  }
+  const S2 = { lime: ['#7fe04f', '#fff'], ocean: ['#3f8cff', '#fff'], watermelon: ['#2f9a46', '#ff5d73'], glow: ['#b6ff7a', '#efffe0'], golden: ['#ffcf5a', '#fff1b8'], neon: ['#25f4ee', '#fe2c55'] }[look];
+  if (look === 'glow' || look === 'neon' || look === 'golden') { c.save(); c.globalCompositeOperation = 'lighter'; glow(bx, y0, 24, look === 'glow' ? 'rgba(160,255,120,A)' : look === 'neon' ? 'rgba(37,244,238,A)' : 'rgba(255,207,90,A)', .45 + .15 * Math.sin(t * 4)); c.restore(); }
+  c.fillStyle = S2[1]; c.beginPath(); c.arc(bx, y0, r, 0, Math.PI); c.fill();
+  c.fillStyle = S2[0]; c.beginPath(); c.arc(bx, y0, r, Math.PI, Math.PI * 2); c.fill();
+  if (look === 'watermelon') { c.fillStyle = '#1a1a1a'; c.fillRect(bx - 2, y0 + 2, 1, 1.5); c.fillRect(bx + 2, y0 + 2, 1, 1.5); c.strokeStyle = '#1d6b2f'; c.lineWidth = .8; c.beginPath(); c.moveTo(bx - 2, y0 - 5); c.lineTo(bx - 2, y0); c.moveTo(bx + 2, y0 - 5); c.lineTo(bx + 2, y0); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,0.6)'; c.beginPath(); c.arc(bx - 2, by - 1, 1.6, 0, 7); c.fill();
+  c.fillStyle = S2[0]; c.fillRect(bx - 1, by - 9, 2, 6);
+}
+function drawPet(look, X, Y, t) {
+  const c = ctx; c.save(); c.translate(X, Y); c.scale(.62, .62);
+  const bob = Math.sin(t * 2) * 1.2;
+  if (look === 'frog') { c.fillStyle = '#4fbf5a'; c.beginPath(); c.ellipse(0, -10, 16, 11, 0, 0, 7); c.fill(); c.beginPath(); c.arc(-8, -20 + bob * .3, 6, 0, 7); c.arc(8, -20 + bob * .3, 6, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-8, -21, 3.5, 0, 7); c.arc(8, -21, 3.5, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-7, -21, 1.8, 0, 7); c.arc(9, -21, 1.8, 0, 7); c.fill(); }
+  if (look === 'gull') { c.fillStyle = '#f4f7f8'; c.beginPath(); c.ellipse(0, -16, 15, 10, -.2, 0, 7); c.fill(); c.beginPath(); c.arc(11, -27 + bob, 7, 0, 7); c.fill(); c.fillStyle = '#9aa7ad'; c.beginPath(); c.ellipse(-4, -18, 11, 5, -.3, 0, 7); c.fill(); c.fillStyle = '#ff9f1c'; c.beginPath(); c.moveTo(17, -28 + bob); c.lineTo(26, -26 + bob); c.lineTo(17, -24 + bob); c.fill(); c.fillRect(-3, -7, 2, 7); c.fillRect(3, -7, 2, 7); c.fillStyle = '#111'; c.beginPath(); c.arc(13, -29 + bob, 1.5, 0, 7); c.fill(); }
+  if (look === 'cat') { c.fillStyle = '#f29a3a'; c.beginPath(); c.ellipse(0, -13, 12, 14, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -31, 9, 0, 7); c.fill(); c.beginPath(); c.moveTo(-8, -35); c.lineTo(-7, -45); c.lineTo(-2, -38); c.moveTo(8, -35); c.lineTo(7, -45); c.lineTo(2, -38); c.fill(); c.strokeStyle = '#f29a3a'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, -4); c.quadraticCurveTo(26, -4, 22 + Math.sin(t * 3) * 3, -22); c.stroke(); c.fillStyle = '#111'; c.beginPath(); c.arc(-3.5, -32, 1.6, 0, 7); c.arc(3.5, -32, 1.6, 0, 7); c.fill(); }
+  if (look === 'otter') { c.fillStyle = '#8a5a3c'; c.beginPath(); c.ellipse(0, -15, 12, 16, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -34 + bob * .5, 9, 0, 7); c.fill(); c.fillStyle = '#c99a72'; c.beginPath(); c.ellipse(0, -13, 7, 11, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, -31, 6, 4.5, 0, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-3.5, -36, 1.6, 0, 7); c.arc(3.5, -36, 1.6, 0, 7); c.arc(0, -32, 1.8, 0, 7); c.fill(); c.fillStyle = '#8fd6ff'; c.beginPath(); c.ellipse(0, -20, 6, 3.5, .3, 0, 7); c.fill(); }
+  c.restore();
+}
+function drawTrophy(look, X, Y) {
+  const c = ctx, col = { mossback: '#6f7d3c', marlin: '#3a7bd5', leviathan: '#c9a2ff' }[look];
+  if (look === 'leviathan') { c.save(); c.globalCompositeOperation = 'lighter'; glow(X, Y, 34, 'rgba(180,120,255,A)', .45); c.restore(); }
+  c.fillStyle = '#8a5a2b'; c.beginPath(); c.roundRect(X - 17, Y - 9, 34, 18, 4); c.fill(); c.fillStyle = '#ffcf5a'; c.fillRect(X - 5, Y + 5, 10, 2);
+  c.fillStyle = col; c.beginPath(); c.ellipse(X + 1, Y - 1, 10, 4.5, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(X - 8, Y - 1); c.lineTo(X - 14, Y - 6); c.lineTo(X - 14, Y + 4); c.fill();
+  if (look === 'marlin') { c.strokeStyle = col; c.lineWidth = 1.5; c.beginPath(); c.moveTo(X + 10, Y - 1); c.lineTo(X + 17, Y - 2); c.stroke(); }
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(X + 7, Y - 2, 1, 0, 7); c.fill();
+}
 function drawDock(L, t, dy, lit) {
   ctx.fillStyle = L.sil;
   const dw = W * 0.13 + 70;
@@ -2202,19 +2363,23 @@ function drawDock(L, t, dy, lit) {
   for (let x = 10; x < dw; x += 34) ctx.fillRect(x, dy, 6, H - dy);
   ctx.fillStyle = 'rgba(255,255,255,0.07)'; for (let x = 0; x < dw; x += 14) ctx.fillRect(x, dy - 6, 1, 8);
   // lantern post at the dock's end
-  const lx = dw - 6, ly = dy - 46;
+  const lx = dw - 6, ly = dy - 46, lan = skinOn('lantern');
+  const LC = { teal: ['rgba(80,240,220,A)', '#bafff4'], pink: ['rgba(255,110,190,A)', '#ffd0ec'], fireflies: ['rgba(255,190,90,A)', '#ffd88a'] }[lan] || ['rgba(255,190,90,A)', '#ffd88a'];
+  if (lan) lit = true;
   ctx.fillStyle = L.sil; ctx.fillRect(lx - 1.5, ly, 3, 40); ctx.fillRect(lx - 6, ly - 2, 12, 3);
   ctx.fillRect(lx - 4, ly + 1, 8, 10);
   if (lit) {
     const fl = 0.85 + Math.sin(t * 9) * 0.05 + Math.sin(t * 23) * 0.04;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    glow(lx, ly + 6, 70 * fl, 'rgba(255,190,90,A)', 0.35);
-    glow(lx, ly + 6, 14, 'rgba(255,230,160,A)', 0.9);
+    glow(lx, ly + 6, 70 * fl, LC[0], 0.35);
+    glow(lx, ly + 6, 14, LC[0], 0.9);
     // reflection on the water
-    for (let i = 0; i < 6; i++) { ctx.fillStyle = `rgba(255,190,90,${0.18 - i * 0.025})`; ctx.fillRect(lx - 6 + Math.sin(t * 2 + i) * 3, dy + 6 + i * 6, 12, 2); }
+    for (let i = 0; i < 6; i++) { ctx.fillStyle = LC[0].replace('A', 0.18 - i * 0.025); ctx.fillRect(lx - 6 + Math.sin(t * 2 + i) * 3, dy + 6 + i * 6, 12, 2); }
     ctx.restore();
-    ctx.fillStyle = '#ffd88a'; ctx.fillRect(lx - 2.5, ly + 3, 5, 6);
+    ctx.fillStyle = LC[1]; ctx.fillRect(lx - 2.5, ly + 3, 5, 6);
+    if (lan === 'fireflies') for (let i = 0; i < 9; i++) { const a = t * .6 + i * 2.1, rr = 22 + (i * 11) % 30, fx = lx + Math.cos(a) * rr, fy = ly + 4 + Math.sin(a * 1.3) * rr * .6; ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(fx, fy, 6, 'rgba(210,255,120,A)', .5 + .5 * Math.sin(t * 5 + i)); ctx.restore(); }
   }
+  const tro = skinOn('trophy'); if (tro) drawTrophy(tro, W * 0.13 - 8, dy + 14);
 }
 
 function draw(time) {
@@ -2241,8 +2406,11 @@ function draw(time) {
   // crew boats
   boats.forEach(b => {
     const by = b.y + Math.sin(t * 1.6 + b.ph) * 1.6 * amp, s = b.s;
-    ctx.fillStyle = L.sil; ctx.globalAlpha = 0.9;
+    const bt = skinOn('boat'), hull = { red: '#d83a2e', sunny: '#ffc93c', royal: '#1f3a8a' }[bt];
+    ctx.fillStyle = hull || L.sil; ctx.globalAlpha = 0.95;
     ctx.beginPath(); ctx.moveTo(b.x - 16 * s, by); ctx.lineTo(b.x + 16 * s, by); ctx.lineTo(b.x + 11 * s, by + 6 * s); ctx.lineTo(b.x - 11 * s, by + 6 * s); ctx.closePath(); ctx.fill();
+    if (bt === 'royal') { ctx.fillStyle = '#ffcf5a'; ctx.fillRect(b.x - 15 * s, by, 30 * s, 1.5 * s); ctx.beginPath(); ctx.moveTo(b.x - 9 * s, by - 16 * s); ctx.lineTo(b.x - 2 * s, by - 13 * s); ctx.lineTo(b.x - 9 * s, by - 10 * s); ctx.fill(); ctx.fillStyle = L.sil; ctx.fillRect(b.x - 9.5 * s, by - 16 * s, 1 * s, 16 * s); }
+    ctx.fillStyle = L.sil;
     ctx.fillRect(b.x - 2 * s, by - 9 * s, 4 * s, 9 * s);
     ctx.beginPath(); ctx.arc(b.x, by - 11 * s, 2.6 * s, 0, 7); ctx.fill();
     ctx.strokeStyle = L.sil; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(b.x + 1 * s, by - 7 * s); ctx.lineTo(b.x + 16 * s, by - 20 * s); ctx.lineTo(b.x + 19 * s, by + 3); ctx.stroke();
@@ -2267,8 +2435,12 @@ function draw(time) {
   const lean = fightF ? 0.32 + Math.sin(t * 19) * 0.06 + (1 - fightF.meter / 100) * 0.12 : 0;
   ctx.save(); ctx.translate(0, ay); ctx.transform(1, 0, lean, 1, 0, 0); ctx.translate(0, -ay);
   ctx.beginPath(); ctx.arc(ax + 10, ay - 40, 8, 0, 7); ctx.fill();                       // head
-  ctx.beginPath(); ctx.moveTo(ax - 4, ay - 46); ctx.lineTo(ax + 24, ay - 46); ctx.lineTo(ax + 10, ay - 57); ctx.closePath(); ctx.fill(); // hat
+  const hatOn = skinOn('hat');
+  if (!hatOn) { ctx.beginPath(); ctx.moveTo(ax - 4, ay - 46); ctx.lineTo(ax + 24, ay - 46); ctx.lineTo(ax + 10, ay - 57); ctx.closePath(); ctx.fill(); } // classic hat
+  if (hatOn === 'hood') ctx.fillStyle = '#e8b21e';
   ctx.beginPath(); ctx.moveTo(ax, ay - 32); ctx.lineTo(ax + 20, ay - 32); ctx.lineTo(ax + 22, ay); ctx.lineTo(ax - 4, ay); ctx.closePath(); ctx.fill(); // body
+  ctx.fillStyle = L.sil;
+  if (hatOn) drawHat(ax + 10, ay - 40, 8, hatOn);
   // rim light from the sun/lantern
   ctx.strokeStyle = isNight(L) ? 'rgba(255,200,120,0.35)' : 'rgba(255,240,200,0.3)'; ctx.lineWidth = 1.2;
   ctx.beginPath(); ctx.arc(ax + 10, ay - 40, 8, -1.2, 0.6); ctx.stroke();
@@ -2279,6 +2451,7 @@ function draw(time) {
   if (fightF) ctx.fillRect(ax + 34, ay - 6, 12, 5);                                     // heels dug into the dock
   ctx.fillRect(ax - 34, ay - 16, 16, 16);                                               // bucket
   if (S.up.holder) { ctx.fillRect(ax - 52, ay - 30, 3, 30); ctx.fillRect(ax - 56, ay - 32, 11, 3); } // rod holder post
+  const petOn = skinOn('pet'); if (petOn) drawPet(petOn, ax + 52, ay, t);
   // rod, colored by tier
   const tier = rodTier();
   let tip = rodTip();
@@ -2291,10 +2464,19 @@ function draw(time) {
     tip = { x: tip.x + (fightF.fx - tip.x) * pull * 0.35 + Math.sin(t * 27) * 3, y: tip.y + 46 + pull * 30 + Math.sin(t * 23) * 6 };
     ctrl = { x: hand.x + 24, y: hand.y - 70 };
   } else { tip = { x: tip.x, y: tip.y + bend }; ctrl = { x: ax + 40, y: ay - 60 }; }
-  if (tier.at >= 50) { ctx.shadowColor = '#ffcf5a'; ctx.shadowBlur = 10; }
-  ctx.strokeStyle = tier.color; ctx.lineWidth = fightF ? 3.8 : 3.2;
+  const wrap = skinOn('rod');
+  let rodStroke = tier.color;
+  if (wrap) {
+    const g = ctx.createLinearGradient(hand.x, hand.y, tip.x, tip.y);
+    if (wrap === 'sunset') ['#feda75', '#fa7e1e', '#d62976', '#962fbf', '#4f5bd5'].forEach((k, i) => g.addColorStop(i / 4, k));
+    else if (wrap === 'lava') { g.addColorStop(0, '#5a1a08'); g.addColorStop(.5, '#ff5a1f'); g.addColorStop(1, '#ffd23f'); }
+    rodStroke = wrap === 'sunset' || wrap === 'lava' ? g : { forest: '#2f8a4a', candy: '#ffffff', ice: '#c8f3ff' }[wrap];
+    if (wrap !== 'forest' && wrap !== 'candy') { ctx.shadowColor = { sunset: '#d62976', lava: '#ff5a1f', ice: '#9fe8ff' }[wrap]; ctx.shadowBlur = 10; }
+  } else if (tier.at >= 50) { ctx.shadowColor = '#ffcf5a'; ctx.shadowBlur = 10; }
+  ctx.strokeStyle = rodStroke; ctx.lineWidth = fightF ? 3.8 : 3.2;
   ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo(ctrl.x, ctrl.y, tip.x, tip.y); ctx.stroke();
   ctx.shadowBlur = 0;
+  if (wrap === 'candy') { ctx.strokeStyle = '#e8483c'; ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(hand.x, hand.y); ctx.quadraticCurveTo(ctrl.x, ctrl.y, tip.x, tip.y); ctx.stroke(); ctx.setLineDash([]); }
   ctx.strokeStyle = tier.wrap; ctx.lineWidth = 4.5; // grip wraps
   ctx.beginPath(); ctx.moveTo(hand.x - 3, hand.y + 4); ctx.lineTo(hand.x + 3, hand.y - 6); ctx.stroke();
   ctx.fillStyle = '#c8d3da'; ctx.beginPath(); ctx.arc(hand.x + 4, hand.y - 2, 3.2, 0, 7); ctx.fill(); // reel
@@ -2343,10 +2525,14 @@ function draw(time) {
     if (cast.state !== 'reel') {
       if (cast.state === 'bite') { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(bx, by, 26, 'rgba(255,210,90,A)', 0.55); ctx.restore(); }
       if (active('chum') && Math.random() < 0.3) particles.push({ x: bx + rnd(-30, 30), y: by + rnd(0, 10), vx: 0, vy: 6, life: 1, max: 1, color: 'rgba(170,110,70,0.7)', size: 1.8, type: 'spark', g: 0 });
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(bx, by + 2, 6, 0, Math.PI); ctx.fill();
-      ctx.fillStyle = '#ff6b3d'; ctx.beginPath(); ctx.arc(bx, by + 2, 6, Math.PI, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(bx - 2, by - 1, 1.6, 0, 7); ctx.fill();
-      ctx.fillStyle = '#ff6b3d'; ctx.fillRect(bx - 1, by - 9, 2, 6);
+      const bobOn = skinOn('bobber');
+      if (bobOn) drawBobberSkin(bx, by, bobOn, t);
+      else {
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(bx, by + 2, 6, 0, Math.PI); ctx.fill();
+        ctx.fillStyle = '#ff6b3d'; ctx.beginPath(); ctx.arc(bx, by + 2, 6, Math.PI, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(bx - 2, by - 1, 1.6, 0, 7); ctx.fill();
+        ctx.fillStyle = '#ff6b3d'; ctx.fillRect(bx - 1, by - 9, 2, 6);
+      }
       if (cast.state === 'bite') {
         ctx.fillStyle = '#ffd25a'; ctx.font = '28px "Lilita One", sans-serif'; ctx.textAlign = 'center';
         ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(40,20,0,0.6)'; const ey = by - 16 - Math.abs(Math.sin(t * 12)) * 6;
@@ -2552,6 +2738,14 @@ function start(hotData) {
     }
   }
   clampCrew(); // saves from before the crew caps
+  // v1.2: players from older versions get pearls (and trophies) for what they already achieved, using the same rules
+  if (saved && !S.pearlsTotal && !S.retroPearls) {
+    const legendsN = Object.values(S.monsters).reduce((x, e) => x + e.n, 0), distinct = Object.keys(S.monsters).length;
+    const grant = 10 * goalsDone() + 5 * Object.keys(S.log).length + 50 * watersComplete() + 100 * distinct + 40 * legendsN;
+    S.retroPearls = 1;
+    SKINS.filter(k => k.legend !== null && S.monsters[k.legend]).forEach(k => { S.owned[k.id] = 1; if (!S.equip.trophy) S.equip.trophy = k.id; });
+    if (grant > 0) { gainPearls(grant); setTimeout(() => toast(`<b>Welcome to v1.2!</b> You earned <b>${fmt(grant)} pearls</b> for everything you've already done. Spend them in the Skins tab.`, 'gem', '#e6eef7'), 1400); }
+  }
   dispCash = S.cash;
   resize(); onLocChange(); renderPanel(); renderSkillbar(); updateAction(); updateHeader(); syncToggles(); syncSettings(); checkGoals();
   window.addEventListener('resize', resize);
