@@ -257,7 +257,23 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
   background: var(--glass); border: 1px solid var(--edge); border-radius: 14px; padding: 8px 14px; min-height: 46px;
   font-variant-numeric: tabular-nums; backdrop-filter: blur(6px);
 }
+.lastcatch { cursor: pointer; position: relative; }
+.lastcatch:hover { border-color: var(--edge-hi); }
+.lastcatch::after { content: "History ›"; color: var(--muted); font-size: .72rem; font-weight: 800; margin-left: 4px; white-space: nowrap; }
 .lastcatch .who { font-weight: 900; }
+.hlist { display: grid; gap: 8px; max-height: min(64vh, 620px); overflow-y: auto; padding-right: 2px; }
+.hrow { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px; background: var(--glass-2); border: 1px solid var(--edge); border-left: 4px solid var(--rc); }
+.hrow .fart { height: 56px; margin: 0; }
+.hinfo { min-width: 0; display: grid; gap: 3px; font-size: .78rem; color: var(--muted); }
+.hinfo b { font-size: .95rem; }
+.htags { display: flex; flex-wrap: wrap; gap: 4px; }
+.hinfo .pearl { width: 11px; height: 11px; vertical-align: -1px; }
+.hval { text-align: right; display: grid; gap: 2px; }
+.hval b { font-family: var(--display); color: var(--gold); font-size: 1.05rem; font-weight: 400; }
+.hval small { color: var(--muted); font-size: .7rem; font-weight: 700; }
+.hbtn { display: inline-flex; align-items: center; gap: 8px; justify-self: start; }
+.hbtn svg { width: 16px; height: 16px; }
+@media (max-width: 520px) { .hrow { grid-template-columns: 70px minmax(0, 1fr); } .hrow .fart { height: 44px; } .hval { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; } }
 .lastcatch .meta { color: var(--muted); font-size: .86rem; flex: 1; min-width: 0; }
 .lastcatch .gain { font-family: var(--display); color: var(--gold); font-size: 1.15rem; letter-spacing: .3px; }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font: 900 .68rem var(--body); letter-spacing: .6px; text-transform: uppercase; color: #06131a; background: var(--rc, #b8c7cc); vertical-align: 1px; }
@@ -358,6 +374,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .buy:disabled::after, .buy.maxed::after, .buy.ghost::after { display: none; }
 .buy.maxed { background: transparent; color: var(--gold); border: 1px solid rgba(255, 207, 90, .35); box-shadow: none; }
 .buy.gold { background: linear-gradient(180deg, #ffe9a3, var(--gold) 55%, #e7a91c); color: #3a2600; box-shadow: inset 0 2px 0 rgba(255,255,255,.6), 0 3px 0 var(--gold-deep); }
+.buy.gold:disabled { background: linear-gradient(180deg, #24485a, #1b3a4a); color: #7a9aa3; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 3px 0 #0b2230; }
 .ghost { background: transparent; color: var(--muted); border: 1px solid var(--edge); box-shadow: none; }
 .danger { background: linear-gradient(180deg, #ff8a6a, var(--danger)) !important; color: #2a0803 !important; box-shadow: inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #7d1a0e !important; }
 .seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 10px; overflow: hidden; background: var(--glass); }
@@ -622,8 +639,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </div>
 <div class="modal" id="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
   <div class="sheet">
-    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.1</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
     <ul class="news">
+      <li><b>v1.2.1:</b> tap your <b>last catch</b> (or Logbook → Last 10 catches) to see a <b>history of your last 10 catches</b>, with pictures and every detail.</li>
+      <li><b>v1.2.1 fix:</b> unlock and buy buttons stay grey until you can afford them.</li>
       <li><b>Pearls</b> 🫧, a new currency for cosmetics. Earn them from perfect catches, new species, rare fish, goals, legends and a <b>daily bonus</b>. Pearls never reset.</li>
       <li>A new <b>Skins</b> tab: bobbers, rod wraps, hats, dock companions, lanterns and crew boats, from Common to Legendary.</li>
       <li><b>Trophies</b> for your dock when you land Old Mossback, Grandfather Marlin and The Leviathan.</li>
@@ -635,6 +654,12 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     </ul>
     <p class="code-msg" style="margin:0">Your save carried over. Happy fishing!</p>
     <button class="buy cta" data-close="news">Got it</button>
+  </div>
+</div>
+<div class="modal" id="history" hidden role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="historyTitle"><span data-icon="book"></span>Last 10 catches</h2><button class="close" data-close="history" aria-label="Close">✕</button></div>
+    <div class="hlist" id="historyList"></div>
   </div>
 </div>
 <div class="modal" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -705,7 +730,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 'use strict';
 
 // Game version: bump this with every update you upload (shown in Settings, and stored in saves and backups).
-const VERSION = '1.2';
+const VERSION = '1.2.1';
 
 /* ---------- Icons (24px stroke icons) ---------- */
 const ICONS = {
@@ -1054,7 +1079,7 @@ function youRate() {
 /* ---------- State ---------- */
 const SAVE_KEY = 'bobber-brine-save-v2';
 const fresh = () => ({
-  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0, econ: 2,
+  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0, econ: 2, recent: [],
   loc: 0, unlocked: [true, false, false, false, false, false],
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
@@ -1218,6 +1243,8 @@ function landCatch(perfect) {
   S.catches += count; if (perfect) S.perfects++;
   if (active('storm')) S.stormCatches += count;
   showLastCatch(best, total, count, perfect, treasure);
+  logRecent({ li: S.loc, fi: best.idx, n: best.name, r: best.rarity, w: best.weight, v: total, p: perfect ? perfectMult() : 0, g: !!best.golden, c: count, nw: !!best.isNew,
+    tr: treasure ? treasure.name : '', pe: pearls, so: !!sonar, st: active('storm'), gh: active('golden'), t: Date.now() });
   return { fish: best, total, count, perfect, treasure, sonar, pearls };
 }
 
@@ -1463,6 +1490,7 @@ function renderPanel() {
     });
   } else if (activeTab === 'log') {
     const R = S.rec, legendsLanded = Object.values(S.monsters).reduce((a, e) => a + e.n, 0);
+    h += `<button class="buy ghost hbtn" id="historyBtn" type="button">${icon('book')} Last 10 catches</button>`;
     h += `<h3>${icon('trophy', 'style="width:20px;height:20px;color:var(--gold)"')}Personal records <small>Kept when you retire</small></h3>
       <div class="recs">
         <div class="rec"><small>Biggest catch</small><b>${R.bestCatch ? kg(R.bestCatch.w) : '—'}</b><span>${R.bestCatch ? R.bestCatch.name : 'Land a fish to set it'}</span></div>
@@ -1630,6 +1658,28 @@ function toast(html, ic = 'spark', color = 'var(--gold)') {
   setTimeout(() => t.remove(), innerWidth < 920 ? 2800 : 3800);
   while ($('toasts').children.length > 4) $('toasts').firstChild.remove();
 }
+// Catch history: the last 10 catches, newest first, shown from the last-catch bar or the Logbook.
+function logRecent(e) { S.recent = [e, ...(S.recent || [])].slice(0, 10); if (!$('history').hidden) renderHistory(); }
+function ago(t) { const s = Math.max(0, (Date.now() - t) / 1000); return s < 60 ? 'just now' : s < 3600 ? Math.floor(s / 60) + ' min ago' : s < 86400 ? Math.floor(s / 3600) + ' h ago' : Math.floor(s / 86400) + ' d ago'; }
+function renderHistory() {
+  const list = S.recent || [];
+  $('historyList').innerHTML = list.length ? list.map((e, i) => {
+    const art = e.L ? fishArt(LEGEND_ART[e.li], 'h' + i + 'L', false, true) : fishArt(FISH_ART[e.li][e.fi], 'h' + i + '_' + e.li + '_' + e.fi);
+    const col = e.L ? 'var(--buoy)' : e.g ? '#ffcf5a' : RARITY_C[e.r];
+    const tags = [e.L ? `<span class="pill" style="--rc:var(--buoy)">Legend</span>` : `<span class="pill" style="--rc:${RARITY_C[e.r]}">${RARITY[e.r]}</span>`];
+    if (e.g) tags.push(`<span class="pill" style="--rc:#ffcf5a">Golden ×10</span>`);
+    if (e.p) tags.push(`<span class="pill" style="--rc:#ffe58f">Perfect ×${e.p}</span>`);
+    if (e.nw) tags.push(`<span class="pill" style="--rc:#5fe08a">New species ×5</span>`);
+    if (e.first) tags.push(`<span class="pill" style="--rc:#5fe08a">First time</span>`);
+    if (e.c > 1) tags.push(`<span class="pill" style="--rc:#5cd6ff">Double catch</span>`);
+    if (e.tr) tags.push(`<span class="pill" style="--rc:#d9a35a">+ ${e.tr}</span>`);
+    const extra = [e.st ? 'during a storm' : '', e.gh ? 'in Golden Hour' : '', e.so ? 'sonar' : ''].filter(Boolean).join(' · ');
+    return `<div class="hrow" style="--rc:${col}"><div class="fart">${art}</div><div class="hinfo"><b style="color:${col}">${e.g ? 'Golden ' : ''}${e.n}</b><div class="htags">${tags.join(' ')}</div>
+      <span>${kg(e.w)} · ${LOCS[e.li].name}${e.pe ? ` · <i class="pearl"></i> +${e.pe}` : ''}${extra ? ' · ' + extra : ''}</span></div>
+      <div class="hval"><b>+${money(e.v)}</b><small>${ago(e.t)}</small></div></div>`;
+  }).join('') : '<p class="note">No catches yet. Cast your first line!</p>';
+}
+function openHistory() { renderHistory(); openSheet('history'); }
 function showLastCatch(fish, total, count, perfect, treasure) {
   const tags = [];
   tags.push(`<span class="pill" style="--rc:${RARITY_C[fish.rarity]}">${RARITY[fish.rarity]}</span>`);
@@ -1828,11 +1878,13 @@ async function sha256(text) {
   return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 function openSettings() { syncSettings(); $('settings').hidden = false; $('codeMsg').textContent = ''; $('codeMsg').className = 'code-msg'; $('closeSettings').focus(); SND.click(); }
-const anyModal = () => !started || !$('settings').hidden || !$('help').hidden || !$('news').hidden;
+const anyModal = () => !started || !$('settings').hidden || !$('help').hidden || !$('news').hidden || !$('history').hidden;
 function openSheet(id) { $(id).hidden = false; SND.click(); $(id).querySelector('.close').focus(); }
 function closeSheet(id) { if ($(id).hidden) return; $(id).hidden = true; if (id === 'help') S.seenHelp = true; if (id === 'news') S.seenVer = VERSION; save(); }
 document.addEventListener('click', e => { const b = e.target.closest('[data-close]'); if (b) closeSheet(b.dataset.close); });
-['help', 'news'].forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
+['help', 'news', 'history'].forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); }));
+$('lastcatch').addEventListener('click', openHistory);
+document.addEventListener('click', e => { if (e.target.closest('#historyBtn')) openHistory(); });
 $('helpBtn').addEventListener('click', () => { closeSettings(); openSheet('help'); });
 $('newsBtn').addEventListener('click', () => { closeSettings(); openSheet('news'); });
 function closeSettings() { if ($('settings').hidden) return; $('settings').hidden = true; wipeArmed = false; $('wipeBtn').textContent = 'Wipe save'; $('wipeBtn').classList.remove('danger'); save(); }
@@ -2100,6 +2152,7 @@ $('action').addEventListener('click', doAction);
 cv.addEventListener('pointerdown', e => { e.preventDefault(); doAction(); });
 window.addEventListener('keydown', e => {
   if (!started) { if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); startGame(); } return; }
+  if (!$('history').hidden) { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); closeSheet('history'); } return; }
   if (!$('help').hidden || !$('news').hidden) { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); closeSheet($('help').hidden ? 'news' : 'help'); } return; }
   if (e.target instanceof HTMLInputElement || !$('settings').hidden) { if (e.key === 'Escape') closeSettings(); return; } // typing, or the settings window is open
   if (e.code === 'Space' && e.repeat && cast.state === 'fight') { e.preventDefault(); return; } // holding Space doesn't count as tapping
@@ -2139,6 +2192,7 @@ function winFight() {
   if (trophyId && !S.owned[trophyId.id]) setTimeout(() => unlockSkin(trophyId.id, 'TROPHY EARNED'), 2600);
   S.monsters[f.loc] = prev ? { n: prev.n + 1, best: Math.max(prev.best, weight) } : { n: 1, best: weight };
   const fish = { name: m.name, rarity: 4, weight, monster: true };
+  logRecent({ li: f.loc, L: 1, n: m.name, r: 4, w: weight, v: value, pe: 40 + (prev ? 0 : 100), first: !prev, t: Date.now() });
   cast.tx = f.fx; cast.ty = f.fy; cast.x = f.fx; cast.y = f.fy;
   cast.state = 'reel'; cast.t = 0; cast.reel = { fish, total: value, count: 1, perfect: false }; cast.fight = null;
   SND.setFight(false); SND.monsterWin();
