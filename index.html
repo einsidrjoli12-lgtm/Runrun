@@ -607,7 +607,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <li><span>Wait for the bobber to dip and the <b>!</b> to appear, then tap for a <b>perfect catch</b>. Tap too early and the fish swims off.</span></li>
       <li><span>Every fish earns money. Spend it in the shop on <b>tackle</b>, a <b>crew</b> that fishes for you, <b>specials</b> and new <b>waters</b>.</span></li>
       <li><span>Sometimes a <b>legendary monster</b> bites. Tap as fast as you can to fill the meter before it snaps your line.</span></li>
-      <li><span>Finish <b>goals</b> for permanent income bonuses, and <b>retire</b> once you've earned $1B to start a stronger career.</span></li>
+      <li><span>Finish <b>goals</b> for permanent income bonuses, and <b>retire</b> once you've earned $1M to start a stronger career.</span></li>
       <li><span>Perfect catches, new fish, goals and legends earn <b>pearls</b>. Spend them on looks in the <b>Skins</b> tab.</span></li>
       <li><span>Keys <b>1–4</b> fire your abilities. Your progress saves automatically.</span></li>
     </ol>
@@ -622,6 +622,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
       <li>A new <b>Skins</b> tab: bobbers, rod wraps, hats, dock companions, lanterns and crew boats, from Common to Legendary.</li>
       <li><b>Trophies</b> for your dock when you land Old Mossback, Grandfather Marlin and The Leviathan.</li>
       <li><b>Platform codes</b>: follow <b>Bobber &amp; Brine</b> on TikTok and <b>Bobber &amp; Brine Game</b> on Instagram and YouTube for codes that unlock exclusive skins. Enter them in Settings → Code.</li>
+      <li><b>Rebalance:</b> deckhands now cost more in each new water, so your own fishing stays worth it. To make up for it, new waters are cheaper to unlock and the first fame star comes at $1M.</li>
       <li>Earlier: <b>personal records</b>, a title screen and How to play (v1.1).</li>
     </ul>
     <p class="code-msg" style="margin:0">Your save carried over. Happy fishing!</p>
@@ -756,22 +757,22 @@ const LOCS = [
     sky: ['#6fa9e2', '#ffd9a8'], water: ['#3a8099', '#123344'], far: '#6b9a7a', far2: '#2f5a44', sil: '#122028', sun: '#ffe08a',
     v: { clouds: '#fff4e6', birds: true, reeds: true, trees: 'willow', sunY: 0.55, sunR: 0.065, current: true },
     fish: [['Creek Chub', 0, 15, 0.1], ['Rainbow Trout', 0, 22, 1.5], ['Smallmouth Bass', 1, 60, 1.8], ['Walleye', 2, 180, 3], ['Lake Sturgeon', 3, 700, 40], ['Paddlefish', 4, 3000, 30]] },
-  { id: 'lake', name: 'Glacier Lake', cost: 5e5, color: '#8fe3ff', depth: '60 m', temp: '3°C',
+  { id: 'lake', name: 'Glacier Lake', cost: 1e5, color: '#8fe3ff', depth: '60 m', temp: '3°C',
     desc: 'Clear meltwater ringed by peaks, under the northern lights. The pike here hold grudges.',
     sky: ['#081430', '#35628c'], water: ['#235f80', '#061a2c'], far: '#6d8eb0', far2: '#1a2f45', sil: '#0a1622', sun: '#eef6ff',
     v: { stars: true, aurora: true, ice: true, trees: 'pine', peaks: true, moon: true, lantern: true, sunY: 0.3, sunR: 0.045 },
     fish: [['Cisco', 0, 120, 0.4], ['Lake Trout', 0, 170, 4], ['Northern Pike', 1, 450, 5], ['Muskellunge', 2, 1400, 12], ['Arctic Char', 3, 5200, 6], ['Ghost Pike', 4, 24000, 18]] },
-  { id: 'coast', name: 'Rocky Coast', cost: 2e9, color: '#ffa36b', depth: '30 m', temp: '14°C',
+  { id: 'coast', name: 'Rocky Coast', cost: 3e7, color: '#ffa36b', depth: '30 m', temp: '14°C',
     desc: 'Salt spray, gulls and a lighthouse at sunset. Bring a bigger cooler.',
     sky: ['#5b4a8a', '#ffb070'], water: ['#3a6f94', '#0c2440'], far: '#7a5a6e', far2: '#2a1f30', sil: '#160f1c', sun: '#ffcf6a',
     v: { clouds: '#ffc0a0', birds: true, lighthouse: true, rocks: true, lantern: true, sunY: 0.86, sunR: 0.11 },
     fish: [['Atlantic Mackerel', 0, 2000, 0.6], ['Striped Bass', 0, 2800, 7], ['Red Snapper', 1, 7500, 5], ['Atlantic Halibut', 2, 24000, 60], ['Yellowtail', 3, 90000, 15], ['Goliath Grouper', 4, 400000, 180]] },
-  { id: 'ocean', name: 'Open Ocean', cost: 2e13, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
+  { id: 'ocean', name: 'Open Ocean', cost: 3e10, color: '#4f8cff', depth: '3,000 m', temp: '22°C',
     desc: 'Nothing but blue to the horizon. Marlin, tuna and big money.',
     sky: ['#2f6fd6', '#c4e6ff'], water: ['#1c64b8', '#061a40'], far: null, far2: null, sil: '#0a1430', sun: '#ffffff',
     v: { clouds: '#ffffff', birds: true, ship: true, swell: 1.9, sunY: 0.22, sunR: 0.06 },
     fish: [['Skipjack Tuna', 0, 40000, 3], ['Mahi-mahi', 0, 55000, 10], ['Wahoo', 1, 150000, 20], ['Swordfish', 2, 480000, 110], ['Blue Marlin', 3, 1800000, 300], ['Atlantic Bluefin', 4, 8000000, 400]] },
-  { id: 'trench', name: 'Midnight Trench', cost: 3e16, color: '#a07bff', depth: '10,900 m', temp: '1°C',
+  { id: 'trench', name: 'Midnight Trench', cost: 8e12, color: '#a07bff', depth: '10,900 m', temp: '1°C',
     desc: 'A mile of black water under a moonless sky. Things glow down there.',
     sky: ['#03040c', '#16123a'], water: ['#16124a', '#020208'], far: null, far2: null, sil: '#000000', sun: '#d8e2ff',
     v: { stars: true, plankton: true, jelly: true, lantern: true, moon: true, sunY: 0.28, sunR: 0.035 },
@@ -818,13 +819,16 @@ const UPGRADES = [
 const CREW_CAPS = { hands: [5, 10, 20, 35, 60, 100], speed: [4, 8, 12, 16, 20, 20], skill: [10, 20, 30, 40, 50, 60] };
 const topWater = () => S.unlocked.lastIndexOf(true);
 const crewCap = (id, w = topWater()) => CREW_CAPS[id][Math.max(0, w)];
+// Crew prices grow with each new water so deckhands stay a boost and fishing keeps paying the most early on.
+const CREW_PRICE = [1, 15, 600, 1.5e5, 3e7, 8e9];
+const crewPrice = () => CREW_PRICE[Math.max(0, topWater())];
 function clampCrew() { for (const id in CREW_CAPS) S.crew[id] = Math.min(S.crew[id], crewCap(id)); }
 const CREW = [
-  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', get max() { return crewCap('hands'); }, cost: n => 100 * 1.35 ** n,
+  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', get max() { return crewCap('hands'); }, cost: n => 100 * 1.35 ** n * crewPrice(),
     desc: () => `Each one lands a fish every ${handInterval().toFixed(1)}s, even while you are away.` },
-  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', get max() { return crewCap('speed'); }, cost: l => 3000 * 3 ** l,
+  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', get max() { return crewCap('speed'); }, cost: l => 3000 * 3 ** l * crewPrice(),
     desc: l => `Deckhand catch time ${handInterval(l).toFixed(2)}s → ${handInterval(l + 1).toFixed(2)}s` },
-  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', get max() { return crewCap('skill'); }, cost: l => 10000 * 3.2 ** l,
+  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', get max() { return crewCap('skill'); }, cost: l => 10000 * 3.2 ** l * crewPrice(),
     desc: l => `Deckhand catch value ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
 ];
 // Active abilities: buy once, fire with a button or keys 1-4, then wait for them to recharge.
@@ -890,9 +894,9 @@ function goalGroup(key, name, icn, get, tiers) {
 goalGroup('catch', 'Land # fish', 'fish', () => S.catches, [1, 10, 50, 250, 1000, 5000, 25000, 100000]);
 goalGroup('perfect', 'Make # perfect catch(es)', 'hook', () => S.perfects, [5, 50, 250, 1000, 5000]);
 goalGroup('species', 'Log # species', 'book', () => Object.keys(S.log).length, [3, 6, 12, 18, 24, 30, 36]);
-goalGroup('earn', 'Earn # in total', 'market', () => S.totalEarned, [500, 1e5, 1e7, 1e9, 1e12, 1e15, 1e18]);
+goalGroup('earn', 'Earn # in total', 'market', () => S.totalEarned, [500, 1e5, 1e7, 1e9, 1e11, 1e13, 1e15]);
 goalGroup('rod', 'Reach rod level #', 'rod', () => S.up.rod, [5, 10, 25, 50, 80]);
-goalGroup('hands', 'Hire # deckhand(s)', 'hands', () => S.crew.hands, [1, 10, 25, 50, 100]);
+goalGroup('hands', 'Hire # deckhand(s)', 'hands', () => S.crew.hands, [1, 5, 10, 25, 50]);
 goalGroup('waters', 'Unlock # waters', 'wave', () => S.unlocked.filter(Boolean).length, [2, 3, 4, 5, 6]);
 goalGroup('legend', 'Land # legendary monster(s)', 'star', () => Object.values(S.monsters).reduce((a, e) => a + e.n, 0), [1, 3, 10]);
 goalGroup('storm', 'Catch # fish during storms', 'storm', () => S.stormCatches, [10, 100, 1000]);
@@ -944,7 +948,7 @@ function youRate() {
 /* ---------- State ---------- */
 const SAVE_KEY = 'bobber-brine-save-v2';
 const fresh = () => ({
-  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0,
+  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0, econ: 2,
   loc: 0, unlocked: [true, false, false, false, false, false],
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
@@ -962,6 +966,7 @@ function merge(data) {
   const base = fresh();
   if (!data || typeof data !== 'object') return base;
   Object.assign(base, data);
+  if (data.econ !== 2) { base.runEarned = (data.runEarned || 0) / 1000; base.econ = 2; } // fame now counts from $1M instead of $1B
   base.up = Object.assign(fresh().up, data.up || {});
   base.crew = Object.assign(fresh().crew, data.crew || {});
   base.unlocked = LOCS.map((_, i) => i === 0 || !!(data.unlocked && data.unlocked[i]));
@@ -1047,7 +1052,7 @@ function rollFish(locIdx, minRarity = 0) {
   const f = loc.fish[i]; const size = 0.5 + Math.random() * Math.random() * 1.5;
   return { idx: i, name: f[0], rarity: f[1], weight: f[3] * size, base: f[2] * PRICE * size };
 }
-function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e9)); }
+function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e6)); }
 
 /* ---------- Economy actions ---------- */
 function earn(amount) { S.cash += amount; S.runEarned += amount; S.totalEarned += amount; }
@@ -1110,6 +1115,7 @@ function landCatch(perfect) {
   return { fish: best, total, count, perfect, treasure, sonar, pearls };
 }
 
+let crewFloat = 0, crewFloatAt = 0;
 function crewTick(dt) {
   if (!S.crew.hands) return;
   const speed = active('frenzy') ? 6 : 1;
@@ -1131,7 +1137,12 @@ function crewTick(dt) {
     earn(total); SND.coin();
     if (boats.length) {
       const b = boats[Math.floor(Math.random() * Math.min(boats.length, S.crew.hands))];
-      floaters.push({ x: b.x, y: b.y - 18, text: '+' + money(total), color: '#d8f3f8', life: 1.3, size: 12 });
+      crewFloat += total;
+      if (now() - crewFloatAt > (W < 520 ? 2600 : 1700)) { // one combined crew number at a time, not one per fish
+        crewFloatAt = now();
+        floaters.push({ x: b.x, y: b.y - 16, text: '+' + money(crewFloat), color: 'rgba(216,243,248,0.8)', life: 1.1, size: 11 });
+        crewFloat = 0;
+      }
       if (Math.random() < 0.5) jumpers.push({ x: b.x + 14, y: b.y + 4, t: 0, dir: Math.random() < 0.5 ? 1 : -1, size: 6 });
     }
   }
@@ -1388,13 +1399,13 @@ function renderPanel() {
     if (closed.length) h += `<h3>Completed <small>${closed.length}</small></h3>` + closed.map(g => `<div class="goal done"><span class="gi">${icon('trophy')}</span><span class="gname">${g.name}</span><span class="gnum">Done</span></div>`).join('');
   } else if (activeTab === 'retire') {
     const gain = pendingFame();
-    const nextAt = (gain + 1) ** 2 * 1e9;
+    const nextAt = (gain + 1) ** 2 * 1e6;
     h += `<h3>Retire and tell tales</h3>
       <p class="note">Sell the boat, hang up the rod and become a legend at the bait shop. You lose your cash, tackle, crew, specials and waters, but every Fame star adds +10% to all income forever. Your logbook stays.</p>
       <div class="item" style="--c:var(--gold)"><div class="tile">${icon('star')}</div><div class="head"><span class="bigstat">+${gain} ★</span></div>
         <div class="desc">Earned this career: ${money(S.runEarned)}. Next star at ${money(nextAt)}. You have ${S.fame} ★ (income ×${fameMult().toFixed(1)}).</div>
         <button class="buy gold ${retireArmed ? 'danger' : ''}" id="retireBtn" ${gain < 1 ? 'disabled' : ''}>${retireArmed ? 'Tap to confirm' : 'Retire'}</button></div>
-      <p class="note">${gain < 1 ? 'Earn $1B in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
+      <p class="note">${gain < 1 ? 'Earn $1M in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
       <h3>Records</h3>
       <p class="note">Lifetime earnings ${money(S.totalEarned)} · Careers retired: ${S.retires}</p>
       <div class="row"><span class="note">Progress saves in this browser automatically.</span>
