@@ -378,6 +378,9 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .fishchip b { display: block; font-size: .9rem; }
 .fishchip span { color: var(--muted); }
 .fishchip.unknown { opacity: .5; border-left-color: var(--edge); }
+.fart { height: 58px; margin: -2px -4px 4px; border-radius: 9px; background: radial-gradient(ellipse at 50% 60%, color-mix(in srgb, var(--rc, #5cd6ff) 22%, transparent), transparent 70%), linear-gradient(180deg, rgba(10,40,58,.6), rgba(4,18,28,.6)); display: grid; place-items: center; }
+.fart svg { height: 100%; width: 100%; }
+.fishchip.unknown .fart { background: linear-gradient(180deg, rgba(10,40,58,.5), rgba(4,18,28,.5)); }
 .progress { height: 10px; background: rgba(0,0,0,.35); border-radius: 99px; overflow: hidden; border: 1px solid var(--edge); }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff2b8); box-shadow: 0 0 10px var(--gold); }
 
@@ -503,7 +506,10 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .scene.bannering .loc-badge, .scene.bannering .effects { opacity: 0; }
   .wrap { padding-bottom: 16px; }
   .copy { font-size: 9px; bottom: max(3px, env(safe-area-inset-bottom, 0px)); }
-  .toasts { top: calc(var(--hdr, 80px) + 6px); bottom: auto; left: 50%; right: auto; transform: translateX(-50%); width: max-content; }
+  /* phones: a slim pill along the bottom edge of the scene, instead of a big box over the top of it */
+  .toasts { top: calc(var(--scene-bot, 300px) - 8px); bottom: auto; left: 50%; right: auto; transform: translate(-50%, -100%); width: max-content; max-width: min(92vw, 420px); }
+  .toast { padding: 4px 11px; font-size: .7rem; line-height: 1.25; gap: 6px; border-radius: 999px; align-items: center; background: rgba(6, 22, 32, .78); box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .toast svg { width: 13px; height: 13px; margin-top: 0; }
   .toast:nth-last-child(n+2) { display: none; }
 }
 @media (max-width: 520px) {
@@ -789,6 +795,104 @@ const MONSTERS = [
   { name: 'Grandfather Marlin', kg: 700, desc: 'Fourteen feet of spear and spite.' },
   { name: 'The Leviathan', kg: 2000, desc: 'Something from the bottom of the trench. It glows.' },
 ];
+// Logbook pictures: every species drawn as a small SVG from a few traits. Uncaught fish show as a silhouette.
+// [half length, half height, back color, belly color, fin color, tail, nose, extras]
+const FISH_ART = [
+  [[24, 15, '#4f7fa0', '#f2b35a', '#3d6680', 'round', 'round', 'bars earspot'], [27, 10, '#8a9a3a', '#f2e27a', '#e9873a', 'fork', 'round', 'bars'],
+   [27, 11, '#5a4a3a', '#c9b48a', '#4a3c2e', 'round', 'blunt', 'whiskers'], [30, 12, '#5f8a4a', '#e8e6c8', '#4f7a3a', 'round', 'round', 'stripe:#2f4a26 bigmouth'],
+   [28, 12, '#f7f2ea', '#fffaf2', '#f7e8da', 'round', 'round', 'patches shine'], [26, 15, '#f5a623', '#fff0b0', '#ffcf3a', 'round', 'round', 'shine scales glowfin']],
+  [[25, 8, '#8a9aa8', '#eef1f3', '#9aa6b0', 'fork', 'round', 'stripe:#4a5560'], [29, 10, '#6f8a5a', '#f2efe6', '#7a9466', 'fork', 'round', 'stripe:#ff7aa8 spots'],
+   [29, 11, '#8a7a4a', '#e8dcb0', '#7a6a3e', 'round', 'round', 'bars'], [31, 10, '#b8a24a', '#f2ecd8', '#a8923e', 'fork', 'point', 'glasseye'],
+   [36, 8, '#6a6f73', '#cfd3d6', '#5a5f63', 'shark', 'point', 'scutes whiskers'], [30, 9, '#7a8a95', '#d8dee2', '#6a7a85', 'shark', 'paddle', '']],
+  [[27, 8, '#a8c4d8', '#f0f5f8', '#9ab8cc', 'fork', 'point', 'shine'], [31, 10, '#5a6a7a', '#e8ecef', '#4a5a6a', 'fork', 'round', 'spots'],
+   [36, 8, '#5f7a3a', '#efe8c8', '#6a8a42', 'round', 'duck', 'beans'], [37, 9, '#9aa06a', '#efeed8', '#8a905a', 'round', 'duck', 'bars'],
+   [28, 11, '#4a6a8a', '#ff6a3d', '#ff8a5a', 'fork', 'round', 'spots whiteedge'], [35, 8, '#cfeaff', '#ffffff', '#e8f6ff', 'round', 'duck', 'ghost']],
+  [[29, 9, '#2f7f8f', '#e8eef0', '#2a6a78', 'crescent', 'point', 'waves finlets'], [31, 11, '#7a8a96', '#f2f4f5', '#6a7a86', 'fork', 'round', 'lines'],
+   [27, 14, '#e8504a', '#ffc2b8', '#d8403a', 'fork', 'round', 'shine'], [27, 17, '#6a5a4a', '#e8dcc8', '#5a4a3a', 'round', 'round', 'mottle'],
+   [31, 10, '#4a6aa8', '#eef2f5', '#ffd23a', 'crescent', 'point', 'stripe:#ffd23a'], [30, 17, '#8a7a5a', '#d8c8a0', '#7a6a4a', 'round', 'blunt', 'mottle bigmouth']],
+  [[30, 12, '#2a4a7a', '#e8eef5', '#2a4a7a', 'crescent', 'point', 'bellylines finlets'], [30, 13, '#3fae6a', '#ffd23a', '#3a9fd8', 'fork', 'blunt', 'longdorsal spots'],
+   [36, 8, '#2a6a9a', '#e0eef5', '#2a5a8a', 'crescent', 'point', 'bars'], [32, 10, '#4a4a6a', '#c8c8d8', '#3a3a5a', 'crescent', 'bill', ''],
+   [32, 11, '#2a4a9a', '#e8f0ff', '#1e3a7a', 'crescent', 'bill', 'sail bars'], [33, 14, '#1a2a5a', '#dfe6ef', '#ffd23a', 'crescent', 'point', 'finlets shine']],
+  [[20, 9, '#3a3a6a', '#6a6aa0', '#4a4a7a', 'fork', 'round', 'glow bigeye'], [18, 15, '#c8d0e0', '#f2f5fa', '#aab4c8', 'fork', 'round', 'hatchet glow bigeye'],
+   [38, 5, '#1a1a2a', '#2a2a3a', '#1a1a2a', 'eel', 'round', 'gulp tailglow'], [22, 17, '#3a2a2a', '#5a4040', '#2a1e1e', 'round', 'blunt', 'lure teeth'],
+   [0, 0, '#c84a4a', '#ff9a8a', '#a83a3a', 'squid', 'round', ''], [32, 13, '#2a3a6a', '#4a5a8a', '#22305a', 'round', 'round', 'whitespots lobes']],
+];
+// legends reuse a look from their water, bigger and with a glow
+const LEGEND_ART = [[30, 12, '#3a3226', '#8a7a5a', '#2a241c', 'round', 'blunt', 'whiskers'], [38, 9, '#c8ccd0', '#f2f4f5', '#a8acb0', 'shark', 'point', 'scutes whiskers'],
+  [38, 9, '#3a5a2a', '#d8d0a0', '#4a6a2a', 'round', 'duck', 'beans'], [32, 18, '#5a4a32', '#a8987a', '#4a3a28', 'round', 'blunt', 'mottle bigmouth'],
+  [34, 11, '#1a3a8a', '#dfe8ff', '#14307a', 'crescent', 'bill', 'sail bars'], [36, 13, '#1a1030', '#3a2a5a', '#2a1a4a', 'round', 'blunt', 'lure teeth glow']];
+let artSeed = 1; const artRnd = () => ((artSeed = artSeed * 16807 % 2147483647) / 2147483647);
+function fishArt(spec, key, dark, legend) {
+  const [L, H, top, belly, fin, tail, nose, ex = ''] = spec, has = k => ex.split(' ').some(x => x.split(':')[0] === k), arg = k => (ex.split(' ').find(x => x.startsWith(k + ':')) || '').split(':')[1];
+  const id = 'fa' + key, cx = 52, cy = 25; artSeed = key.split('').reduce((a, c) => a * 31 + c.charCodeAt(0), 7) % 2147483647 || 1;
+  const sil = dark ? '#0a1a24' : null, F = c => sil || c;
+  let s = '';
+  if (tail === 'squid') { // giant squid: mantle, eye, arms
+    const arms = [...Array(8)].map((_, i) => `<path d="M30 ${21 + i * 1.2} C ${20 - i} ${14 + i * 2.6}, ${10 - i} ${30 + i * 1.5}, ${2 + i * .6} ${12 + i * 4}" stroke="${F(fin)}" stroke-width="${2.6 - i * .15}" fill="none" stroke-linecap="round"/>`).join('');
+    s = `${arms}<path d="M30 17 C 50 11, 78 13, 94 25 C 78 37, 50 39, 30 33 Z" fill="${F(top)}"/><path d="M84 25 L98 15 L96 35 Z" fill="${F(fin)}"/>${dark ? '' : `<ellipse cx="38" cy="25" rx="4" ry="4" fill="#fff"/><circle cx="38.5" cy="25" r="2.2" fill="#111"/><path d="M50 30 C 62 32, 74 31, 86 27" stroke="${belly}" stroke-width="2" fill="none" opacity=".6"/>`}`;
+    return `<svg viewBox="0 0 100 50" aria-hidden="true">${s}</svg>`;
+  }
+  const hx = cx + L, tx = cx - L, blunt = nose === 'blunt';
+  const body = `M${tx} ${cy - H * .28} C ${tx + L * .55} ${cy - H * 1.18}, ${hx - L * (blunt ? .12 : .4)} ${cy - H * (blunt ? 1.15 : 1.02)}, ${hx} ${cy - (blunt ? H * .25 : 0)} ${blunt ? `L ${hx} ${cy + H * .3}` : ''} C ${hx - L * .4} ${cy + H * 1.0}, ${tx + L * .55} ${cy + H * 1.05}, ${tx} ${cy + H * .28} Z`;
+  // tail
+  const tw = Math.max(10, H * 1.1);
+  if (tail === 'fork') s += `<path d="M${tx + 3} ${cy} L${tx - 12} ${cy - tw} L${tx - 7} ${cy} L${tx - 12} ${cy + tw} Z" fill="${F(fin)}"/>`;
+  else if (tail === 'round') s += `<path d="M${tx + 3} ${cy - 2} C ${tx - 6} ${cy - tw}, ${tx - 15} ${cy - tw * .6}, ${tx - 13} ${cy} C ${tx - 15} ${cy + tw * .6}, ${tx - 6} ${cy + tw}, ${tx + 3} ${cy + 2} Z" fill="${F(fin)}"/>`;
+  else if (tail === 'crescent') s += `<path d="M${tx + 3} ${cy} L${tx - 8} ${cy - tw * 1.1} Q ${tx - 9} ${cy}, ${tx - 8} ${cy + tw * 1.1} Z" fill="${F(fin)}"/><path d="M${tx - 2} ${cy} L${tx - 14} ${cy - tw * 1.2} L${tx - 9} ${cy} L${tx - 14} ${cy + tw * 1.2} Z" fill="${F(fin)}"/>`;
+  else if (tail === 'shark') s += `<path d="M${tx + 3} ${cy - 1} L${tx - 14} ${cy - tw * 1.2} L${tx - 6} ${cy + 1} L${tx - 10} ${cy + tw * .6} L${tx + 3} ${cy + 2} Z" fill="${F(fin)}"/>`;
+  else if (tail === 'eel') s += `<path d="M${tx + 2} ${cy - 2} C ${tx - 8} ${cy - 4}, ${tx - 14} ${cy + 6}, ${tx - 22} ${cy + 2} C ${tx - 14} ${cy + 9}, ${tx - 6} ${cy + 3}, ${tx + 2} ${cy + 3} Z" fill="${F(top)}"/>`;
+  // fins behind the body
+  if (has('sail')) s += `<path d="M${cx - L * .5} ${cy - H * .8} C ${cx - L * .3} ${cy - H * 3}, ${cx + L * .4} ${cy - H * 2.8}, ${cx + L * .45} ${cy - H * .9} Z" fill="${F(fin)}"/>`;
+  else if (has('longdorsal')) s += `<path d="M${tx + 4} ${cy - H * .4} C ${cx - L * .3} ${cy - H * 1.7}, ${cx + L * .5} ${cy - H * 1.8}, ${hx - 6} ${cy - H * .9} Z" fill="${F(fin)}"/>`;
+  else if (tail !== 'eel') s += `<path d="M${cx - L * .35} ${cy - H * .85} C ${cx - L * .15} ${cy - H * 1.75}, ${cx + L * .2} ${cy - H * 1.6}, ${cx + L * .25} ${cy - H * .9} Z" fill="${F(fin)}"/>`;
+  if (tail !== 'eel') s += `<path d="M${cx - L * .3} ${cy + H * .85} C ${cx - L * .2} ${cy + H * 1.5}, ${cx + L * .05} ${cy + H * 1.4}, ${cx + L * .1} ${cy + H * .9} Z" fill="${F(fin)}"/>`;
+  if (has('lobes')) s += `<ellipse cx="${cx + L * .15}" cy="${cy + H * 1.05}" rx="5" ry="3" fill="${F(fin)}"/><ellipse cx="${cx - L * .45}" cy="${cy + H * 1.0}" rx="5" ry="3" fill="${F(fin)}"/>`;
+  if (has('hatchet')) s += `<path d="M${cx - L * .6} ${cy + H * .4} L${cx + L * .2} ${cy + H * 1.25} L${cx + L * .6} ${cy + H * .5} Z" fill="${F(belly)}"/>`;
+  // snouts
+  if (nose === 'bill') s += `<path d="M${hx - 2} ${cy - 1.2} L${hx + 22} ${cy - .2} L${hx - 2} ${cy + 1.4} Z" fill="${F(top)}"/>`;
+  if (nose === 'paddle') s += `<path d="M${hx - 3} ${cy - 1.5} L${hx + 12} ${cy - 3} C ${hx + 20} ${cy - 4}, ${hx + 20} ${cy + 4}, ${hx + 12} ${cy + 3} L${hx - 3} ${cy + 1.5} Z" fill="${F(top)}"/>`;
+  if (nose === 'duck') s += `<path d="M${hx - 4} ${cy - H * .5} L${hx + 7} ${cy - 1} L${hx + 7} ${cy + 1.5} L${hx - 4} ${cy + H * .45} Z" fill="${F(top)}"/>`;
+  if (nose === 'point' && has('scutes')) s += `<path d="M${hx - 3} ${cy - 3} L${hx + 8} ${cy + 1} L${hx - 3} ${cy + 3} Z" fill="${F(top)}"/>`;
+  // body with a back-to-belly gradient
+  s += dark ? `<path d="${body}" fill="${sil}"/>` : `<defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset=".48" stop-color="${top}"/><stop offset=".72" stop-color="${belly}"/></linearGradient><clipPath id="${id}c"><path d="${body}"/></clipPath></defs><path d="${body}" fill="url(#${id}g)"/>`;
+  if (!dark) {
+    let pat = '';
+    if (has('bars')) for (let i = 0; i < 6; i++) pat += `<rect x="${tx + 8 + i * (L * 1.6 / 6)}" y="0" width="${L * .11}" height="50" fill="#000" opacity=".22"/>`;
+    if (has('stripe')) pat += `<rect x="0" y="${cy - 1.6}" width="100" height="3.4" fill="${arg('stripe')}" opacity=".8"/>`;
+    if (has('lines')) for (let i = -2; i <= 1; i++) pat += `<rect x="0" y="${cy + i * H * .32}" width="100" height="1.4" fill="#1f2a33" opacity=".55"/>`;
+    if (has('bellylines')) for (let i = 0; i < 3; i++) pat += `<rect x="0" y="${cy + H * (.2 + i * .22)}" width="100" height="1.3" fill="#2a3a5a" opacity=".5"/>`;
+    if (has('waves')) for (let i = 0; i < 7; i++) pat += `<path d="M${tx + 6 + i * L * .26} ${cy - H} q 3 ${H * .5} 0 ${H * .9}" stroke="#123a44" stroke-width="1.6" fill="none" opacity=".75"/>`;
+    const dots = (n, color, r, yMin, yMax, op = 1) => { for (let i = 0; i < n; i++) pat += `<circle cx="${tx + 4 + artRnd() * L * 1.8}" cy="${cy + yMin * H + artRnd() * (yMax - yMin) * H}" r="${r * (.7 + artRnd() * .6)}" fill="${color}" opacity="${op}"/>`; };
+    if (has('spots')) dots(16, '#1d2a22', 1, -.9, .3, .55);
+    if (has('beans')) dots(12, '#e8e2b0', 1.8, -.7, .6, .8);
+    if (has('whitespots')) dots(12, '#e8eef8', 1.2, -.8, .8, .8);
+    if (has('mottle')) dots(14, '#000', 3, -.9, .9, .18);
+    if (has('patches')) { pat += `<ellipse cx="${cx + 4}" cy="${cy - H * .55}" rx="9" ry="5" fill="#ff6b3d"/><ellipse cx="${cx - 12}" cy="${cy - H * .2}" rx="6" ry="4" fill="#e8402a"/><ellipse cx="${hx - 7}" cy="${cy - H * .6}" rx="4" ry="3" fill="#ff6b3d"/>`; }
+    if (has('scales')) for (let r = 0; r < 3; r++) for (let i = 0; i < 6; i++) pat += `<path d="M${tx + 10 + i * 6 + (r % 2) * 3} ${cy - H * .5 + r * H * .45} q 3 3 6 0" stroke="#fff4c0" stroke-width=".9" fill="none" opacity=".6"/>`;
+    if (has('ghost')) pat += `<rect width="100" height="50" fill="#bfe8ff" opacity=".25"/>`;
+    s += `<g clip-path="url(#${id}c)">${pat}</g>`;
+    if (has('shine')) s += `<ellipse cx="${cx + L * .1}" cy="${cy - H * .45}" rx="${L * .5}" ry="${H * .14}" fill="#fff" opacity=".45"/>`;
+    if (has('scutes')) for (let i = 0; i < 6; i++) s += `<path d="M${tx + 8 + i * L * .28} ${cy - H * .85} l2 -2 l2 2 z" fill="#e8eaec" opacity=".8"/>`;
+    if (has('finlets')) for (let i = 0; i < 4; i++) { s += `<path d="M${tx + 2 + i * 3.5} ${cy - H * .3 - i * .8} l1.5 -3 l1.5 3 z" fill="${fin}"/><path d="M${tx + 2 + i * 3.5} ${cy + H * .3 + i * .8} l1.5 3 l1.5 -3 z" fill="${fin}"/>`; }
+    if (has('whiteedge')) s += `<path d="M${cx - L * .3} ${cy + H * 1.25} l6 0" stroke="#fff" stroke-width="1.3"/>`;
+    if (has('earspot')) s += `<ellipse cx="${hx - L * .48}" cy="${cy - H * .1}" rx="2.6" ry="3.4" fill="#1a2a44"/>`;
+    // pectoral fin, gill line, eye, mouth
+    s += `<path d="M${hx - L * .42} ${cy + H * .15} q -7 ${H * .35} -9 ${H * .7} q 6 -1 10 ${-H * .45} z" fill="${fin}" opacity=".9"/>`;
+    s += `<path d="M${hx - L * .34} ${cy - H * .6} q -3 ${H * .6} 0 ${H * 1.15}" stroke="#000" stroke-width=".9" fill="none" opacity=".25"/>`;
+    const er = has('bigeye') ? Math.max(3.2, H * .32) : Math.max(1.8, H * .17), ex2 = hx - L * (has('bigeye') ? .2 : .17), ey = cy - H * (blunt ? .3 : .22);
+    s += has('glasseye') ? `<circle cx="${ex2}" cy="${ey}" r="${er * 1.25}" fill="#e8f0d0"/><circle cx="${ex2 + .4}" cy="${ey}" r="${er * .6}" fill="#3a3a1a"/>`
+       : `<circle cx="${ex2}" cy="${ey}" r="${er}" fill="#fff"/><circle cx="${ex2 + er * .25}" cy="${ey}" r="${er * .6}" fill="#0b1218"/>${legend ? `<circle cx="${ex2 + er * .25}" cy="${ey}" r="${er * .6}" fill="#ff3a1a" opacity=".85"/>` : ''}`;
+    if (has('bigmouth')) s += `<path d="M${hx} ${cy + H * .1} q -6 ${H * .25} -10 ${H * .15}" stroke="#2a1a10" stroke-width="1.4" fill="none"/>`;
+    if (has('teeth')) s += `<path d="M${hx} ${cy + 1} l-3 3 l-2 -3 l-2 3 l-2 -3 l-2 3 l-2 -3" stroke="#fff" stroke-width=".9" fill="none"/>`;
+    if (has('whiskers')) s += `<path d="M${hx - 1} ${cy + 1} q 6 3 9 9 M${hx - 2} ${cy + 2} q 3 5 3 11 M${hx - 1} ${cy - 1} q 7 -1 11 -5" stroke="${fin}" stroke-width=".9" fill="none"/>`;
+    if (has('gulp')) s += `<path d="M${hx - 2} ${cy - 1} L${hx + 14} ${cy - 9} Q ${hx + 10} ${cy + 2}, ${hx + 14} ${cy + 12} Z" fill="${top}" stroke="#3a3a5a" stroke-width=".8"/>`;
+    if (has('lure')) s += `<path d="M${hx - L * .5} ${cy - H * .95} C ${hx - L * .2} ${cy - H * 2}, ${hx + 8} ${cy - H * 1.9}, ${hx + 9} ${cy - H * 1.1}" stroke="${fin}" stroke-width="1.2" fill="none"/><circle cx="${hx + 9}" cy="${cy - H * 1.05}" r="5" fill="#9af7ff" opacity=".35"/><circle cx="${hx + 9}" cy="${cy - H * 1.05}" r="2.2" fill="#dffcff"/>`;
+    if (has('glow')) for (let i = 0; i < 6; i++) s += `<circle cx="${tx + 8 + i * L * .27}" cy="${cy + H * .62}" r="1.3" fill="#7af0ff"/><circle cx="${tx + 8 + i * L * .27}" cy="${cy + H * .62}" r="3" fill="#7af0ff" opacity=".3"/>`;
+    if (has('tailglow')) s += `<circle cx="${tx - 22}" cy="${cy + 2}" r="4.5" fill="#ff5ad8" opacity=".35"/><circle cx="${tx - 22}" cy="${cy + 2}" r="1.8" fill="#ffc8f2"/>`;
+    if (has('glowfin')) s += `<ellipse cx="${cx}" cy="${cy}" rx="${L + 8}" ry="${H + 6}" fill="#ffcf3a" opacity=".12"/>`;
+  }
+  return `<svg viewBox="-12 -10 124 70" aria-hidden="true">${legend && !dark ? `<ellipse cx="50" cy="25" rx="52" ry="26" fill="#ff5a3d" opacity=".12"/>` : ''}${s}</svg>`;
+}
 const FIGHT = { time: 10, start: 30, drain: 14, tap: 5.5 }; // seconds, meter start %, drain %/s, % per tap
 
 const TREASURES = ['Message in a Bottle', 'Barnacled Pocket Watch', 'Sunken Chest', "Pirate's Compass", 'Jeweled Crown'];
@@ -1375,8 +1479,8 @@ function renderPanel() {
       h += `<div class="logloc"><h3>${L.name} <small>${L.depth} · ${L.temp}${comp ? ' · <span style="color:var(--kelp)">Complete +10%</span>' : ''}</small></h3><div class="fishgrid">`;
       L.fish.forEach((f, fi) => {
         const e = S.log[li + ':' + fi];
-        h += e ? `<div class="fishchip" style="--rc:${RARITY_C[f[1]]}"><b>${f[0]}</b><span>${RARITY[f[1]]} · ${fmt(e.n)} caught<br>Best: ${kg(e.best)}</span></div>`
-               : `<div class="fishchip unknown"><b>???</b><span>${RARITY[f[1]]} · not yet caught</span></div>`;
+        h += e ? `<div class="fishchip" style="--rc:${RARITY_C[f[1]]}"><div class="fart">${fishArt(FISH_ART[li][fi], li + '_' + fi)}</div><b>${f[0]}</b><span>${RARITY[f[1]]} · ${fmt(e.n)} caught<br>Best: ${kg(e.best)}</span></div>`
+               : `<div class="fishchip unknown"><div class="fart">${fishArt(FISH_ART[li][fi], li + '_' + fi, true)}</div><b>???</b><span>${RARITY[f[1]]} · not yet caught</span></div>`;
       });
       h += `</div></div>`;
     });
@@ -1385,8 +1489,8 @@ function renderPanel() {
       <p class="note">About 1 bite in ${has('magnet') ? '350' : '1,000'} is a monster. Tap fast to fill the meter before it breaks your line.</p><div class="fishgrid">`;
     MONSTERS.forEach((m, li) => {
       const e = S.monsters[li];
-      h += e ? `<div class="fishchip" style="--rc:var(--buoy)"><b>${m.name}</b><span>${LOCS[li].name} · landed ${e.n}×<br>Best: ${kg(e.best)}</span></div>`
-             : `<div class="fishchip unknown"><b>???</b><span>Legend of ${LOCS[li].name}</span></div>`;
+      h += e ? `<div class="fishchip" style="--rc:var(--buoy)"><div class="fart">${fishArt(LEGEND_ART[li], 'L' + li, false, true)}</div><b>${m.name}</b><span>${LOCS[li].name} · landed ${e.n}×<br>Best: ${kg(e.best)}</span></div>`
+             : `<div class="fishchip unknown"><div class="fart">${fishArt(LEGEND_ART[li], 'L' + li, true, true)}</div><b>???</b><span>Legend of ${LOCS[li].name}</span></div>`;
     });
     h += `</div></div>`;
   } else if (activeTab === 'goals') {
@@ -1521,7 +1625,7 @@ function toast(html, ic = 'spark', color = 'var(--gold)') {
   const t = document.createElement('div'); t.className = 'toast'; t.style.setProperty('--tc', color);
   t.innerHTML = icon(ic) + `<div>${html}</div>`;
   $('toasts').appendChild(t);
-  setTimeout(() => t.remove(), 3800);
+  setTimeout(() => t.remove(), innerWidth < 920 ? 2800 : 3800);
   while ($('toasts').children.length > 4) $('toasts').firstChild.remove();
 }
 function showLastCatch(fish, total, count, perfect, treasure) {
@@ -1863,6 +1967,7 @@ function resize() {
   stars = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.36, r: Math.random() * 1.3 + 0.3, p: Math.random() * 6 }));
   swimmers = Array.from({ length: 6 }, () => newSwimmer(true)); // re-place fish under the new horizon (e.g. after rotating a phone)
   buildScene();
+  document.documentElement.style.setProperty('--scene-bot', Math.round($('scene').getBoundingClientRect().bottom) + 'px');
   document.documentElement.style.setProperty('--hdr', Math.round(document.querySelector('header.top').getBoundingClientRect().bottom) + 'px');
 }
 const horizon = () => H * 0.38;
