@@ -271,6 +271,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
 .hval { text-align: right; display: grid; gap: 2px; }
 .hval b { font-family: var(--display); color: var(--gold); font-size: 1.05rem; font-weight: 400; }
 .hval small { color: var(--muted); font-size: .7rem; font-weight: 700; }
+.news-h { margin: 4px 0 -4px; font: 400 1.05rem var(--display); color: var(--gold); letter-spacing: .4px; }
 .hbtn { display: inline-flex; align-items: center; gap: 8px; justify-self: start; }
 .hbtn svg { width: 16px; height: 16px; }
 @media (max-width: 520px) { .hrow { grid-template-columns: 70px minmax(0, 1fr); } .hrow .fart { height: 44px; } .hval { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; } }
@@ -640,9 +641,13 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 <div class="modal" id="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
   <div class="sheet">
     <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.1</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <h3 class="news-h">Hotfix v1.2.1</h3>
     <ul class="news">
-      <li><b>v1.2.1:</b> tap your <b>last catch</b> (or Logbook → Last 10 catches) to see a <b>history of your last 10 catches</b>, with pictures and every detail.</li>
-      <li><b>v1.2.1 fix:</b> unlock and buy buttons stay grey until you can afford them.</li>
+      <li><b>Catch history:</b> tap your <b>last catch</b> (or Logbook → Last 10 catches) to see your last 10 catches, with pictures and every detail.</li>
+      <li><b>Fix:</b> unlock and buy buttons stay grey until you can afford them.</li>
+    </ul>
+    <h3 class="news-h">Update v1.2</h3>
+    <ul class="news">
       <li><b>Pearls</b> 🫧, a new currency for cosmetics. Earn them from perfect catches, new species, rare fish, goals, legends and a <b>daily bonus</b>. Pearls never reset.</li>
       <li>A new <b>Skins</b> tab: bobbers, rod wraps, hats, dock companions, lanterns and crew boats, from Common to Legendary.</li>
       <li><b>Trophies</b> for your dock when you land Old Mossback, Grandfather Marlin and The Leviathan.</li>
