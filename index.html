@@ -294,6 +294,7 @@ canvas#sea { display: block; width: 100%; cursor: pointer; touch-action: manipul
 }
 @media (min-width: 920px) and (max-height: 680px) { .recent-h { display: none; } .recent { padding: 5px 6px; } }
 @media (min-width: 920px) and (max-width: 1180px) { .hint { display: none; } }
+@media (max-height: 500px) { .copy { display: none; } }
 .news-h { margin: 4px 0 -4px; font: 400 1.05rem var(--display); color: var(--gold); letter-spacing: .4px; }
 .hbtn { display: inline-flex; align-items: center; gap: 8px; justify-self: start; }
 .hbtn svg { width: 16px; height: 16px; }
@@ -2957,6 +2958,10 @@ function frame(nowT) {
 let started = false, returning = false;
 function startGame() {
   if (started) return; started = true;
+  // a tiny embed (e.g. a game site shrinking the window on a phone) can't fit the shop: go fullscreen if the page allows it
+  if (innerHeight < 450 && innerWidth < 920 && document.fullscreenEnabled && !document.fullscreenElement) {
+    try { const r = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+  }
   SND.init(); SND.apply();              // the tap gives the browser permission to play sound, so music starts now
   const t = $('title'); t.classList.add('leaving'); setTimeout(() => t.remove(), 500);
   setTimeout(() => {
