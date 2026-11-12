@@ -1227,13 +1227,15 @@ function retire() {
   S.rec.bestCareer = Math.max(S.rec.bestCareer, S.runEarned);
   const keep = { fame: S.fame + gain, retires: S.retires + 1, totalEarned: S.totalEarned, log: S.log, monsters: S.monsters, catches: S.catches, perfects: S.perfects,
     goldens: S.goldens, treasures: S.treasures, stormCatches: S.stormCatches, goals: S.goals, early: S.early, sinceMonster: S.sinceMonster, rec: S.rec, seenHelp: S.seenHelp, seenVer: S.seenVer, pearls: S.pearls, pearlsTotal: S.pearlsTotal, owned: S.owned, equip: S.equip, lastDaily: S.lastDaily, music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev };
-  S = Object.assign(fresh(), keep);
+  S = Object.assign(fresh(), keep); forgetRun();
   retireArmed = false; SND.fanfare(); resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast(`You retired with <b>${gain} ★</b> more fame. All income is now ×${fameMult().toFixed(1)}.`, 'star');
 }
+// A new save or career forgets the old one's recent income, which sizes goal rewards.
+function forgetRun() { youLog.length = 0; crewAcc = 0; crewFloat = 0; dispCash = S.cash; }
 function hardReset() {
   if (!resetArmed) { resetArmed = true; renderPanel(); return; }
-  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev }); resetArmed = false; resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
+  S = Object.assign(fresh(), { music: S.music, sfx: S.sfx, autoCast: S.autoCast, set: S.set, dev: S.dev }); forgetRun(); resetArmed = false; resetCast(); onLocChange(); renderPanel(); renderSkillbar(); save();
   toast('Save wiped. Back to the farm pond.', 'wave');
 }
 
@@ -1833,7 +1835,7 @@ $('importGo').addEventListener('click', () => {
   try { data = decodeSave($('saveCode').value); if (typeof data !== 'object' || typeof data.cash !== 'number') throw 0; }
   catch (e) { backupMsg("That doesn't look like a Bobber & Brine backup code. Copy the whole code and try again.", 'bad'); return; }
   if (!importArmed) { importArmed = true; $('importGo').textContent = 'Tap again to replace your save'; backupMsg(`This backup has ${money(data.cash)} and ${Object.keys(data.log || {}).length} species. Loading it replaces your current progress.`, ''); return; }
-  S = merge(data); clampCrew(); dispCash = S.cash; save();
+  S = merge(data); clampCrew(); forgetRun(); save();
   resetCast(); onLocChange(); renderPanel(); renderSkillbar(); syncSettings(); syncToggles(); SND.apply();
   $('saveCode').hidden = true; $('importRow').hidden = true; importArmed = false;
   backupMsg('Backup loaded.', 'ok'); toast('Backup loaded.', 'book', '#5fe08a');
