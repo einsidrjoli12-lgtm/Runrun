@@ -559,9 +559,20 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .brand { font-size: 1.15rem; gap: 7px; } .brand svg { width: 24px; height: 24px; }
   #musicBtn, #sfxBtn { display: none; }
   .tog { width: 30px; height: 30px; } .tog svg { width: 16px; height: 16px; }
-  .you-chip { display: none; }
   .fame-chip.zero { display: none; }
-  .stats { justify-content: space-between; }
+  /* stats fill the whole row: every chip stretches, the money chip gets the most room */
+  .stats { justify-content: stretch; gap: 5px; }
+  .stats > * { flex: 1 1 0; min-width: 0; justify-content: center; white-space: nowrap; overflow: hidden; }
+  .stats > .cash-chip { flex: 1.5 1 0; justify-content: flex-start; }
+  .toggles { align-items: center; gap: 5px; }
+  .toggles .chip { padding: 4px 8px; font-size: .74rem; gap: 4px; }
+  .toggles .pearl { width: 13px; height: 13px; }
+}
+@media (max-width: 400px) {
+  .brand { font-size: 1rem; gap: 6px; } .brand svg { width: 21px; height: 21px; }
+  .toggles { gap: 4px; } .toggles .chip { padding: 3px 6px; font-size: .7rem; gap: 3px; }
+  .tog { width: 28px; height: 28px; }
+  .chip { padding: 5px 6px; font-size: .74rem; gap: 4px; }
   .cash { font-size: 1.15rem; }
   .loc-badge { left: 8px; top: 8px; padding: 3px 9px 3px 6px; gap: 5px; font-size: .68rem; }
   .loc-badge i { width: 7px; height: 7px; }
@@ -2053,6 +2064,14 @@ let clouds = [], birds = [], glints = [], plankton = [], jellies = [], props = [
 let crewAcc = 0, flash = 0, flashColor = '#fff', lightning = 0, boltPath = null, bannerObj = null, shooting = null, shipX = 0;
 const cloudSprites = {};
 
+// phones: pearls and fame sit on the title row (next to the gear), money and income get the second row to themselves
+function placeChips() {
+  const phone = innerWidth <= 520, tg = $('settingsBtn').parentElement, st = document.querySelector('.stats');
+  for (const el of [$('pearlChip'), $('fameChip')]) {
+    if (phone && el.parentElement !== tg) tg.insertBefore(el, tg.querySelector('.dev-badge'));
+    if (!phone && el.parentElement !== st) st.appendChild(el);
+  }
+}
 function resize() {
   const rect = $('scene').getBoundingClientRect();
   DPR = Math.min(2, window.devicePixelRatio || 1);
@@ -2066,6 +2085,7 @@ function resize() {
   stars = Array.from({ length: 90 }, () => ({ x: Math.random() * W, y: Math.random() * H * 0.36, r: Math.random() * 1.3 + 0.3, p: Math.random() * 6 }));
   swimmers = Array.from({ length: 6 }, () => newSwimmer(true)); // re-place fish under the new horizon (e.g. after rotating a phone)
   buildScene();
+  placeChips();
   document.documentElement.style.setProperty('--scene-bot', Math.round($('scene').getBoundingClientRect().bottom) + 'px');
   document.documentElement.style.setProperty('--hdr', Math.round(document.querySelector('header.top').getBoundingClientRect().bottom) + 'px');
 }
