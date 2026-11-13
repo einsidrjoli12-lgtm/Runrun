@@ -668,6 +668,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.2</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
     <h3 class="news-h">Hotfix v1.2.2</h3>
     <ul class="news">
+      <li><b>Late upgrades:</b> the last levels of the Rod, Market Stall and crew upgrades were so expensive they could never be finished. They now get cheaper the higher you go, so everything can be maxed with enough time in the Midnight Trench.</li>
       <li><b>Fame fix:</b> retiring could give millions of stars, which made income explode. Now you get your first star at $1M and 10 more each time your career earnings grow 10×. If your save had runaway stars, they were scaled to the new rule.</li>
     </ul>
     <h3 class="news-h">Hotfix v1.2.1</h3>
@@ -965,10 +966,12 @@ const ROD_TIERS = [
 ];
 const rodTier = (l = S.up.rod) => ROD_TIERS.filter(t => l >= t.at).pop();
 
+// Late levels grow more gently (from level k on, each costs g2x more instead of gx), so the max is reachable.
+const soft = (l, g, k, g2) => l <= k ? g ** l : g ** k * g2 ** (l - k);
 const UPGRADES = [
   { id: 'holder', name: 'Rod Holder', icon: 'holder', c: '#7fa8b8', max: 1, cost: () => 300,
     desc: () => S.up.holder ? `Recasting automatically: ${S.autoCast ? 'on' : 'off'}. Tap to switch.` : 'Recasts your line automatically after every catch. You can switch it on and off.' },
-  { id: 'rod', name: 'Fishing Rod', icon: 'rod', c: '#ff8a4c', max: 80, cost: l => 20 * 2.4 ** l,
+  { id: 'rod', name: 'Fishing Rod', icon: 'rod', c: '#ff8a4c', max: 80, cost: l => 20 * soft(l, 2.4, 44, 1.45),
     title: l => rodTier(l).name,
     desc: l => `Catch value ×${fx(1.12 ** l)} → ×${fx(1.12 ** (l + 1))}. Rare fish here ${pct(rareChance(S.loc, S.up.bait, l))} → ${pct(rareChance(S.loc, S.up.bait, l + 1))}.${nextTierText(l)}` },
   { id: 'line', name: 'Braided Line', icon: 'line', c: '#5cd6ff', max: 25, cost: l => 30 * 2.6 ** l,
@@ -977,7 +980,7 @@ const UPGRADES = [
     desc: l => `Rare-or-better chance here ${pct(rareChance(S.loc, l, S.up.rod))} → ${pct(rareChance(S.loc, l + 1, S.up.rod))}` },
   { id: 'net', name: 'Landing Net', icon: 'net', c: '#5fe08a', max: 12, cost: l => 1000 * 3.4 ** l,
     desc: l => `Double-catch chance ${pct(0.08 * l)} → ${pct(0.08 * (l + 1))}` },
-  { id: 'market', name: 'Market Stall', icon: 'market', c: '#ffcf5a', max: 60, cost: l => 400 * 2.6 ** l,
+  { id: 'market', name: 'Market Stall', icon: 'market', c: '#ffcf5a', max: 60, cost: l => 400 * soft(l, 2.6, 38, 1.45),
     desc: l => `Sell price ×${fx(1.11 ** l)} → ×${fx(1.11 ** (l + 1))}` },
 ];
 // Crew limits rise with the furthest water you've unlocked. Unlocking a new water resets your cash and crew.
@@ -989,11 +992,11 @@ const CREW_PRICE = [1, 15, 600, 1.5e5, 3e7, 8e9];
 const crewPrice = () => CREW_PRICE[Math.max(0, topWater())];
 function clampCrew() { for (const id in CREW_CAPS) S.crew[id] = Math.min(S.crew[id], crewCap(id)); }
 const CREW = [
-  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', get max() { return crewCap('hands'); }, cost: n => 100 * 1.35 ** n * crewPrice(),
+  { id: 'hands', name: 'Deckhand', icon: 'hands', c: '#3fc8b8', get max() { return crewCap('hands'); }, cost: n => 100 * soft(n, 1.35, 45, 1.13) * crewPrice(),
     desc: () => `Each one lands a fish every ${handInterval().toFixed(1)}s, even while you are away.` },
-  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', get max() { return crewCap('speed'); }, cost: l => 3000 * 3 ** l * crewPrice(),
+  { id: 'speed', name: 'Crew Training', icon: 'speed', c: '#5cd6ff', get max() { return crewCap('speed'); }, cost: l => 3000 * soft(l, 3, 12, 1.75) * crewPrice(),
     desc: l => `Deckhand catch time ${handInterval(l).toFixed(2)}s → ${handInterval(l + 1).toFixed(2)}s` },
-  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', get max() { return crewCap('skill'); }, cost: l => 10000 * 3.2 ** l * crewPrice(),
+  { id: 'skill', name: 'Crew Gear', icon: 'anchor', c: '#8a9cff', get max() { return crewCap('skill'); }, cost: l => 10000 * soft(l, 3.2, 8, 1.38) * crewPrice(),
     desc: l => `Deckhand catch value ×${fx(1.15 ** l)} → ×${fx(1.15 ** (l + 1))}` },
 ];
 // Active abilities: buy once, fire with a button or keys 1-4, then wait for them to recharge.
