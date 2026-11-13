@@ -1044,15 +1044,16 @@ const SKINS = [
   ['sunset', 'Sunset Rod', 'rod', 'code', 'REELGRAM', 'Instagram', '#e1306c'],
   ['beanie', 'Beanie', 'hat', 0], ['bucket', 'Bucket Hat', 'hat', 0], ['hood', 'Rain Hood', 'hat', 1], ['pirate', 'Pirate Hat', 'hat', 2], ['crown', 'Crown', 'hat', 3],
   ['captain', "Red Captain's Cap", 'hat', 'code', 'TUBEFISH', 'YouTube', '#ff3b3b'],
+  ['nott', 'Nótt', 'pet', 'gift', null, null, '#cfdc4a'],
   ['frog', 'Frog', 'pet', 1], ['gull', 'Seagull', 'pet', 1], ['cat', 'Cat', 'pet', 2], ['otter', 'Otter', 'pet', 3],
   ['teal', 'Teal Lantern', 'lantern', 0], ['pink', 'Pink Lantern', 'lantern', 0], ['fireflies', 'Fireflies', 'lantern', 1],
   ['red', 'Red Fleet', 'boat', 0], ['sunny', 'Sunny Fleet', 'boat', 1], ['royal', 'Royal Fleet', 'boat', 2],
   ['mossback', 'Mossback Trophy', 'trophy', 'trophy', 0], ['marlin', 'Marlin Trophy', 'trophy', 'trophy', 4], ['leviathan', 'Leviathan Trophy', 'trophy', 'trophy', 5],
-].map(([id, name, slot, rarity, a, b, c]) => ({ id, name, slot, rarity, code: rarity === 'code' ? a : null, plat: b, pcol: c, legend: rarity === 'trophy' ? a : null }));
+].map(([id, name, slot, rarity, a, b, c]) => ({ id, name, slot, rarity, code: rarity === 'code' ? a : null, secret: rarity === 'gift', plat: b, pcol: c, legend: rarity === 'trophy' ? a : null }));
 const SKIN = Object.fromEntries(SKINS.map(k => [k.id, k]));
 // sha256 of the lower-case platform codes (the codes themselves are not stored)
-const CODE_HASH = { 'cc3c09c9841b9cc09f37cad4413c2de2f3c6d0331d82d9a6364c750cc4a9510b': 'neon', '8982991afdbf987d0c054a681fd330cb1d50f7efc8f3f20aeba586272d82480c': 'sunset', '3cdfe484837bd394dd97267e1409104ff3cb216ae9419392dc18c48b9785b2a3': 'captain' };
-const skinCol = k => k.rarity === 'code' ? k.pcol : k.rarity === 'trophy' ? '#ff8a4c' : RARITY_COL[k.rarity];
+const CODE_HASH = { 'd277670919a94ba361be1887d39852c3f31d7eed817343cbb70fcd8910841f86': 'nott', 'cc3c09c9841b9cc09f37cad4413c2de2f3c6d0331d82d9a6364c750cc4a9510b': 'neon', '8982991afdbf987d0c054a681fd330cb1d50f7efc8f3f20aeba586272d82480c': 'sunset', '3cdfe484837bd394dd97267e1409104ff3cb216ae9419392dc18c48b9785b2a3': 'captain' };
+const skinCol = k => k.rarity === 'code' || k.rarity === 'gift' ? k.pcol : k.rarity === 'trophy' ? '#ff8a4c' : RARITY_COL[k.rarity];
 const skinOn = slot => { const id = S.equip[slot]; return id && S.owned[id] ? id : null; };
 function gainPearls(n) { if (n <= 0) return; S.pearls += n; S.pearlsTotal += n; const el = document.getElementById('pearls'); if (el) el.textContent = fmt(S.pearls); }
 function unlockSkin(id, how) {
@@ -1506,13 +1507,13 @@ function renderPanel() {
   } else if (activeTab === 'skins') {
     h += `<div class="pearlbar"><b><i class="pearl"></i>${fmt(S.pearls)} pearls</b><span>Earn pearls by fishing yourself: perfect catches, new species, rare fish, goals, legends and a daily bonus. Skins are just for looks and you keep them forever.</span></div>`;
     for (const [slot, title, defName] of SLOTS) {
-      const items = SKINS.filter(k => k.slot === slot), cur = skinOn(slot);
+      const items = SKINS.filter(k => k.slot === slot && (!k.secret || S.owned[k.id])), cur = skinOn(slot);
       h += `<h3>${title} <small>${items.filter(k => S.owned[k.id]).length}/${items.length} owned</small></h3>`;
       h += `<div class="item ${!cur ? 'equipped' : ''}" style="--c:#7fa8b8"><div class="tile skin-tile">${skinSwatch(slot, null)}</div><div class="head"><span class="name">${defName}</span></div><div class="desc">The original look.</div>${!cur ? '<button class="buy maxed" disabled>Equipped</button>' : `<button class="buy ghost" data-skin-equip="${slot}:">Equip</button>`}</div>`;
       for (const k of items) {
         const own = !!S.owned[k.id], on = cur === k.id, c = skinCol(k);
-        const pill = k.rarity === 'code' ? `${k.plat} exclusive` : k.rarity === 'trophy' ? 'Trophy' : RARITY_NAMES[k.rarity];
-        const how = k.rarity === 'code' ? `${k.plat} exclusive: follow <b>${{ TikTok: 'Bobber &amp; Brine', Instagram: 'Bobber &amp; Brine Game', YouTube: 'Bobber &amp; Brine Game' }[k.plat]}</b> on ${k.plat} to get the code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
+        const pill = k.rarity === 'gift' ? 'Special' : k.rarity === 'code' ? `${k.plat} exclusive` : k.rarity === 'trophy' ? 'Trophy' : RARITY_NAMES[k.rarity];
+        const how = k.rarity === 'gift' ? 'A very special cat. 🖤' : k.rarity === 'code' ? `${k.plat} exclusive: follow <b>${{ TikTok: 'Bobber &amp; Brine', Instagram: 'Bobber &amp; Brine Game', YouTube: 'Bobber &amp; Brine Game' }[k.plat]}</b> on ${k.plat} to get the code.` : k.rarity === 'trophy' ? `Land ${MONSTERS[k.legend].name} to earn it.` : `${SKIN_PRICE[k.rarity].toLocaleString('en-US')} pearls.`;
         let btn;
         if (on) btn = '<button class="buy maxed" disabled>Equipped</button>';
         else if (own) btn = `<button class="buy" data-skin-equip="${slot}:${k.id}">Equip</button>`;
@@ -1620,7 +1621,7 @@ function skinSwatch(slot, id) {
       pirate: '<path d="M3 26 Q20 0 37 26 Q20 18 3 26Z" fill="#1a1a1a"/><circle cx="20" cy="17" r="3" fill="#fff"/>', crown: '<path d="M8 28 V12 L14 19 L20 9 L26 19 L32 12 V28Z" fill="#ffcf5a"/><circle cx="20" cy="23" r="2.4" fill="#e8483c"/>', captain: '<path d="M8 24 Q8 10 20 10 Q32 10 32 24Z" fill="#ff3b3b"/><rect x="8" y="22" width="24" height="4" fill="#fff"/><ellipse cx="26" cy="28" rx="11" ry="3" fill="#1a1a1a"/><path d="M20 13v8M17 15h6" stroke="#ffcf5a" stroke-width="1.6"/>' }[id];
     return sv(H || '<path d="M4 26 L36 26 L20 10Z" fill="#c7d6dc"/>');
   }
-  if (slot === 'pet') return id ? `<span style="font-size:26px;line-height:1">${{ frog: '🐸', gull: '🐦', cat: '🐱', otter: '🦦' }[id]}</span>` : sv('<path d="M10 30h20" stroke="#7fa8b8" stroke-width="3" stroke-linecap="round"/>');
+  if (slot === 'pet') return id ? `<span style="font-size:26px;line-height:1">${{ frog: '🐸', gull: '🐦', cat: '🐱', otter: '🦦', nott: '🐈‍⬛' }[id]}</span>` : sv('<path d="M10 30h20" stroke="#7fa8b8" stroke-width="3" stroke-linecap="round"/>');
   if (slot === 'lantern') { const c = { teal: '#50f0dc', pink: '#ff6ebe', fireflies: '#ffbe5a' }[id] || '#ffbe5a'; return sv(`<circle cx="20" cy="18" r="14" fill="${c}" opacity=".25"/><rect x="15" y="12" width="10" height="12" rx="2" fill="${c}"/><rect x="19" y="24" width="2" height="12" fill="#c7d6dc"/>${id === 'fireflies' ? '<circle cx="7" cy="9" r="1.8" fill="#e8ff8a"/><circle cx="33" cy="12" r="1.8" fill="#e8ff8a"/><circle cx="31" cy="30" r="1.8" fill="#e8ff8a"/>' : ''}`); }
   if (slot === 'boat') { const c = { red: '#d83a2e', sunny: '#ffc93c', royal: '#1f3a8a' }[id] || '#5d7a88'; return sv(`<path d="M4 22 H36 L30 30 H10Z" fill="${c}"/>${id === 'royal' ? '<rect x="4" y="21" width="32" height="2" fill="#ffcf5a"/><path d="M12 6 V21 M12 6 L20 9 L12 12" stroke="#ffcf5a" stroke-width="2" fill="#ffcf5a"/>' : ''}<circle cx="21" cy="14" r="3" fill="#c7d6dc"/>`); }
   if (slot === 'trophy') { const c = { mossback: '#6f7d3c', marlin: '#3a7bd5', leviathan: '#c9a2ff' }[id]; return id ? sv(`<rect x="4" y="9" width="32" height="20" rx="4" fill="#8a5a2b"/><ellipse cx="20" cy="19" rx="10" ry="5" fill="${c}"/><path d="M10 19 L4 14 V24Z" fill="${c}"/>`) : sv('<rect x="6" y="11" width="28" height="18" rx="4" fill="none" stroke="#7fa8b8" stroke-width="2" stroke-dasharray="4 3"/>'); }
@@ -1989,8 +1990,8 @@ $('codeForm').addEventListener('submit', async e => {
   if (CODE_HASH[hash]) {
     const k = SKIN[CODE_HASH[hash]];
     if (S.owned[k.id]) { msg.textContent = `You already have the ${k.name}.`; msg.className = 'code-msg ok'; return; }
-    unlockSkin(k.id, k.plat.toUpperCase() + ' EXCLUSIVE'); S.equip[k.slot] = k.id; save();
-    msg.textContent = `${k.name} unlocked and equipped. Thanks for following on ${k.plat}!`; msg.className = 'code-msg ok'; return;
+    unlockSkin(k.id, k.secret ? 'SPECIAL PET' : k.plat.toUpperCase() + ' EXCLUSIVE'); S.equip[k.slot] = k.id; save();
+    msg.textContent = k.secret ? `${k.name} joined you on the dock 🖤` : `${k.name} unlocked and equipped. Thanks for following on ${k.plat}!`; msg.className = 'code-msg ok'; return;
   }
   if (ok) {
     S.dev = true; save(); syncSettings();
@@ -2618,7 +2619,7 @@ function drawBobberSkin(bx, by, look, t) {
 }
 // Pets: cute, alive and reactive. They breathe, blink, do little things on their own and cheer when you land a fish.
 const PET = { act: 'idle', t: 0, dur: 0, next: 3, blink: 2, react: 0, big: false };
-const PET_ACTS = { otter: [['groom', 2.2], ['shell', 2.4], ['float', 7.5], ['float', 7.5]], cat: [['groom', 2.6], ['stretch', 2.2], ['nap', 7]], frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1]], gull: [['look', 2.4], ['flap', 1.4], ['squawk', 1.2]] };
+const PET_ACTS = { otter: [['groom', 2.2], ['shell', 2.4], ['float', 7.5], ['float', 7.5]], cat: [['groom', 2.6], ['stretch', 2.2], ['nap', 7]], frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1]], gull: [['look', 2.4], ['flap', 1.4], ['squawk', 1.2]], nott: [['slowblink', 2.6], ['loaf', 5], ['groom', 2.8], ['pounce', 2.6], ['bigstretch', 3.4], ['nap', 6]] };
 function petReact(rarity) { if (PET.act === 'float' || PET.act === 'nap') return; PET.act = 'idle'; PET.react = 1.3; PET.big = rarity >= 3; }
 function stepPet(look, dt) {
   PET.t += dt; PET.blink -= dt; if (PET.blink < -0.13) PET.blink = 2 + Math.random() * 3.5;
@@ -2640,13 +2641,133 @@ function petEyes(c, x1, x2, y, r, mode) { // mode: open | blink | happy
 const blush = (c, x1, x2, y) => { c.fillStyle = 'rgba(255,120,140,.45)'; c.beginPath(); c.ellipse(x1, y, 3, 1.8, 0, 0, 7); c.ellipse(x2, y, 3, 1.8, 0, 0, 7); c.fill(); };
 function petHeart(c, x, y, s, a) { c.save(); c.globalAlpha = a; c.fillStyle = '#ff5a7a'; c.translate(x, y); c.scale(s, s); c.beginPath(); c.moveTo(0, 3); c.bezierCurveTo(-6, -2, -3, -7, 0, -3.5); c.bezierCurveTo(3, -7, 6, -2, 0, 3); c.fill(); c.restore(); }
 function petNote(c, txt, x, y, a, size = 9) { c.save(); c.globalAlpha = a; c.font = `${size}px "Lilita One", sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(5,20,28,.7)'; c.strokeText(txt, x, y); c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore(); }
+// Nótt: a special black cat (code only). Ported from her preview page.
+const N_BLACK = '#17171f', N_RIM = '#3c3c52', N_PINK = '#ff9fb3', N_EYE = '#cfdc4a';
+function nottEyes(c, x1, x2, y, r, mode, night, look = 0) {
+  if (mode === 'open' || mode === 'wide') {
+    const rr = mode === 'wide' ? r * 1.2 : r;
+    if (night) { c.save(); c.globalCompositeOperation = 'lighter'; [x1, x2].forEach(x => { const g = c.createRadialGradient(x, y, 0, x, y, rr * 3.2); g.addColorStop(0, 'rgba(210,240,90,.55)'); g.addColorStop(1, 'rgba(210,240,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, rr * 3.2, 0, 7); c.fill(); }); c.restore(); }
+    c.fillStyle = night ? '#e4f25e' : N_EYE; c.beginPath(); c.ellipse(x1, y, rr, rr * 1.1, 0, 0, 7); c.ellipse(x2, y, rr, rr * 1.1, 0, 0, 7); c.fill();
+    c.fillStyle = '#0b0b10'; const pw = mode === 'wide' ? rr * .75 : rr * .32; c.beginPath(); c.ellipse(x1 + look, y, pw, rr * .9, 0, 0, 7); c.ellipse(x2 + look, y, pw, rr * .9, 0, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(x1 + rr * .35, y - rr * .45, rr * .3, 0, 7); c.arc(x2 + rr * .35, y - rr * .45, rr * .3, 0, 7); c.fill();
+  } else if (mode === 'half') {
+    c.fillStyle = night ? '#e4f25e' : N_EYE; c.beginPath(); c.ellipse(x1, y + r * .35, r, r * .45, 0, 0, Math.PI); c.ellipse(x2, y + r * .35, r, r * .45, 0, 0, Math.PI); c.fill();
+    c.strokeStyle = N_RIM; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x1 - r, y + .3 * r); c.lineTo(x1 + r, y + .3 * r); c.moveTo(x2 - r, y + .3 * r); c.lineTo(x2 + r, y + .3 * r); c.stroke();
+  } else {
+    c.strokeStyle = '#8f8fae'; c.lineWidth = 1.5; c.lineCap = 'round'; c.beginPath();
+    if (mode === 'happy') { c.arc(x1, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(x2 + r * .95, y - .2); c.arc(x2, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); }
+    else { c.moveTo(x1 - r, y); c.quadraticCurveTo(x1, y + r * .7, x1 + r, y); c.moveTo(x2 - r, y); c.quadraticCurveTo(x2, y + r * .7, x2 + r, y); }
+    c.stroke();
+  }
+}
+function nottBlob(c, f) { c.save(); c.fillStyle = N_BLACK; c.strokeStyle = N_RIM; c.lineWidth = 1.6; c.beginPath(); f(); c.fill(); c.stroke(); c.restore(); }
+function drawNott(c, act, k, at, t, night, blinkOn) {
+  const breathe = 1 + Math.sin(t * 2.4) * .025;
+  const react = act === 'react', hop = react ? Math.abs(Math.sin(k * Math.PI * 2)) * 12 : act === 'pounce' && k > .55 && k < .85 ? Math.sin((k - .55) / .3 * Math.PI) * 16 : 0;
+  const px = act === 'pounce' ? (k > .55 ? Math.min(1, (k - .55) / .3) * 16 : 0) : 0;
+  c.save(); c.translate(px, -hop);
+  if (act === 'nap') {
+    nottBlob(c, () => c.ellipse(0, -8, 16, 8, 0, 0, 7));
+    c.save(); c.strokeStyle = N_RIM; c.lineWidth = 7; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -4); c.quadraticCurveTo(10, 5, -12, 2); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 5; c.stroke(); c.restore();
+    nottBlob(c, () => { c.arc(-12, -12, 9.5, 0, 7); });
+    nottBlob(c, () => { c.moveTo(-20, -15); c.lineTo(-19, -24); c.lineTo(-14, -18); c.closePath(); c.moveTo(-9, -19); c.lineTo(-5, -26); c.lineTo(-3, -17); c.closePath(); });
+    nottEyes(c, -15.5, -8.5, -12, 2, 'blink', night);
+    c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-13.5, -8.8); c.lineTo(-10.5, -8.8); c.lineTo(-12, -7.5); c.fill();
+    const z = (at * .7) % 1; petNote(c, 'z', 6 + z * 8, -24 - z * 16, 1 - z, 11); petNote(c, 'Z', 13 + ((z + .5) % 1) * 8, -28 - ((z + .5) % 1) * 16, 1 - (z + .5) % 1, 14);
+    c.restore(); return;
+  }
+  if (act === 'bigstretch') {
+    // ease into the stretch, hold with a little wobble, ease back out
+    const e = x => x * x * (3 - 2 * x), sv = k < .28 ? e(k / .28) : k > .78 ? e((1 - k) / .22) : 1, s = sv * (1 + Math.sin(at * 7) * .02);
+    if (sv > .08) {
+      const hip = { x: -7, y: -16 - 7 * s }, chest = { x: 6 + 3 * s, y: -15 + 7 * s }, reach = 10 + 16 * s;
+      const limb = (x1, y1, x2, y2, w) => { c.lineCap = 'round'; c.strokeStyle = N_RIM; c.lineWidth = w + 2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = w; c.stroke(); };
+      // tail straight up with a hook
+      c.save(); c.lineCap = 'round'; const tl = () => { c.beginPath(); c.moveTo(hip.x - 2, hip.y - 2); c.quadraticCurveTo(hip.x - 10, hip.y - 14, hip.x - 4 + Math.sin(t * 3) * 2, hip.y - 26); }; c.strokeStyle = N_RIM; c.lineWidth = 8; tl(); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 6; tl(); c.stroke(); c.restore();
+      limb(hip.x - 1, hip.y + 4, -9, -1, 5); limb(hip.x + 2, hip.y + 4, -4, -1, 5);                 // back legs
+      // body: a long slope from the raised bum down to the chest
+      const mx = (hip.x + chest.x) / 2, my = (hip.y + chest.y) / 2, ang = Math.atan2(chest.y - hip.y, chest.x - hip.x), len = Math.hypot(chest.x - hip.x, chest.y - hip.y);
+      nottBlob(c, () => c.ellipse(mx, my, len / 2 + 7, 7.5, ang, 0, 7));
+      limb(chest.x, chest.y + 3, chest.x + reach, -1.5, 4.6); limb(chest.x - 2, chest.y + 3, chest.x + reach - 4, -1.2, 4.6); // front legs reaching out
+      nottBlob(c, () => { c.ellipse(chest.x + reach + 1, -1.5, 3, 2, 0, 0, 7); c.ellipse(chest.x + reach - 3, -1.2, 3, 2, 0, 0, 7); });
+      if (s > .9) { c.strokeStyle = '#ddd'; c.lineWidth = .7; for (const dx of [-1, 1, 3]) { c.beginPath(); c.moveTo(chest.x + reach + 2 + dx, -2.6); c.lineTo(chest.x + reach + 3.4 + dx, -3.8); c.stroke(); } } // claws out
+      // head low between the front legs, ears back a bit
+      c.save(); c.translate(chest.x + 6, chest.y - 4 + 2 * s); c.rotate(.15 * s);
+      nottBlob(c, () => { c.moveTo(-9, -2); c.lineTo(-10 + 2 * s, -14 + 2 * s); c.lineTo(-2.5, -8); c.closePath(); c.moveTo(9, -2); c.lineTo(10 - 2 * s, -14 + 2 * s); c.lineTo(2.5, -8); c.closePath(); });
+      nottBlob(c, () => c.ellipse(0, 0, 10.5, 9.5, 0, 0, 7));
+      nottEyes(c, -4.2, 4.2, -1, 2.4, 'happy', night);
+      const yawn = s > .85 ? Math.sin(Math.min(1, (k - .3) / .4) * Math.PI) : 0;
+      c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-1.6, 3); c.lineTo(1.6, 3); c.lineTo(0, 4.6); c.fill();
+      if (yawn > .15) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 7, 2.2, 2.8 * yawn, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(-1.6, 4.7, .8, 1.2); c.fillRect(.8, 4.7, .8, 1.2); }
+      c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .7; c.beginPath(); [[-5, 4, -14, 2.5], [-5, 5.5, -14, 7], [5, 4, 14, 2.5], [5, 5.5, 14, 7]].forEach(([a, b, d, f]) => { c.moveTo(a, b); c.lineTo(d, f); }); c.stroke();
+      c.restore();
+      c.restore(); return;
+    }
+  }
+  const loaf = act === 'loaf' ? Math.min(1, k * 4, (1 - k) * 4) : 0;
+  const wiggle = act === 'pounce' && k > .2 && k < .55 ? Math.sin(at * 30) * 2.2 : 0;
+  const crouch = act === 'pounce' ? (k > .15 && k < .55 ? 1 : 0) : 0;
+  c.scale(1 + loaf * .08 + crouch * .06, (1 - loaf * .18 - crouch * .15) * breathe);
+  // fluffy tail (up and curled when happy, wide sweep otherwise)
+  const sw = Math.sin(t * (react ? 9 : 2)) * (react ? 5 : 4);
+  c.save(); c.lineCap = 'round';
+  const tail = () => { c.beginPath(); if (react) { c.moveTo(7, -8); c.quadraticCurveTo(19, -20, 14 + sw * .4, -42); } else if (loaf > .5) { c.moveTo(7, -3); c.quadraticCurveTo(4, 3, -10, 1); } else { c.moveTo(7 + wiggle, -4); c.quadraticCurveTo(26, -2, 26 + sw, -17); } };
+  c.strokeStyle = N_RIM; c.lineWidth = 8; tail(); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 6; tail(); c.stroke();
+  c.restore();
+  // chubby body
+  nottBlob(c, () => c.ellipse(wiggle, -14.5, 10, 15.5, 0, 0, 7));
+  c.fillStyle = 'rgba(255,255,255,.05)'; c.beginPath(); c.ellipse(wiggle - 3, -18, 4, 8, 0, 0, 7); c.fill();
+  // paws
+  const groom = act === 'groom' && k > .1 && k < .9;
+  if (loaf < .5) {
+    nottBlob(c, () => { c.ellipse(-3.8, -1.5, 3, 2.4, 0, 0, 7); if (!groom) c.ellipse(3.8, -1.5, 3, 2.4, 0, 0, 7); });
+    if (groom) nottBlob(c, () => c.ellipse(-1, -26 + Math.sin(at * 10) * 1.5, 3.4, 2.8, 0, 0, 7));
+  }
+  // head
+  const tilt = act === 'idle' ? Math.sin(t * .6) * .12 : react ? Math.sin(t * 8) * .08 : 0;
+  c.save(); c.translate(wiggle, -32); c.rotate(tilt);
+  nottBlob(c, () => { c.moveTo(-10, -2); c.lineTo(-9, -16); c.lineTo(-2.5, -8.5); c.closePath(); c.moveTo(10, -2); c.lineTo(9, -16); c.lineTo(2.5, -8.5); c.closePath(); });
+  c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-8.2, -4); c.lineTo(-8, -12.5); c.lineTo(-4.4, -8.2); c.moveTo(8.2, -4); c.lineTo(8, -12.5); c.lineTo(4.4, -8.2); c.fill();
+  nottBlob(c, () => c.ellipse(0, 0, 11, 10.5, 0, 0, 7)); // face
+  // eyes: open, wide (spotting a fish), half (loaf), blink, happy, slow blink
+  let mode = blinkOn ? 'blink' : 'open', look = 0;
+  if (react) mode = 'happy';
+  else if (act === 'slowblink') { mode = k > .3 && k < .62 ? 'blink' : k > .2 && k < .72 ? 'half' : 'open'; }
+  else if (act === 'loaf') mode = blinkOn ? 'blink' : 'half';
+  else if (act === 'groom') mode = 'happy';
+  else if (act === 'pounce' && k < .6) { mode = 'wide'; look = 1.6; }
+  nottEyes(c, -4.6, 4.6, -1.2, 2.6, mode, night, look);
+  c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-1.7, 3.4); c.lineTo(1.7, 3.4); c.lineTo(0, 5.2); c.fill();
+  c.strokeStyle = '#8f8fae'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 5.2); c.lineTo(0, 6.2); c.arc(-1.5, 6.2, 1.5, 0, Math.PI); c.moveTo(3, 6.2); c.arc(1.5, 6.2, 1.5, 0, Math.PI); c.stroke();
+  if (groom) { c.fillStyle = '#ff7f99'; c.beginPath(); c.ellipse(-1, 8.2, 1.4, 1.8, 0, 0, 7); c.fill(); }
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .7; c.beginPath(); [[-6, 4.5, -15, 3], [-6, 6, -15, 7.5], [6, 4.5, 15, 3], [6, 6, 15, 7.5]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
+  c.fillStyle = 'rgba(255,120,150,.35)'; c.beginPath(); c.ellipse(-7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.ellipse(7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.fill();
+  c.restore();
+  // little collar with the white tag
+  c.strokeStyle = '#c94a62'; c.lineWidth = 1.8; c.beginPath(); c.arc(wiggle, -32, 9.8, Math.PI * .28, Math.PI * .72); c.stroke();
+  c.fillStyle = '#f4eef2'; c.beginPath(); c.ellipse(wiggle, -22.3, 2.4, 1.7, 0, 0, 7); c.fill();
+  if (act === 'slowblink' && k > .35 && k < .9) petHeart(c, 14, -52 - (k - .35) * 18, 1, 1 - (k - .35) * 1.6);
+  c.restore();
+  if (react) for (let i = 0; i < 3; i++) { const q = (k * 1.2 + i * .3) % 1; petHeart(c, -8 + i * 8 + Math.sin(q * 6 + i) * 3, -58 - q * 28, 1, 1 - q); }
+}
+function nottFish(c, k, t) { // the fish she pounces at
+  if (k > .1 && k < .62) { c.save(); c.globalAlpha = Math.min(1, (k - .1) * 6, (.62 - k) * 8); c.fillStyle = '#9fd8ef'; c.translate(46 + Math.sin(t * 3) * 2, 14); c.beginPath(); c.ellipse(0, 0, 6, 2.6, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-5, 0); c.lineTo(-9, -3); c.lineTo(-9, 3); c.fill(); c.restore(); }
+  if (k > .78 && k < 1) { c.save(); c.globalAlpha = (1 - k) * 4; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(40, 14, 10 + (k - .78) * 40, 3, 0, 0, 7); c.stroke(); c.restore(); }
+}
 function drawPet(look, X, Y, t) {
   stepPet(look, dtFrame || 0);
-  const c = ctx, P = PET, k = Math.min(1, P.t / Math.max(.01, P.dur)), S = 0.62;
+  const c = ctx, P = PET, k = Math.min(1, P.t / Math.max(.01, P.dur)), SC = 0.62;
   const breathe = 1 + Math.sin(t * 2.4) * 0.025;
   const reacting = P.react > 0, rp = reacting ? 1 - P.react / 1.3 : 0;
   const hop = reacting ? Math.abs(Math.sin(rp * Math.PI * (P.big ? 3 : 2))) * (P.big ? 12 : 8) : 0;
   const eyes = reacting ? 'happy' : P.blink < 0 ? 'blink' : 'open';
+  if (look === 'nott') {
+    c.save(); c.translate(X, Y); c.scale(SC, SC);
+    const act = reacting ? 'react' : P.act, kk = reacting ? rp : k, at = reacting ? rp * 1.3 : P.t;
+    if (act === 'pounce') nottFish(c, kk, t);
+    drawNott(c, act, kk, at, t, isNight(LOCS[S.loc]), P.blink < 0);
+    c.restore(); return;
+  }
   c.save(); c.translate(X, Y);
   // ---------- OTTER ----------
   if (look === 'otter') {
@@ -2659,7 +2780,7 @@ function drawPet(look, X, Y, t) {
       const fx = wx * u, fy = wy * u - Math.sin(u * Math.PI) * 22;
       if (into >= 1 && out === 0) {
         const b = Math.sin(t * 2) * 1.5;
-        c.translate(fx, fy + b); c.scale(S, S);
+        c.translate(fx, fy + b); c.scale(SC, SC);
         c.strokeStyle = `rgba(255,255,255,${.25 + .15 * Math.sin(t * 3)})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(0, 6, 30 + Math.sin(t * 2) * 3, 6, 0, 0, 7); c.stroke();
         c.fillStyle = brown; c.beginPath(); c.ellipse(0, 0, 22, 9, 0, 0, 7); c.fill();                 // body on its back
         c.fillStyle = light; c.beginPath(); c.ellipse(0, -2, 15, 6, 0, 0, 7); c.fill();                // tummy up
@@ -2676,7 +2797,7 @@ function drawPet(look, X, Y, t) {
       }
       c.translate(fx, fy); // mid-hop: draw the sitting otter along the arc
     }
-    c.translate(0, -hop); c.scale(S, S * breathe);
+    c.translate(0, -hop); c.scale(SC, SC * breathe);
     c.fillStyle = brown; c.beginPath(); c.ellipse(-13, -3, 9, 3.5, -.25, 0, 7); c.fill();                 // tail
     c.beginPath(); c.ellipse(0, -14, 13, 15, 0, 0, 7); c.fill();                                          // body
     c.fillStyle = light; c.beginPath(); c.ellipse(0, -12, 8.5, 10.5, 0, 0, 7); c.fill();                  // tummy
@@ -2702,7 +2823,7 @@ function drawPet(look, X, Y, t) {
   // ---------- CAT ----------
   else if (look === 'cat') {
     const fur = '#f2a03d', stripe = '#cf7414', cream = '#fff3e0';
-    c.translate(0, -hop); c.scale(S, S * breathe);
+    c.translate(0, -hop); c.scale(SC, SC * breathe);
     if (P.act === 'nap') {
       c.fillStyle = fur; c.beginPath(); c.ellipse(0, -8, 17, 9.5, 0, 0, 7); c.fill();                    // curled up
       c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -4); c.quadraticCurveTo(10, 4, -10, 1); c.stroke();
@@ -2743,7 +2864,7 @@ function drawPet(look, X, Y, t) {
   else if (look === 'frog') {
     const g = '#5cc96a', dg = '#3f9a4c', belly = '#d4f5a8';
     const jump = P.act === 'hop' ? Math.sin(k * Math.PI) * 12 : 0;
-    c.translate(0, -hop - jump); c.scale(S, S * (P.act === 'hop' ? 1 + Math.sin(k * Math.PI) * .1 : breathe));
+    c.translate(0, -hop - jump); c.scale(SC, SC * (P.act === 'hop' ? 1 + Math.sin(k * Math.PI) * .1 : breathe));
     c.fillStyle = dg; c.beginPath(); c.ellipse(-12, -4, 7, 4.5, -.3, 0, 7); c.ellipse(12, -4, 7, 4.5, .3, 0, 7); c.fill(); // back legs
     c.fillStyle = g; c.beginPath(); c.ellipse(0, -10, 14.5, 10.5, 0, 0, 7); c.fill();                     // body
     c.fillStyle = belly; c.beginPath(); c.ellipse(0, -6.5, 9, 6, 0, 0, 7); c.fill();
@@ -2768,7 +2889,7 @@ function drawPet(look, X, Y, t) {
   else if (look === 'gull') {
     const grey = '#a9b6bd', beak = '#ffc93c';
     const flap = P.act === 'flap' || reacting ? Math.sin((P.act === 'flap' ? P.t : rp) * 24) : null;
-    c.translate(0, -hop - (P.act === 'flap' ? Math.abs(Math.sin(k * Math.PI)) * 6 : 0)); c.scale(S, S * breathe);
+    c.translate(0, -hop - (P.act === 'flap' ? Math.abs(Math.sin(k * Math.PI)) * 6 : 0)); c.scale(SC, SC * breathe);
     c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3, 0); c.moveTo(3, -6); c.lineTo(3, 0); c.stroke(); // legs
     c.fillStyle = '#ff9f1c'; c.beginPath(); c.ellipse(-3, .5, 3, 1.2, 0, 0, 7); c.ellipse(3, .5, 3, 1.2, 0, 0, 7); c.fill();
     c.fillStyle = '#e8eef1'; c.beginPath(); c.moveTo(-10, -14); c.lineTo(-21, -10); c.lineTo(-11, -9); c.fill();          // tail
