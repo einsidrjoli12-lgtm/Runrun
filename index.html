@@ -679,6 +679,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
     <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.2</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
     <h3 class="news-h">Hotfix v1.2.2</h3>
     <ul class="news">
+      <li><b>Cuter pets:</b> all four dock pets were redrawn and come alive: they blink, groom, nap, hop and cheer with hearts when you land a fish. The otter even takes a swim and floats on its back.</li>
       <li><b>Late upgrades:</b> the last levels of the Rod, Market Stall and crew upgrades were so expensive they could never be finished. They now get cheaper the higher you go, so everything can be maxed with enough time in the Midnight Trench.</li>
       <li><b>Fame fix:</b> retiring could give millions of stars, which made income explode. Now you get your first star at $1M and 10 more each time your career earnings grow 10×. If your save had runaway stars, they were scaled to the new rule.</li>
     </ul>
@@ -2191,7 +2192,7 @@ function startCast() {
 function reelIn(perfect) {
   const res = landCatch(perfect);
   if (res.pearls) floaters.push({ x: cast.x, y: cast.y - 54, text: `+${res.pearls} pearl${res.pearls > 1 ? 's' : ''}`, color: '#eef3ff', life: 1.8, size: 15 });
-  SND.catch(res.fish.rarity, perfect, res.fish.golden);
+  SND.catch(res.fish.rarity, perfect, res.fish.golden); petReact(res.fish.golden ? 3 : res.fish.rarity);
   if (res.treasure) SND.treasure();
   cast.state = 'reel'; cast.t = 0; cast.reel = res;
   ripples.push({ x: cast.x, y: cast.y, r: 4, life: 1 });
@@ -2260,7 +2261,7 @@ function winFight() {
   logRecent({ li: f.loc, L: 1, n: m.name, r: 4, w: weight, v: value, pe: 40 + (prev ? 0 : 100), first: !prev, t: Date.now() });
   cast.tx = f.fx; cast.ty = f.fy; cast.x = f.fx; cast.y = f.fy;
   cast.state = 'reel'; cast.t = 0; cast.reel = { fish, total: value, count: 1, perfect: false }; cast.fight = null;
-  SND.setFight(false); SND.monsterWin();
+  SND.setFight(false); SND.monsterWin(); petReact(5);
   splash(f.fx, f.fy, 40); burst(f.fx, f.fy - 20, '#ffcf5a', 50, { speed: 260 });
   rings.push({ x: f.fx, y: f.fy, r: 10, life: 1.4, color: '#ffcf5a', rays: true });
   flash = 0.6; flashColor = '#fff3c4';
@@ -2615,14 +2616,181 @@ function drawBobberSkin(bx, by, look, t) {
   c.fillStyle = 'rgba(255,255,255,0.6)'; c.beginPath(); c.arc(bx - 2, by - 1, 1.6, 0, 7); c.fill();
   c.fillStyle = S2[0]; c.fillRect(bx - 1, by - 9, 2, 6);
 }
+// Pets: cute, alive and reactive. They breathe, blink, do little things on their own and cheer when you land a fish.
+const PET = { act: 'idle', t: 0, dur: 0, next: 3, blink: 2, react: 0, big: false };
+const PET_ACTS = { otter: [['groom', 2.2], ['shell', 2.4], ['float', 7.5], ['float', 7.5]], cat: [['groom', 2.6], ['stretch', 2.2], ['nap', 7]], frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1]], gull: [['look', 2.4], ['flap', 1.4], ['squawk', 1.2]] };
+function petReact(rarity) { if (PET.act === 'float' || PET.act === 'nap') return; PET.act = 'idle'; PET.react = 1.3; PET.big = rarity >= 3; }
+function stepPet(look, dt) {
+  PET.t += dt; PET.blink -= dt; if (PET.blink < -0.13) PET.blink = 2 + Math.random() * 3.5;
+  if (PET.react > 0) PET.react -= dt;
+  if (PET.act === 'idle') { if (PET.react <= 0 && (PET.next -= dt) <= 0) { const list = PET_ACTS[look] || [], a = list[Math.floor(Math.random() * list.length)]; if (a) { PET.act = a[0]; PET.dur = a[1]; PET.t = 0; } } }
+  else if (PET.t >= PET.dur) { PET.act = 'idle'; PET.next = 4 + Math.random() * 6; }
+}
+function petEyes(c, x1, x2, y, r, mode) { // mode: open | blink | happy
+  if (mode === 'open') {
+    c.fillStyle = '#16110e'; c.beginPath(); c.ellipse(x1, y, r, r * 1.15, 0, 0, 7); c.ellipse(x2, y, r, r * 1.15, 0, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(x1 + r * .35, y - r * .4, r * .38, 0, 7); c.arc(x2 + r * .35, y - r * .4, r * .38, 0, 7); c.fill();
+  } else {
+    c.strokeStyle = '#16110e'; c.lineWidth = 1.6; c.lineCap = 'round'; c.beginPath();
+    if (mode === 'happy') { c.arc(x1, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(x2 + r * .95, y - .2); c.arc(x2, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); }
+    else { c.moveTo(x1 - r, y); c.quadraticCurveTo(x1, y + r * .7, x1 + r, y); c.moveTo(x2 - r, y); c.quadraticCurveTo(x2, y + r * .7, x2 + r, y); }
+    c.stroke();
+  }
+}
+const blush = (c, x1, x2, y) => { c.fillStyle = 'rgba(255,120,140,.45)'; c.beginPath(); c.ellipse(x1, y, 3, 1.8, 0, 0, 7); c.ellipse(x2, y, 3, 1.8, 0, 0, 7); c.fill(); };
+function petHeart(c, x, y, s, a) { c.save(); c.globalAlpha = a; c.fillStyle = '#ff5a7a'; c.translate(x, y); c.scale(s, s); c.beginPath(); c.moveTo(0, 3); c.bezierCurveTo(-6, -2, -3, -7, 0, -3.5); c.bezierCurveTo(3, -7, 6, -2, 0, 3); c.fill(); c.restore(); }
+function petNote(c, txt, x, y, a, size = 9) { c.save(); c.globalAlpha = a; c.font = `${size}px "Lilita One", sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(5,20,28,.7)'; c.strokeText(txt, x, y); c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore(); }
 function drawPet(look, X, Y, t) {
-  const c = ctx; c.save(); c.translate(X, Y); c.scale(.62, .62);
-  const bob = Math.sin(t * 2) * 1.2;
-  if (look === 'frog') { c.fillStyle = '#4fbf5a'; c.beginPath(); c.ellipse(0, -10, 16, 11, 0, 0, 7); c.fill(); c.beginPath(); c.arc(-8, -20 + bob * .3, 6, 0, 7); c.arc(8, -20 + bob * .3, 6, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-8, -21, 3.5, 0, 7); c.arc(8, -21, 3.5, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-7, -21, 1.8, 0, 7); c.arc(9, -21, 1.8, 0, 7); c.fill(); }
-  if (look === 'gull') { c.fillStyle = '#f4f7f8'; c.beginPath(); c.ellipse(0, -16, 15, 10, -.2, 0, 7); c.fill(); c.beginPath(); c.arc(11, -27 + bob, 7, 0, 7); c.fill(); c.fillStyle = '#9aa7ad'; c.beginPath(); c.ellipse(-4, -18, 11, 5, -.3, 0, 7); c.fill(); c.fillStyle = '#ff9f1c'; c.beginPath(); c.moveTo(17, -28 + bob); c.lineTo(26, -26 + bob); c.lineTo(17, -24 + bob); c.fill(); c.fillRect(-3, -7, 2, 7); c.fillRect(3, -7, 2, 7); c.fillStyle = '#111'; c.beginPath(); c.arc(13, -29 + bob, 1.5, 0, 7); c.fill(); }
-  if (look === 'cat') { c.fillStyle = '#f29a3a'; c.beginPath(); c.ellipse(0, -13, 12, 14, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -31, 9, 0, 7); c.fill(); c.beginPath(); c.moveTo(-8, -35); c.lineTo(-7, -45); c.lineTo(-2, -38); c.moveTo(8, -35); c.lineTo(7, -45); c.lineTo(2, -38); c.fill(); c.strokeStyle = '#f29a3a'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(10, -4); c.quadraticCurveTo(26, -4, 22 + Math.sin(t * 3) * 3, -22); c.stroke(); c.fillStyle = '#111'; c.beginPath(); c.arc(-3.5, -32, 1.6, 0, 7); c.arc(3.5, -32, 1.6, 0, 7); c.fill(); }
-  if (look === 'otter') { c.fillStyle = '#8a5a3c'; c.beginPath(); c.ellipse(0, -15, 12, 16, 0, 0, 7); c.fill(); c.beginPath(); c.arc(0, -34 + bob * .5, 9, 0, 7); c.fill(); c.fillStyle = '#c99a72'; c.beginPath(); c.ellipse(0, -13, 7, 11, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, -31, 6, 4.5, 0, 0, 7); c.fill(); c.fillStyle = '#111'; c.beginPath(); c.arc(-3.5, -36, 1.6, 0, 7); c.arc(3.5, -36, 1.6, 0, 7); c.arc(0, -32, 1.8, 0, 7); c.fill(); c.fillStyle = '#8fd6ff'; c.beginPath(); c.ellipse(0, -20, 6, 3.5, .3, 0, 7); c.fill(); }
+  stepPet(look, dtFrame || 0);
+  const c = ctx, P = PET, k = Math.min(1, P.t / Math.max(.01, P.dur)), S = 0.62;
+  const breathe = 1 + Math.sin(t * 2.4) * 0.025;
+  const reacting = P.react > 0, rp = reacting ? 1 - P.react / 1.3 : 0;
+  const hop = reacting ? Math.abs(Math.sin(rp * Math.PI * (P.big ? 3 : 2))) * (P.big ? 12 : 8) : 0;
+  const eyes = reacting ? 'happy' : P.blink < 0 ? 'blink' : 'open';
+  c.save(); c.translate(X, Y);
+  // ---------- OTTER ----------
+  if (look === 'otter') {
+    const brown = '#7d5032', light = '#e2bd96', dark = '#4e301d';
+    const shell = (x, y, sc = 1) => { c.save(); c.translate(x, y); c.scale(sc, sc); c.fillStyle = '#ffb3c7'; c.beginPath(); c.moveTo(0, 3); c.arc(0, 0, 4, Math.PI * .9, Math.PI * 2.1); c.closePath(); c.fill(); c.strokeStyle = '#e07a98'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, 3); c.lineTo(-2.4, -2.6); c.moveTo(0, 3); c.lineTo(0, -3.6); c.moveTo(0, 3); c.lineTo(2.4, -2.6); c.stroke(); c.restore(); };
+    if (P.act === 'float') {
+      // hop in, float on its back in front of the dock, hop out
+      const into = Math.min(1, P.t / .6), out = Math.max(0, (P.t - (P.dur - .7)) / .7);
+      const wx = 36, wy = 34, u = out > 0 ? 1 - out : into;
+      const fx = wx * u, fy = wy * u - Math.sin(u * Math.PI) * 22;
+      if (into >= 1 && out === 0) {
+        const b = Math.sin(t * 2) * 1.5;
+        c.translate(fx, fy + b); c.scale(S, S);
+        c.strokeStyle = `rgba(255,255,255,${.25 + .15 * Math.sin(t * 3)})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(0, 6, 30 + Math.sin(t * 2) * 3, 6, 0, 0, 7); c.stroke();
+        c.fillStyle = brown; c.beginPath(); c.ellipse(0, 0, 22, 9, 0, 0, 7); c.fill();                 // body on its back
+        c.fillStyle = light; c.beginPath(); c.ellipse(0, -2, 15, 6, 0, 0, 7); c.fill();                // tummy up
+        c.fillStyle = brown; c.beginPath(); c.ellipse(-24, -1, 6, 3, -.3, 0, 7); c.fill();            // tail
+        c.beginPath(); c.ellipse(-14, -9 + Math.sin(t * 3) * 1, 2.6, 4, -.2, 0, 7); c.ellipse(-8, -9 + Math.sin(t * 3 + 1) * 1, 2.6, 4, .2, 0, 7); c.fill(); // feet up
+        c.beginPath(); c.arc(22, -4, 9, 0, 7); c.fill();                                                // head
+        c.fillStyle = light; c.beginPath(); c.ellipse(25, -2, 5.5, 4, 0, 0, 7); c.fill();
+        c.fillStyle = dark; c.beginPath(); c.ellipse(28, -4, 2.2, 1.6, 0, 0, 7); c.fill();
+        petEyes(c, 18, 24, -8, 1.8, 'blink');
+        shell(6, -8);
+        c.fillStyle = brown; c.beginPath(); c.ellipse(3, -7, 2.6, 2, 0, 0, 7); c.ellipse(9, -7, 2.6, 2, 0, 0, 7); c.fill(); // paws on the shell
+        if (Math.sin(t * 1.3) > .9) petNote(c, '♡', 12, -22, .8, 12);
+        c.restore(); return;
+      }
+      c.translate(fx, fy); // mid-hop: draw the sitting otter along the arc
+    }
+    c.translate(0, -hop); c.scale(S, S * breathe);
+    c.fillStyle = brown; c.beginPath(); c.ellipse(-13, -3, 9, 3.5, -.25, 0, 7); c.fill();                 // tail
+    c.beginPath(); c.ellipse(0, -14, 13, 15, 0, 0, 7); c.fill();                                          // body
+    c.fillStyle = light; c.beginPath(); c.ellipse(0, -12, 8.5, 10.5, 0, 0, 7); c.fill();                  // tummy
+    c.fillStyle = dark; c.beginPath(); c.ellipse(-6, -1, 4, 2.2, 0, 0, 7); c.ellipse(6, -1, 4, 2.2, 0, 0, 7); c.fill(); // feet
+    // paws: hold the shell, rub the face, or clap the shell
+    let pl = { x: -4.5, y: -18 }, pr = { x: 4.5, y: -18 }, sh = { x: 0, y: -16 }, showShell = true;
+    if (P.act === 'groom') { const w = Math.sin(P.t * 16) * 2; pl = { x: -5 + w, y: -31 }; pr = { x: 5 - w, y: -31 }; showShell = false; }
+    if (P.act === 'shell') { const w = Math.abs(Math.sin(P.t * 9)); pl = { x: -7 + w * 2, y: -20 - w * 4 }; pr = { x: 7 - w * 2, y: -20 - w * 4 }; sh = { x: 0, y: -21 - w * 4 }; if (w > .95) particles.push({ x: X, y: Y - 14, vx: rnd(-20, 20), vy: -30, life: .4, max: .4, color: '#fff', size: 1.4, type: 'spark', g: 0 }); }
+    if (reacting) { const w = Math.abs(Math.sin(rp * Math.PI * 6)); pl = { x: -7 + w * 3, y: -22 }; pr = { x: 7 - w * 3, y: -22 }; sh = { x: 0, y: -22 }; }
+    if (showShell) shell(sh.x, sh.y);
+    c.fillStyle = brown; c.beginPath(); c.ellipse(pl.x, pl.y, 3, 2.4, 0, 0, 7); c.ellipse(pr.x, pr.y, 3, 2.4, 0, 0, 7); c.fill();
+    const tilt = P.act === 'idle' && !reacting ? Math.sin(t * .7) * .12 : 0;
+    c.save(); c.translate(0, -34); c.rotate(tilt);
+    c.fillStyle = brown; c.beginPath(); c.arc(-9, -7, 3.2, 0, 7); c.arc(9, -7, 3.2, 0, 7); c.fill();        // ears
+    c.beginPath(); c.arc(0, 0, 11.5, 0, 7); c.fill();                                                      // head
+    c.fillStyle = light; c.beginPath(); c.ellipse(0, 4, 7.5, 5.5, 0, 0, 7); c.fill();                     // muzzle
+    c.fillStyle = dark; c.beginPath(); c.ellipse(0, 1.6, 2.6, 1.8, 0, 0, 7); c.fill();                    // nose
+    c.strokeStyle = dark; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 3.4); c.lineTo(0, 5); c.arc(-1.6, 5, 1.6, 0, Math.PI); c.moveTo(3.2, 5); c.arc(1.6, 5, 1.6, 0, Math.PI); c.stroke();
+    petEyes(c, -4.8, 4.8, -2.5, 2.1, P.act === 'groom' ? 'happy' : eyes);
+    blush(c, -7.5, 7.5, 3);
+    c.restore();
+  }
+  // ---------- CAT ----------
+  else if (look === 'cat') {
+    const fur = '#f2a03d', stripe = '#cf7414', cream = '#fff3e0';
+    c.translate(0, -hop); c.scale(S, S * breathe);
+    if (P.act === 'nap') {
+      c.fillStyle = fur; c.beginPath(); c.ellipse(0, -8, 17, 9.5, 0, 0, 7); c.fill();                    // curled up
+      c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -4); c.quadraticCurveTo(10, 4, -10, 1); c.stroke();
+      c.fillStyle = stripe; [-8, -2, 4].forEach(x => { c.fillRect(x, -16, 2.2, 5); });
+      c.fillStyle = fur; c.beginPath(); c.arc(-11, -11, 8.5, 0, 7); c.fill();
+      c.beginPath(); c.moveTo(-18, -14); c.lineTo(-18, -22); c.lineTo(-13, -17); c.moveTo(-8, -17); c.lineTo(-5, -24); c.lineTo(-3, -16); c.fill();
+      petEyes(c, -14.5, -8, -11, 1.9, 'blink'); blush(c, -16.5, -5.5, -7.5);
+      const z = (P.t * .8) % 1; petNote(c, 'z', 4 + z * 6, -22 - z * 14, 1 - z, 9); petNote(c, 'Z', 10 + ((z + .5) % 1) * 6, -26 - ((z + .5) % 1) * 14, 1 - (z + .5) % 1, 12);
+      c.restore(); return;
+    }
+    const st = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0;
+    c.scale(1 + st * .18, 1 - st * .16);
+    c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round';                                          // tail
+    const sw = Math.sin(t * (reacting ? 9 : 2.2)) * (reacting ? 6 : 4);
+    c.beginPath(); c.moveTo(9, -3); c.quadraticCurveTo(24, -4, 20 + sw, -22); c.stroke();
+    c.fillStyle = fur; c.beginPath(); c.ellipse(0, -13, 11.5, 13.5, 0, 0, 7); c.fill();                   // body
+    c.fillStyle = cream; c.beginPath(); c.ellipse(0, -11, 6.5, 9, 0, 0, 7); c.fill();
+    const lift = P.act === 'groom' ? 1 : 0;
+    c.fillStyle = cream; c.beginPath(); c.ellipse(-4.5, -1.5, 3.5, 2.6, 0, 0, 7); c.fill();               // paws
+    if (lift) { c.beginPath(); c.ellipse(-1, -24 + Math.sin(P.t * 10) * 1.5, 3, 2.6, 0, 0, 7); c.fill(); } else { c.beginPath(); c.ellipse(4.5, -1.5, 3.5, 2.6, 0, 0, 7); c.fill(); }
+    c.save(); c.translate(0, -30); c.rotate(P.act === 'idle' && !reacting ? Math.sin(t * .6) * .1 : 0);
+    c.fillStyle = fur; c.beginPath(); c.moveTo(-9.5, -3); c.lineTo(-8, -15); c.lineTo(-2, -8); c.moveTo(9.5, -3); c.lineTo(8, -15); c.lineTo(2, -8); c.fill();
+    c.fillStyle = '#ffb3c0'; c.beginPath(); c.moveTo(-7.8, -5); c.lineTo(-7.4, -11.5); c.lineTo(-4, -7.5); c.moveTo(7.8, -5); c.lineTo(7.4, -11.5); c.lineTo(4, -7.5); c.fill();
+    c.fillStyle = fur; c.beginPath(); c.arc(0, 0, 11, 0, 7); c.fill();                                    // head
+    c.fillStyle = stripe; c.fillRect(-1, -10.5, 2, 4.5); c.fillRect(-5, -9.5, 2, 3.5); c.fillRect(3, -9.5, 2, 3.5);
+    c.fillStyle = cream; c.beginPath(); c.ellipse(0, 4.5, 6.5, 4.5, 0, 0, 7); c.fill();
+    c.fillStyle = '#ff8fa3'; c.beginPath(); c.moveTo(-1.6, 2.2); c.lineTo(1.6, 2.2); c.lineTo(0, 3.8); c.fill();
+    const yawn = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0;
+    if (yawn > .2) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 6.4, 2.4, 2.6 * yawn, 0, 0, 7); c.fill(); }
+    else { c.strokeStyle = '#7a3a12'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 3.8); c.lineTo(0, 5); c.arc(-1.5, 5, 1.5, 0, Math.PI); c.moveTo(3, 5); c.arc(1.5, 5, 1.5, 0, Math.PI); c.stroke(); }
+    if (lift) { c.fillStyle = '#ff8fa3'; c.beginPath(); c.ellipse(-1, 7, 1.4, 1.8, 0, 0, 7); c.fill(); }
+    c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .7; c.beginPath(); [[-5, 3.5, -13, 2], [-5, 5, -13, 6], [5, 3.5, 13, 2], [5, 5, 13, 6]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
+    petEyes(c, -4.5, 4.5, -2, 2.1, yawn > .2 || lift ? 'happy' : eyes);
+    blush(c, -7.2, 7.2, 3.2);
+    c.restore();
+  }
+  // ---------- FROG ----------
+  else if (look === 'frog') {
+    const g = '#5cc96a', dg = '#3f9a4c', belly = '#d4f5a8';
+    const jump = P.act === 'hop' ? Math.sin(k * Math.PI) * 12 : 0;
+    c.translate(0, -hop - jump); c.scale(S, S * (P.act === 'hop' ? 1 + Math.sin(k * Math.PI) * .1 : breathe));
+    c.fillStyle = dg; c.beginPath(); c.ellipse(-12, -4, 7, 4.5, -.3, 0, 7); c.ellipse(12, -4, 7, 4.5, .3, 0, 7); c.fill(); // back legs
+    c.fillStyle = g; c.beginPath(); c.ellipse(0, -10, 14.5, 10.5, 0, 0, 7); c.fill();                     // body
+    c.fillStyle = belly; c.beginPath(); c.ellipse(0, -6.5, 9, 6, 0, 0, 7); c.fill();
+    c.fillStyle = dg; c.beginPath(); c.ellipse(-5.5, -.5, 3.5, 1.8, 0, 0, 7); c.ellipse(5.5, -.5, 3.5, 1.8, 0, 0, 7); c.fill(); // front feet
+    const puff = P.act === 'ribbit' ? Math.max(0, Math.sin(P.t * 7)) : 0;
+    if (puff > .05) { c.fillStyle = '#f2ffd6'; c.beginPath(); c.arc(0, -6, 4 + puff * 5, 0, 7); c.fill(); }
+    c.fillStyle = g; c.beginPath(); c.arc(-7.5, -19, 6.5, 0, 7); c.arc(7.5, -19, 6.5, 0, 7); c.fill();       // eye bumps
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(-7.5, -19.5, 4.4, 0, 7); c.arc(7.5, -19.5, 4.4, 0, 7); c.fill();
+    if (eyes === 'open') { c.fillStyle = '#16110e'; c.beginPath(); c.arc(-7, -19.5, 2.4, 0, 7); c.arc(8, -19.5, 2.4, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-6.2, -20.5, .9, 0, 7); c.arc(8.8, -20.5, .9, 0, 7); c.fill(); }
+    else petEyes(c, -7.5, 7.5, -19.5, 2.4, eyes);
+    c.strokeStyle = '#2a6a33'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, -13, 6, .2, Math.PI - .2); c.stroke(); // smile
+    blush(c, -9.5, 9.5, -12);
+    if (P.act === 'ribbit' && puff > .6) petNote(c, '♪', 14, -26 - puff * 3, puff, 11);
+    if (P.act === 'tongue') {
+      const fxp = 26, fyp = -28 + Math.sin(P.t * 18) * 2;
+      if (k < .55) { c.fillStyle = '#333'; c.beginPath(); c.arc(fxp + Math.sin(P.t * 23) * 3, fyp, 1.6, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(fxp + Math.sin(P.t * 23) * 3 - 1, fyp - 2, 1.6, 1, Math.sin(P.t * 60), 0, 7); c.fill(); }
+      if (k > .4 && k < .7) { const r = Math.sin((k - .4) / .3 * Math.PI); c.strokeStyle = '#ff6f8a'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(1, -12); c.lineTo(1 + (fxp - 1) * r, -12 + (fyp + 12) * r); c.stroke(); }
+      if (k > .75) petNote(c, 'gulp', 14, -32, 1 - (k - .75) * 4, 8);
+    }
+  }
+  // ---------- SEAGULL ----------
+  else if (look === 'gull') {
+    const grey = '#a9b6bd', beak = '#ffc93c';
+    const flap = P.act === 'flap' || reacting ? Math.sin((P.act === 'flap' ? P.t : rp) * 24) : null;
+    c.translate(0, -hop - (P.act === 'flap' ? Math.abs(Math.sin(k * Math.PI)) * 6 : 0)); c.scale(S, S * breathe);
+    c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3, 0); c.moveTo(3, -6); c.lineTo(3, 0); c.stroke(); // legs
+    c.fillStyle = '#ff9f1c'; c.beginPath(); c.ellipse(-3, .5, 3, 1.2, 0, 0, 7); c.ellipse(3, .5, 3, 1.2, 0, 0, 7); c.fill();
+    c.fillStyle = '#e8eef1'; c.beginPath(); c.moveTo(-10, -14); c.lineTo(-21, -10); c.lineTo(-11, -9); c.fill();          // tail
+    c.fillStyle = '#fbfdfe'; c.beginPath(); c.ellipse(0, -14, 12.5, 10, -.1, 0, 7); c.fill();                        // body
+    if (flap !== null) { // wings up and flapping
+      c.fillStyle = grey; [-1, 1].forEach(sd => { c.save(); c.translate(-2, -18); c.rotate(sd * (.5 + flap * .6) - Math.PI / 2 * .2); c.beginPath(); c.ellipse(sd * 9, -6, 11, 4, sd * -.6, 0, 7); c.fill(); c.restore(); });
+    } else { c.fillStyle = grey; c.beginPath(); c.ellipse(-3, -15, 10, 6, -.25, 0, 7); c.fill(); c.fillStyle = '#4a5560'; c.beginPath(); c.ellipse(-11, -12, 4, 2.4, -.3, 0, 7); c.fill(); }
+    const turn = P.act === 'look' ? (k > .25 && k < .75 ? -1 : 1) : 1;
+    c.save(); c.translate(5, -27); c.scale(turn, 1); c.rotate(!reacting && P.act === 'idle' ? Math.sin(t * .9) * .12 : 0);
+    c.fillStyle = '#fbfdfe'; c.beginPath(); c.arc(0, 0, 8.5, 0, 7); c.fill();
+    const open = P.act === 'squawk' ? Math.abs(Math.sin(P.t * 12)) : reacting ? .5 : 0;
+    c.fillStyle = beak; c.beginPath(); c.moveTo(6, -1.5); c.lineTo(15, -1 - open * 2); c.lineTo(7, 1); c.fill();
+    c.beginPath(); c.moveTo(6, 1); c.lineTo(14, 1.5 + open * 3); c.lineTo(6, 3); c.fill();
+    c.fillStyle = '#ff5a3d'; c.beginPath(); c.arc(11.5, 1.6 + open * 1.5, 1, 0, 7); c.fill();
+    petEyes(c, 2.5, 2.5, -2, 1.9, eyes);
+    blush(c, 1, 1, 2.8);
+    c.restore();
+    if (P.act === 'squawk' && P.t > .2) petNote(c, 'squawk!', 14, -46, Math.min(1, (P.dur - P.t) * 3), 9);
+  }
   c.restore();
+  // hearts when you land something
+  if (reacting) for (let i = 0; i < (P.big ? 4 : 2); i++) { const q = (rp * 1.2 + i * .28) % 1; petHeart(c, X - 6 + i * 6 + Math.sin(q * 6 + i) * 3, Y - 28 - q * 26, .8 + (P.big ? .3 : 0), 1 - q); }
 }
 function drawTrophy(look, X, Y) {
   const c = ctx, col = { mossback: '#6f7d3c', marlin: '#3a7bd5', leviathan: '#c9a2ff' }[look];
@@ -2727,7 +2895,7 @@ function draw(time) {
   if (fightF) ctx.fillRect(ax + 34, ay - 6, 12, 5);                                     // heels dug into the dock
   ctx.fillRect(ax - 34, ay - 16, 16, 16);                                               // bucket
   if (S.up.holder) { ctx.fillRect(ax - 52, ay - 30, 3, 30); ctx.fillRect(ax - 56, ay - 32, 11, 3); } // rod holder post
-  const petOn = skinOn('pet'); if (petOn) drawPet(petOn, ax + 52, ay, t);
+  const petOn = skinOn('pet'); if (petOn) drawPet(petOn, ax + 47, ay, t);
   // rod, colored by tier
   const tier = rodTier();
   let tip = rodTip();
