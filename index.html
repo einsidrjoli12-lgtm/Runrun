@@ -665,7 +665,11 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 </div>
 <div class="modal" id="news" hidden role="dialog" aria-modal="true" aria-labelledby="newsTitle">
   <div class="sheet">
-    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.1</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <div class="sheet-head"><h2 id="newsTitle"><span data-icon="spark"></span>What's new in v1.2.2</h2><button class="close" data-close="news" aria-label="Close">✕</button></div>
+    <h3 class="news-h">Hotfix v1.2.2</h3>
+    <ul class="news">
+      <li><b>Fame fix:</b> retiring could give millions of stars, which made income explode. Now you get your first star at $1M and 10 more each time your career earnings grow 10×. If your save had runaway stars, they were scaled to the new rule.</li>
+    </ul>
     <h3 class="news-h">Hotfix v1.2.1</h3>
     <ul class="news">
       <li><b>Catch history:</b> tap your <b>last catch</b> (or Logbook → Last 10 catches) to see your last 10 catches, with pictures and every detail.</li>
@@ -760,7 +764,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 'use strict';
 
 // Game version: bump this with every update you upload (shown in Settings, and stored in saves and backups).
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 
 /* ---------- Icons (24px stroke icons) ---------- */
 const ICONS = {
@@ -1109,7 +1113,7 @@ function youRate() {
 /* ---------- State ---------- */
 const SAVE_KEY = 'bobber-brine-save-v2';
 const fresh = () => ({
-  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0, econ: 2, recent: [],
+  cash: 0, runEarned: 0, totalEarned: 0, fame: 0, retires: 0, econ: 2, fameV: 2, recent: [],
   loc: 0, unlocked: [true, false, false, false, false, false],
   up: { holder: 0, rod: 0, line: 0, bait: 0, net: 0, market: 0 },
   crew: { hands: 0, speed: 0, skill: 0 },
@@ -1127,6 +1131,7 @@ function merge(data) {
   const base = fresh();
   if (!data || typeof data !== 'object') return base;
   Object.assign(base, data);
+  if (data.fameV !== 2) { const F = data.fame || 0; base.fame = Math.min(F, fameFor(F * F * 1e6)); base.fameV = 2; } // fame used to be a square root and could run away
   if (data.econ !== 2) { base.runEarned = (data.runEarned || 0) / 1000; base.econ = 2; } // fame now counts from $1M instead of $1B
   base.up = Object.assign(fresh().up, data.up || {});
   base.crew = Object.assign(fresh().crew, data.crew || {});
@@ -1213,7 +1218,11 @@ function rollFish(locIdx, minRarity = 0) {
   const f = loc.fish[i]; const size = 0.5 + Math.random() * Math.random() * 1.5;
   return { idx: i, name: f[0], rarity: f[1], weight: f[3] * size, base: f[2] * PRICE * size };
 }
-function pendingFame() { return Math.floor(Math.sqrt(S.runEarned / 1e6)); }
+// Fame grows with the log of a career's earnings: the first star at $1M, then 10 more each time earnings grow 10x.
+// (A square root let fame feed on itself: more stars, more income, far more stars.)
+const fameFor = earned => earned < 1e6 ? 0 : Math.floor(10 * Math.log10(earned / 1e6)) + 1;
+const fameNextAt = gain => 1e6 * 10 ** (gain / 10);
+function pendingFame() { return fameFor(S.runEarned); }
 
 /* ---------- Economy actions ---------- */
 function earn(amount) { S.cash += amount; S.runEarned += amount; S.totalEarned += amount; }
@@ -1565,13 +1574,13 @@ function renderPanel() {
     if (closed.length) h += `<h3>Completed <small>${closed.length}</small></h3>` + closed.map(g => `<div class="goal done"><span class="gi">${icon('trophy')}</span><span class="gname">${g.name}</span><span class="gnum">Done</span></div>`).join('');
   } else if (activeTab === 'retire') {
     const gain = pendingFame();
-    const nextAt = (gain + 1) ** 2 * 1e6;
+    const nextAt = fameNextAt(gain);
     h += `<h3>Retire and tell tales</h3>
       <p class="note">Sell the boat, hang up the rod and become a legend at the bait shop. You lose your cash, tackle, crew, specials and waters, but every Fame star adds +10% to all income forever. Your logbook stays.</p>
       <div class="item" style="--c:var(--gold)"><div class="tile">${icon('star')}</div><div class="head"><span class="bigstat">+${gain} ★</span></div>
         <div class="desc">Earned this career: ${money(S.runEarned)}. Next star at ${money(nextAt)}. You have ${S.fame} ★ (income ×${fameMult().toFixed(1)}).</div>
         <button class="buy gold ${retireArmed ? 'danger' : ''}" id="retireBtn" ${gain < 1 ? 'disabled' : ''}>${retireArmed ? 'Tap to confirm' : 'Retire'}</button></div>
-      <p class="note">${gain < 1 ? 'Earn $1M in one career to qualify for your first star.' : 'Fame scales with the square root of what you earned this career.'}</p>
+      <p class="note">${gain < 1 ? 'Earn $1M in one career to qualify for your first star.' : 'You get 10 more stars each time your career earnings grow 10×.'}</p>
       <h3>Records</h3>
       <p class="note">Lifetime earnings ${money(S.totalEarned)} · Careers retired: ${S.retires}</p>
       <div class="row"><span class="note">Progress saves in this browser automatically.</span>
