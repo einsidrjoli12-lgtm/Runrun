@@ -2620,12 +2620,15 @@ function drawBobberSkin(bx, by, look, t) {
 // Pets: cute, alive and reactive. They breathe, blink, do little things on their own and cheer when you land a fish.
 const PET = { act: 'idle', t: 0, dur: 0, next: 3, blink: 2, react: 0, big: false };
 const PET_ACTS = { otter: [['groom', 2.2], ['shell', 2.4], ['float', 7.5], ['float', 7.5]], cat: [['groom', 2.6], ['stretch', 2.2], ['nap', 7]], frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1]], gull: [['look', 2.4], ['flap', 1.4], ['squawk', 1.2]], nott: [['slowblink', 2.6], ['loaf', 5], ['groom', 2.8], ['pounce', 2.6], ['bigstretch', 3.4], ['nap', 6]] };
-function petReact(rarity) { if (PET.act === 'float' || PET.act === 'nap') return; PET.act = 'idle'; PET.react = 1.3; PET.big = rarity >= 3; }
+const PET_FADE = 0.35;
+function petSnap() { PET.prev = { act: PET.act, t: PET.t, dur: PET.dur, react: PET.react, big: PET.big, blink: 1 }; PET.fade = PET_FADE; }
+function petReact(rarity) { if (PET.act === 'float' || PET.act === 'nap') return; if (PET.act !== 'idle') petSnap(); PET.act = 'idle'; PET.react = 1.3; PET.big = rarity >= 3; }
 function stepPet(look, dt) {
   PET.t += dt; PET.blink -= dt; if (PET.blink < -0.13) PET.blink = 2 + Math.random() * 3.5;
   if (PET.react > 0) PET.react -= dt;
-  if (PET.act === 'idle') { if (PET.react <= 0 && (PET.next -= dt) <= 0) { const list = PET_ACTS[look] || [], a = list[Math.floor(Math.random() * list.length)]; if (a) { PET.act = a[0]; PET.dur = a[1]; PET.t = 0; } } }
-  else if (PET.t >= PET.dur) { PET.act = 'idle'; PET.next = 4 + Math.random() * 6; }
+  if (PET.act === 'idle') { if (PET.react <= 0 && (PET.next -= dt) <= 0) { const list = PET_ACTS[look] || [], a = list[Math.floor(Math.random() * list.length)]; if (a) { petSnap(); PET.act = a[0]; PET.dur = a[1]; PET.t = 0; } } }
+  else if (PET.t >= PET.dur) { PET.t = PET.dur; petSnap(); PET.act = 'idle'; PET.t = 0; PET.next = 4 + Math.random() * 6; }
+  if (PET.fade > 0) PET.fade -= dt;
 }
 function petEyes(c, x1, x2, y, r, mode) { // mode: open | blink | happy
   if (mode === 'open') {
@@ -2664,7 +2667,7 @@ function nottBlob(c, f) { c.save(); c.fillStyle = N_BLACK; c.strokeStyle = N_RIM
 function drawNott(c, act, k, at, t, night, blinkOn) {
   const breathe = 1 + Math.sin(t * 2.4) * .025;
   const react = act === 'react', hop = react ? Math.abs(Math.sin(k * Math.PI * 2)) * 12 : act === 'pounce' && k > .55 && k < .85 ? Math.sin((k - .55) / .3 * Math.PI) * 16 : 0;
-  const px = act === 'pounce' ? (k > .55 ? Math.min(1, (k - .55) / .3) * 16 : 0) : 0;
+  const px = act === 'pounce' ? (k > .55 && k <= .85 ? (k - .55) / .3 * 16 : k > .85 ? 16 * (1 - (k - .85) / .15) * (1 - (k - .85) / .15) : 0) : 0;
   c.save(); c.translate(px, -hop);
   if (act === 'nap') {
     nottBlob(c, () => c.ellipse(0, -8, 16, 8, 0, 0, 7));
@@ -2679,7 +2682,8 @@ function drawNott(c, act, k, at, t, night, blinkOn) {
   if (act === 'bigstretch') {
     // ease into the stretch, hold with a little wobble, ease back out
     const e = x => x * x * (3 - 2 * x), sv = k < .28 ? e(k / .28) : k > .78 ? e((1 - k) / .22) : 1, s = sv * (1 + Math.sin(at * 7) * .02);
-    if (sv > .08) {
+    if (sv > 0) {
+      if (sv < .4) { c.save(); c.globalAlpha *= 1 - sv / .4; drawNott(c, 'idle', 0, 0, t, night, blinkOn); c.restore(); c.globalAlpha *= sv / .4; } // blend in from sitting
       const hip = { x: -7, y: -16 - 7 * s }, chest = { x: 6 + 3 * s, y: -15 + 7 * s }, reach = 10 + 16 * s;
       const limb = (x1, y1, x2, y2, w) => { c.lineCap = 'round'; c.strokeStyle = N_RIM; c.lineWidth = w + 2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = w; c.stroke(); };
       // tail straight up with a hook
@@ -2718,10 +2722,10 @@ function drawNott(c, act, k, at, t, night, blinkOn) {
   nottBlob(c, () => c.ellipse(wiggle, -14.5, 10, 15.5, 0, 0, 7));
   c.fillStyle = 'rgba(255,255,255,.05)'; c.beginPath(); c.ellipse(wiggle - 3, -18, 4, 8, 0, 0, 7); c.fill();
   // paws
-  const groom = act === 'groom' && k > .1 && k < .9;
+  const gl = act === 'groom' ? petEnv(k, .22) : 0, groom = gl > .5;
   if (loaf < .5) {
-    nottBlob(c, () => { c.ellipse(-3.8, -1.5, 3, 2.4, 0, 0, 7); if (!groom) c.ellipse(3.8, -1.5, 3, 2.4, 0, 0, 7); });
-    if (groom) nottBlob(c, () => c.ellipse(-1, -26 + Math.sin(at * 10) * 1.5, 3.4, 2.8, 0, 0, 7));
+    nottBlob(c, () => c.ellipse(-3.8, -1.5, 3, 2.4, 0, 0, 7));
+    nottBlob(c, () => c.ellipse(3.8 - 4.8 * gl, -1.5 - (24.5 + Math.sin(at * 10) * 1.5) * gl, 3 + .4 * gl, 2.4 + .4 * gl, 0, 0, 7));
   }
   // head
   const tilt = act === 'idle' ? Math.sin(t * .6) * .12 : react ? Math.sin(t * 8) * .08 : 0;
@@ -2734,7 +2738,7 @@ function drawNott(c, act, k, at, t, night, blinkOn) {
   if (react) mode = 'happy';
   else if (act === 'slowblink') { mode = k > .3 && k < .62 ? 'blink' : k > .2 && k < .72 ? 'half' : 'open'; }
   else if (act === 'loaf') mode = blinkOn ? 'blink' : 'half';
-  else if (act === 'groom') mode = 'happy';
+  else if (act === 'groom' && groom) mode = 'happy';
   else if (act === 'pounce' && k < .6) { mode = 'wide'; look = 1.6; }
   nottEyes(c, -4.6, 4.6, -1.2, 2.6, mode, night, look);
   c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-1.7, 3.4); c.lineTo(1.7, 3.4); c.lineTo(0, 5.2); c.fill();
@@ -2756,7 +2760,14 @@ function nottFish(c, k, t) { // the fish she pounces at
 }
 function drawPet(look, X, Y, t) {
   stepPet(look, dtFrame || 0);
-  const c = ctx, P = PET, k = Math.min(1, P.t / Math.max(.01, P.dur)), SC = 0.62;
+  const f = PET.fade > 0 && PET.prev ? PET.fade / PET_FADE : 0;
+  if (f > 0) { ctx.save(); ctx.globalAlpha = f; drawPetPose(look, X, Y, t, PET.prev); ctx.restore(); }
+  ctx.save(); ctx.globalAlpha = 1 - f * .85; drawPetPose(look, X, Y, t, PET); ctx.restore();
+}
+// an envelope that eases a move in and back out, so every pose starts and ends at rest
+const petEnv = (k, a = .2) => { const e = x => x * x * (3 - 2 * x); return k < a ? e(k / a) : k > 1 - a ? e((1 - k) / a) : 1; };
+function drawPetPose(look, X, Y, t, P) {
+  const c = ctx, k = Math.min(1, P.t / Math.max(.01, P.dur)), SC = 0.62;
   const breathe = 1 + Math.sin(t * 2.4) * 0.025;
   const reacting = P.react > 0, rp = reacting ? 1 - P.react / 1.3 : 0;
   const hop = reacting ? Math.abs(Math.sin(rp * Math.PI * (P.big ? 3 : 2))) * (P.big ? 12 : 8) : 0;
@@ -2804,8 +2815,8 @@ function drawPet(look, X, Y, t) {
     c.fillStyle = dark; c.beginPath(); c.ellipse(-6, -1, 4, 2.2, 0, 0, 7); c.ellipse(6, -1, 4, 2.2, 0, 0, 7); c.fill(); // feet
     // paws: hold the shell, rub the face, or clap the shell
     let pl = { x: -4.5, y: -18 }, pr = { x: 4.5, y: -18 }, sh = { x: 0, y: -16 }, showShell = true;
-    if (P.act === 'groom') { const w = Math.sin(P.t * 16) * 2; pl = { x: -5 + w, y: -31 }; pr = { x: 5 - w, y: -31 }; showShell = false; }
-    if (P.act === 'shell') { const w = Math.abs(Math.sin(P.t * 9)); pl = { x: -7 + w * 2, y: -20 - w * 4 }; pr = { x: 7 - w * 2, y: -20 - w * 4 }; sh = { x: 0, y: -21 - w * 4 }; if (w > .95) particles.push({ x: X, y: Y - 14, vx: rnd(-20, 20), vy: -30, life: .4, max: .4, color: '#fff', size: 1.4, type: 'spark', g: 0 }); }
+    if (P.act === 'groom') { const e = petEnv(k, .25), w = Math.sin(P.t * 16) * 2 * e; pl = { x: -4.5 - .5 * e + w, y: -18 - 13 * e }; pr = { x: 4.5 + .5 * e - w, y: -18 - 13 * e }; showShell = e < .5; }
+    if (P.act === 'shell') { const w = Math.abs(Math.sin(P.t * 9)) * petEnv(k, .15); pl = { x: -7 + w * 2, y: -20 - w * 4 }; pr = { x: 7 - w * 2, y: -20 - w * 4 }; sh = { x: 0, y: -21 - w * 4 }; if (w > .95) particles.push({ x: X, y: Y - 14, vx: rnd(-20, 20), vy: -30, life: .4, max: .4, color: '#fff', size: 1.4, type: 'spark', g: 0 }); }
     if (reacting) { const w = Math.abs(Math.sin(rp * Math.PI * 6)); pl = { x: -7 + w * 3, y: -22 }; pr = { x: 7 - w * 3, y: -22 }; sh = { x: 0, y: -22 }; }
     if (showShell) shell(sh.x, sh.y);
     c.fillStyle = brown; c.beginPath(); c.ellipse(pl.x, pl.y, 3, 2.4, 0, 0, 7); c.ellipse(pr.x, pr.y, 3, 2.4, 0, 0, 7); c.fill();
@@ -2841,9 +2852,9 @@ function drawPet(look, X, Y, t) {
     c.beginPath(); c.moveTo(9, -3); c.quadraticCurveTo(24, -4, 20 + sw, -22); c.stroke();
     c.fillStyle = fur; c.beginPath(); c.ellipse(0, -13, 11.5, 13.5, 0, 0, 7); c.fill();                   // body
     c.fillStyle = cream; c.beginPath(); c.ellipse(0, -11, 6.5, 9, 0, 0, 7); c.fill();
-    const lift = P.act === 'groom' ? 1 : 0;
+    const lift = P.act === 'groom' ? petEnv(k, .25) : 0;
     c.fillStyle = cream; c.beginPath(); c.ellipse(-4.5, -1.5, 3.5, 2.6, 0, 0, 7); c.fill();               // paws
-    if (lift) { c.beginPath(); c.ellipse(-1, -24 + Math.sin(P.t * 10) * 1.5, 3, 2.6, 0, 0, 7); c.fill(); } else { c.beginPath(); c.ellipse(4.5, -1.5, 3.5, 2.6, 0, 0, 7); c.fill(); }
+    c.beginPath(); c.ellipse(4.5 - 5.5 * lift, -1.5 - (22.5 + Math.sin(P.t * 10) * 1.5) * lift, 3.5 - .5 * lift, 2.6, 0, 0, 7); c.fill();
     c.save(); c.translate(0, -30); c.rotate(P.act === 'idle' && !reacting ? Math.sin(t * .6) * .1 : 0);
     c.fillStyle = fur; c.beginPath(); c.moveTo(-9.5, -3); c.lineTo(-8, -15); c.lineTo(-2, -8); c.moveTo(9.5, -3); c.lineTo(8, -15); c.lineTo(2, -8); c.fill();
     c.fillStyle = '#ffb3c0'; c.beginPath(); c.moveTo(-7.8, -5); c.lineTo(-7.4, -11.5); c.lineTo(-4, -7.5); c.moveTo(7.8, -5); c.lineTo(7.4, -11.5); c.lineTo(4, -7.5); c.fill();
@@ -2854,9 +2865,9 @@ function drawPet(look, X, Y, t) {
     const yawn = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0;
     if (yawn > .2) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 6.4, 2.4, 2.6 * yawn, 0, 0, 7); c.fill(); }
     else { c.strokeStyle = '#7a3a12'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 3.8); c.lineTo(0, 5); c.arc(-1.5, 5, 1.5, 0, Math.PI); c.moveTo(3, 5); c.arc(1.5, 5, 1.5, 0, Math.PI); c.stroke(); }
-    if (lift) { c.fillStyle = '#ff8fa3'; c.beginPath(); c.ellipse(-1, 7, 1.4, 1.8, 0, 0, 7); c.fill(); }
+    if (lift > .6) { c.fillStyle = '#ff8fa3'; c.beginPath(); c.ellipse(-1, 7, 1.4, 1.8, 0, 0, 7); c.fill(); }
     c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .7; c.beginPath(); [[-5, 3.5, -13, 2], [-5, 5, -13, 6], [5, 3.5, 13, 2], [5, 5, 13, 6]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
-    petEyes(c, -4.5, 4.5, -2, 2.1, yawn > .2 || lift ? 'happy' : eyes);
+    petEyes(c, -4.5, 4.5, -2, 2.1, yawn > .2 || lift > .5 ? 'happy' : eyes);
     blush(c, -7.2, 7.2, 3.2);
     c.restore();
   }
@@ -2869,7 +2880,7 @@ function drawPet(look, X, Y, t) {
     c.fillStyle = g; c.beginPath(); c.ellipse(0, -10, 14.5, 10.5, 0, 0, 7); c.fill();                     // body
     c.fillStyle = belly; c.beginPath(); c.ellipse(0, -6.5, 9, 6, 0, 0, 7); c.fill();
     c.fillStyle = dg; c.beginPath(); c.ellipse(-5.5, -.5, 3.5, 1.8, 0, 0, 7); c.ellipse(5.5, -.5, 3.5, 1.8, 0, 0, 7); c.fill(); // front feet
-    const puff = P.act === 'ribbit' ? Math.max(0, Math.sin(P.t * 7)) : 0;
+    const puff = P.act === 'ribbit' ? Math.max(0, Math.sin(P.t * 7)) * petEnv(k, .2) : 0;
     if (puff > .05) { c.fillStyle = '#f2ffd6'; c.beginPath(); c.arc(0, -6, 4 + puff * 5, 0, 7); c.fill(); }
     c.fillStyle = g; c.beginPath(); c.arc(-7.5, -19, 6.5, 0, 7); c.arc(7.5, -19, 6.5, 0, 7); c.fill();       // eye bumps
     c.fillStyle = '#fff'; c.beginPath(); c.arc(-7.5, -19.5, 4.4, 0, 7); c.arc(7.5, -19.5, 4.4, 0, 7); c.fill();
@@ -2888,7 +2899,7 @@ function drawPet(look, X, Y, t) {
   // ---------- SEAGULL ----------
   else if (look === 'gull') {
     const grey = '#a9b6bd', beak = '#ffc93c';
-    const flap = P.act === 'flap' || reacting ? Math.sin((P.act === 'flap' ? P.t : rp) * 24) : null;
+    const flap = P.act === 'flap' || reacting ? Math.sin((P.act === 'flap' ? P.t : rp) * 24) * (P.act === 'flap' ? petEnv(k, .2) : 1) : null;
     c.translate(0, -hop - (P.act === 'flap' ? Math.abs(Math.sin(k * Math.PI)) * 6 : 0)); c.scale(SC, SC * breathe);
     c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3, 0); c.moveTo(3, -6); c.lineTo(3, 0); c.stroke(); // legs
     c.fillStyle = '#ff9f1c'; c.beginPath(); c.ellipse(-3, .5, 3, 1.2, 0, 0, 7); c.ellipse(3, .5, 3, 1.2, 0, 0, 7); c.fill();
@@ -2897,10 +2908,10 @@ function drawPet(look, X, Y, t) {
     if (flap !== null) { // wings up and flapping
       c.fillStyle = grey; [-1, 1].forEach(sd => { c.save(); c.translate(-2, -18); c.rotate(sd * (.5 + flap * .6) - Math.PI / 2 * .2); c.beginPath(); c.ellipse(sd * 9, -6, 11, 4, sd * -.6, 0, 7); c.fill(); c.restore(); });
     } else { c.fillStyle = grey; c.beginPath(); c.ellipse(-3, -15, 10, 6, -.25, 0, 7); c.fill(); c.fillStyle = '#4a5560'; c.beginPath(); c.ellipse(-11, -12, 4, 2.4, -.3, 0, 7); c.fill(); }
-    const turn = P.act === 'look' ? (k > .25 && k < .75 ? -1 : 1) : 1;
+    const turn = P.act === 'look' ? 1 - 2 * petEnv((k - .2) / .6 < 0 ? 0 : (k - .2) / .6 > 1 ? 1 : (k - .2) / .6, .3) * (k > .2 && k < .8 ? 1 : 0) : 1;
     c.save(); c.translate(5, -27); c.scale(turn, 1); c.rotate(!reacting && P.act === 'idle' ? Math.sin(t * .9) * .12 : 0);
     c.fillStyle = '#fbfdfe'; c.beginPath(); c.arc(0, 0, 8.5, 0, 7); c.fill();
-    const open = P.act === 'squawk' ? Math.abs(Math.sin(P.t * 12)) : reacting ? .5 : 0;
+    const open = P.act === 'squawk' ? Math.abs(Math.sin(P.t * 12)) * petEnv(k, .2) : reacting ? .5 : 0;
     c.fillStyle = beak; c.beginPath(); c.moveTo(6, -1.5); c.lineTo(15, -1 - open * 2); c.lineTo(7, 1); c.fill();
     c.beginPath(); c.moveTo(6, 1); c.lineTo(14, 1.5 + open * 3); c.lineTo(6, 3); c.fill();
     c.fillStyle = '#ff5a3d'; c.beginPath(); c.arc(11.5, 1.6 + open * 1.5, 1, 0, 7); c.fill();
