@@ -2617,312 +2617,291 @@ function drawBobberSkin(bx, by, look, t) {
   c.fillStyle = 'rgba(255,255,255,0.6)'; c.beginPath(); c.arc(bx - 2, by - 1, 1.6, 0, 7); c.fill();
   c.fillStyle = S2[0]; c.fillRect(bx - 1, by - 9, 2, 6);
 }
-// Pets: cute, alive and reactive. They breathe, blink, do little things on their own and cheer when you land a fish.
-const PET = { act: 'idle', t: 0, dur: 0, next: 3, blink: 2, react: 0, big: false };
-const PET_ACTS = { otter: [['groom', 2.2], ['shell', 2.4], ['float', 7.5], ['float', 7.5]], cat: [['groom', 2.6], ['stretch', 2.2], ['nap', 7]], frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1]], gull: [['look', 2.4], ['flap', 1.4], ['squawk', 1.2]], nott: [['slowblink', 2.6], ['loaf', 5], ['groom', 2.8], ['pounce', 2.6], ['bigstretch', 3.4], ['nap', 6]] };
-const PET_FADE = 0.35;
-function petSnap() { PET.prev = { act: PET.act, t: PET.t, dur: PET.dur, react: PET.react, big: PET.big, blink: 1 }; PET.fade = PET_FADE; }
-function petReact(rarity) { if (PET.act === 'float' || PET.act === 'nap') return; if (PET.act !== 'idle') petSnap(); PET.act = 'idle'; PET.react = 1.3; PET.big = rarity >= 3; }
-function stepPet(look, dt) {
-  PET.t += dt; PET.blink -= dt; if (PET.blink < -0.13) PET.blink = 2 + Math.random() * 3.5;
-  if (PET.react > 0) PET.react -= dt;
-  if (PET.act === 'idle') { if (PET.react <= 0 && (PET.next -= dt) <= 0) { const list = PET_ACTS[look] || [], a = list[Math.floor(Math.random() * list.length)]; if (a) { petSnap(); PET.act = a[0]; PET.dur = a[1]; PET.t = 0; } } }
-  else if (PET.t >= PET.dur) { PET.t = PET.dur; petSnap(); PET.act = 'idle'; PET.t = 0; PET.next = 4 + Math.random() * 6; }
-  if (PET.fade > 0) PET.fade -= dt;
-}
-function petEyes(c, x1, x2, y, r, mode) { // mode: open | blink | happy
-  if (mode === 'open') {
-    c.fillStyle = '#16110e'; c.beginPath(); c.ellipse(x1, y, r, r * 1.15, 0, 0, 7); c.ellipse(x2, y, r, r * 1.15, 0, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.beginPath(); c.arc(x1 + r * .35, y - r * .4, r * .38, 0, 7); c.arc(x2 + r * .35, y - r * .4, r * .38, 0, 7); c.fill();
-  } else {
-    c.strokeStyle = '#16110e'; c.lineWidth = 1.6; c.lineCap = 'round'; c.beginPath();
-    if (mode === 'happy') { c.arc(x1, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(x2 + r * .95, y - .2); c.arc(x2, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); }
-    else { c.moveTo(x1 - r, y); c.quadraticCurveTo(x1, y + r * .7, x1 + r, y); c.moveTo(x2 - r, y); c.quadraticCurveTo(x2, y + r * .7, x2 + r, y); }
-    c.stroke();
+// Bobber & Brine dock pets: continuous, snap-free animation.
+// Every move is driven by envelopes that start and end at the resting pose, and pose changes
+// (lying down, rolling onto the back, stretching) interpolate the body shape itself. No cross-fades.
+// Draws at the origin with the ground at y = 0 (about 50 units tall); the caller translates and scales.
+const PETS = (() => {
+  const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+  const env = (k, a = .2) => k < a ? ease(k / a) : k > 1 - a ? ease((1 - k) / a) : 1;
+  const win = (k, a, b, edge = .25) => k <= a || k >= b ? 0 : env((k - a) / (b - a), edge); // an envelope over part of a move
+  const lerp = (a, b, u) => a + (b - a) * u;
+  const lp = (p, q, u) => p.map((v, i) => lerp(v, q[i], u));
+  const ACTS = {
+    otter: [['groom', 2.4], ['shell', 2.6], ['float', 8], ['float', 8]],
+    cat: [['groom', 2.8], ['stretch', 2.4], ['nap', 7]],
+    frog: [['ribbit', 1.8], ['tongue', 1.4], ['tongue', 1.4], ['hop', 1.1]],
+    gull: [['look', 2.6], ['flap', 1.6], ['squawk', 1.4]],
+    nott: [['slowblink', 2.8], ['loaf', 5.5], ['groom', 3], ['pounce', 2.8], ['bigstretch', 3.8], ['nap', 7]],
+  };
+  const REACT = 1.4;
+  function newState() { return { act: 'idle', t: 0, dur: 0, next: 3, blink: 2, react: 0, big: false, pending: -1 }; }
+  // a caught fish: cheer now, or finish the current move gently first
+  function react(P, rarity) {
+    if (P.act === 'idle') { P.react = REACT; P.big = rarity >= 3; }
+    else { P.pending = rarity; P.t = Math.max(P.t, P.dur * .8); }
   }
-}
-const blush = (c, x1, x2, y) => { c.fillStyle = 'rgba(255,120,140,.45)'; c.beginPath(); c.ellipse(x1, y, 3, 1.8, 0, 0, 7); c.ellipse(x2, y, 3, 1.8, 0, 0, 7); c.fill(); };
-function petHeart(c, x, y, s, a) { c.save(); c.globalAlpha = a; c.fillStyle = '#ff5a7a'; c.translate(x, y); c.scale(s, s); c.beginPath(); c.moveTo(0, 3); c.bezierCurveTo(-6, -2, -3, -7, 0, -3.5); c.bezierCurveTo(3, -7, 6, -2, 0, 3); c.fill(); c.restore(); }
-function petNote(c, txt, x, y, a, size = 9) { c.save(); c.globalAlpha = a; c.font = `${size}px "Lilita One", sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(5,20,28,.7)'; c.strokeText(txt, x, y); c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore(); }
-// Nótt: a special black cat (code only). Ported from her preview page.
-const N_BLACK = '#17171f', N_RIM = '#3c3c52', N_PINK = '#ff9fb3', N_EYE = '#cfdc4a';
-function nottEyes(c, x1, x2, y, r, mode, night, look = 0) {
-  if (mode === 'open' || mode === 'wide') {
-    const rr = mode === 'wide' ? r * 1.2 : r;
-    if (night) { c.save(); c.globalCompositeOperation = 'lighter'; [x1, x2].forEach(x => { const g = c.createRadialGradient(x, y, 0, x, y, rr * 3.2); g.addColorStop(0, 'rgba(210,240,90,.55)'); g.addColorStop(1, 'rgba(210,240,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, rr * 3.2, 0, 7); c.fill(); }); c.restore(); }
-    c.fillStyle = night ? '#e4f25e' : N_EYE; c.beginPath(); c.ellipse(x1, y, rr, rr * 1.1, 0, 0, 7); c.ellipse(x2, y, rr, rr * 1.1, 0, 0, 7); c.fill();
-    c.fillStyle = '#0b0b10'; const pw = mode === 'wide' ? rr * .75 : rr * .32; c.beginPath(); c.ellipse(x1 + look, y, pw, rr * .9, 0, 0, 7); c.ellipse(x2 + look, y, pw, rr * .9, 0, 0, 7); c.fill();
-    c.fillStyle = '#fff'; c.beginPath(); c.arc(x1 + rr * .35, y - rr * .45, rr * .3, 0, 7); c.arc(x2 + rr * .35, y - rr * .45, rr * .3, 0, 7); c.fill();
-  } else if (mode === 'half') {
-    c.fillStyle = night ? '#e4f25e' : N_EYE; c.beginPath(); c.ellipse(x1, y + r * .35, r, r * .45, 0, 0, Math.PI); c.ellipse(x2, y + r * .35, r, r * .45, 0, 0, Math.PI); c.fill();
-    c.strokeStyle = N_RIM; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x1 - r, y + .3 * r); c.lineTo(x1 + r, y + .3 * r); c.moveTo(x2 - r, y + .3 * r); c.lineTo(x2 + r, y + .3 * r); c.stroke();
-  } else {
-    c.strokeStyle = '#8f8fae'; c.lineWidth = 1.5; c.lineCap = 'round'; c.beginPath();
-    if (mode === 'happy') { c.arc(x1, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(x2 + r * .95, y - .2); c.arc(x2, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); }
-    else { c.moveTo(x1 - r, y); c.quadraticCurveTo(x1, y + r * .7, x1 + r, y); c.moveTo(x2 - r, y); c.quadraticCurveTo(x2, y + r * .7, x2 + r, y); }
-    c.stroke();
-  }
-}
-function nottBlob(c, f) { c.save(); c.fillStyle = N_BLACK; c.strokeStyle = N_RIM; c.lineWidth = 1.6; c.beginPath(); f(); c.fill(); c.stroke(); c.restore(); }
-function drawNott(c, act, k, at, t, night, blinkOn) {
-  const breathe = 1 + Math.sin(t * 2.4) * .025;
-  const react = act === 'react', hop = react ? Math.abs(Math.sin(k * Math.PI * 2)) * 12 : act === 'pounce' && k > .55 && k < .85 ? Math.sin((k - .55) / .3 * Math.PI) * 16 : 0;
-  const px = act === 'pounce' ? (k > .55 && k <= .85 ? (k - .55) / .3 * 16 : k > .85 ? 16 * (1 - (k - .85) / .15) * (1 - (k - .85) / .15) : 0) : 0;
-  c.save(); c.translate(px, -hop);
-  if (act === 'nap') {
-    nottBlob(c, () => c.ellipse(0, -8, 16, 8, 0, 0, 7));
-    c.save(); c.strokeStyle = N_RIM; c.lineWidth = 7; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -4); c.quadraticCurveTo(10, 5, -12, 2); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 5; c.stroke(); c.restore();
-    nottBlob(c, () => { c.arc(-12, -12, 9.5, 0, 7); });
-    nottBlob(c, () => { c.moveTo(-20, -15); c.lineTo(-19, -24); c.lineTo(-14, -18); c.closePath(); c.moveTo(-9, -19); c.lineTo(-5, -26); c.lineTo(-3, -17); c.closePath(); });
-    nottEyes(c, -15.5, -8.5, -12, 2, 'blink', night);
-    c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-13.5, -8.8); c.lineTo(-10.5, -8.8); c.lineTo(-12, -7.5); c.fill();
-    const z = (at * .7) % 1; petNote(c, 'z', 6 + z * 8, -24 - z * 16, 1 - z, 11); petNote(c, 'Z', 13 + ((z + .5) % 1) * 8, -28 - ((z + .5) % 1) * 16, 1 - (z + .5) % 1, 14);
-    c.restore(); return;
-  }
-  if (act === 'bigstretch') {
-    // ease into the stretch, hold with a little wobble, ease back out
-    const e = x => x * x * (3 - 2 * x), sv = k < .28 ? e(k / .28) : k > .78 ? e((1 - k) / .22) : 1, s = sv * (1 + Math.sin(at * 7) * .02);
-    if (sv > 0) {
-      if (sv < .4) { c.save(); c.globalAlpha *= 1 - sv / .4; drawNott(c, 'idle', 0, 0, t, night, blinkOn); c.restore(); c.globalAlpha *= sv / .4; } // blend in from sitting
-      const hip = { x: -7, y: -16 - 7 * s }, chest = { x: 6 + 3 * s, y: -15 + 7 * s }, reach = 10 + 16 * s;
-      const limb = (x1, y1, x2, y2, w) => { c.lineCap = 'round'; c.strokeStyle = N_RIM; c.lineWidth = w + 2; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = w; c.stroke(); };
-      // tail straight up with a hook
-      c.save(); c.lineCap = 'round'; const tl = () => { c.beginPath(); c.moveTo(hip.x - 2, hip.y - 2); c.quadraticCurveTo(hip.x - 10, hip.y - 14, hip.x - 4 + Math.sin(t * 3) * 2, hip.y - 26); }; c.strokeStyle = N_RIM; c.lineWidth = 8; tl(); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 6; tl(); c.stroke(); c.restore();
-      limb(hip.x - 1, hip.y + 4, -9, -1, 5); limb(hip.x + 2, hip.y + 4, -4, -1, 5);                 // back legs
-      // body: a long slope from the raised bum down to the chest
-      const mx = (hip.x + chest.x) / 2, my = (hip.y + chest.y) / 2, ang = Math.atan2(chest.y - hip.y, chest.x - hip.x), len = Math.hypot(chest.x - hip.x, chest.y - hip.y);
-      nottBlob(c, () => c.ellipse(mx, my, len / 2 + 7, 7.5, ang, 0, 7));
-      limb(chest.x, chest.y + 3, chest.x + reach, -1.5, 4.6); limb(chest.x - 2, chest.y + 3, chest.x + reach - 4, -1.2, 4.6); // front legs reaching out
-      nottBlob(c, () => { c.ellipse(chest.x + reach + 1, -1.5, 3, 2, 0, 0, 7); c.ellipse(chest.x + reach - 3, -1.2, 3, 2, 0, 0, 7); });
-      if (s > .9) { c.strokeStyle = '#ddd'; c.lineWidth = .7; for (const dx of [-1, 1, 3]) { c.beginPath(); c.moveTo(chest.x + reach + 2 + dx, -2.6); c.lineTo(chest.x + reach + 3.4 + dx, -3.8); c.stroke(); } } // claws out
-      // head low between the front legs, ears back a bit
-      c.save(); c.translate(chest.x + 6, chest.y - 4 + 2 * s); c.rotate(.15 * s);
-      nottBlob(c, () => { c.moveTo(-9, -2); c.lineTo(-10 + 2 * s, -14 + 2 * s); c.lineTo(-2.5, -8); c.closePath(); c.moveTo(9, -2); c.lineTo(10 - 2 * s, -14 + 2 * s); c.lineTo(2.5, -8); c.closePath(); });
-      nottBlob(c, () => c.ellipse(0, 0, 10.5, 9.5, 0, 0, 7));
-      nottEyes(c, -4.2, 4.2, -1, 2.4, 'happy', night);
-      const yawn = s > .85 ? Math.sin(Math.min(1, (k - .3) / .4) * Math.PI) : 0;
-      c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-1.6, 3); c.lineTo(1.6, 3); c.lineTo(0, 4.6); c.fill();
-      if (yawn > .15) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 7, 2.2, 2.8 * yawn, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.fillRect(-1.6, 4.7, .8, 1.2); c.fillRect(.8, 4.7, .8, 1.2); }
-      c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .7; c.beginPath(); [[-5, 4, -14, 2.5], [-5, 5.5, -14, 7], [5, 4, 14, 2.5], [5, 5.5, 14, 7]].forEach(([a, b, d, f]) => { c.moveTo(a, b); c.lineTo(d, f); }); c.stroke();
-      c.restore();
-      c.restore(); return;
+  function start(P, act, dur) { P.act = act; P.dur = dur; P.t = 0; P.react = 0; }
+  function step(P, look, dt) {
+    P.t += dt; P.blink -= dt; if (P.blink < -.14) P.blink = 2 + Math.random() * 3.5;
+    if (P.react > 0) P.react = Math.max(0, P.react - dt);
+    if (P.act === 'idle') {
+      if (P.react <= 0 && (P.next -= dt) <= 0) { const l = ACTS[look] || [], a = l[Math.floor(Math.random() * l.length)]; if (a) start(P, a[0], a[1]); }
+    } else if (P.t >= P.dur) {
+      P.act = 'idle'; P.t = 0; P.next = 4 + Math.random() * 6;
+      if (P.pending >= 0) { P.react = REACT; P.big = P.pending >= 3; P.pending = -1; }
     }
   }
-  const loaf = act === 'loaf' ? Math.min(1, k * 4, (1 - k) * 4) : 0;
-  const wiggle = act === 'pounce' && k > .2 && k < .55 ? Math.sin(at * 30) * 2.2 : 0;
-  const crouch = act === 'pounce' ? (k > .15 && k < .55 ? 1 : 0) : 0;
-  c.scale(1 + loaf * .08 + crouch * .06, (1 - loaf * .18 - crouch * .15) * breathe);
-  // fluffy tail (up and curled when happy, wide sweep otherwise)
-  const sw = Math.sin(t * (react ? 9 : 2)) * (react ? 5 : 4);
-  c.save(); c.lineCap = 'round';
-  const tail = () => { c.beginPath(); if (react) { c.moveTo(7, -8); c.quadraticCurveTo(19, -20, 14 + sw * .4, -42); } else if (loaf > .5) { c.moveTo(7, -3); c.quadraticCurveTo(4, 3, -10, 1); } else { c.moveTo(7 + wiggle, -4); c.quadraticCurveTo(26, -2, 26 + sw, -17); } };
-  c.strokeStyle = N_RIM; c.lineWidth = 8; tail(); c.stroke(); c.strokeStyle = N_BLACK; c.lineWidth = 6; tail(); c.stroke();
-  c.restore();
-  // chubby body
-  nottBlob(c, () => c.ellipse(wiggle, -14.5, 10, 15.5, 0, 0, 7));
-  c.fillStyle = 'rgba(255,255,255,.05)'; c.beginPath(); c.ellipse(wiggle - 3, -18, 4, 8, 0, 0, 7); c.fill();
-  // paws
-  const gl = act === 'groom' ? petEnv(k, .22) : 0, groom = gl > .5;
-  if (loaf < .5) {
-    nottBlob(c, () => c.ellipse(-3.8, -1.5, 3, 2.4, 0, 0, 7));
-    nottBlob(c, () => c.ellipse(3.8 - 4.8 * gl, -1.5 - (24.5 + Math.sin(at * 10) * 1.5) * gl, 3 + .4 * gl, 2.4 + .4 * gl, 0, 0, 7));
+  // eyes with an eyelid: o = 1 open, 0 closed. happy draws ^ ^. iris/slit for cats.
+  function eyes(c, x1, x2, y, r, { o = 1, happy = 0, iris = null, slit = .32, glow = false, lash = '#16110e' } = {}) {
+    if (happy > .5) {
+      c.strokeStyle = lash; c.lineWidth = 1.6; c.lineCap = 'round'; c.beginPath();
+      c.arc(x1, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.moveTo(x2 + r * .95, y - .2); c.arc(x2, y + 1, r, Math.PI * 1.15, Math.PI * 1.85); c.stroke(); return;
+    }
+    if (o < .16) {
+      c.strokeStyle = lash; c.lineWidth = 1.5; c.lineCap = 'round'; c.beginPath();
+      c.moveTo(x1 - r, y); c.quadraticCurveTo(x1, y + r * .7, x1 + r, y); c.moveTo(x2 - r, y); c.quadraticCurveTo(x2, y + r * .7, x2 + r, y); c.stroke(); return;
+    }
+    const ry = r * 1.12 * o, cy = y + r * (1 - o) * .45;
+    if (iris) {
+      if (glow) { c.save(); c.globalCompositeOperation = 'lighter'; for (const x of [x1, x2]) { const g = c.createRadialGradient(x, cy, 0, x, cy, r * 3.2); g.addColorStop(0, 'rgba(210,240,90,.5)'); g.addColorStop(1, 'rgba(210,240,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, cy, r * 3.2, 0, 7); c.fill(); } c.restore(); }
+      c.fillStyle = iris; c.beginPath(); c.ellipse(x1, cy, r, ry, 0, 0, 7); c.ellipse(x2, cy, r, ry, 0, 0, 7); c.fill();
+      c.fillStyle = '#0b0b10'; c.beginPath(); c.ellipse(x1, cy, r * slit, ry * .85, 0, 0, 7); c.ellipse(x2, cy, r * slit, ry * .85, 0, 0, 7); c.fill();
+    } else { c.fillStyle = '#16110e'; c.beginPath(); c.ellipse(x1, cy, r, ry, 0, 0, 7); c.ellipse(x2, cy, r, ry, 0, 0, 7); c.fill(); }
+    if (o > .55) { c.fillStyle = '#fff'; c.beginPath(); c.arc(x1 + r * .35, cy - ry * .4, r * .3, 0, 7); c.arc(x2 + r * .35, cy - ry * .4, r * .3, 0, 7); c.fill(); }
   }
-  // head
-  const tilt = act === 'idle' ? Math.sin(t * .6) * .12 : react ? Math.sin(t * 8) * .08 : 0;
-  c.save(); c.translate(wiggle, -32); c.rotate(tilt);
-  nottBlob(c, () => { c.moveTo(-10, -2); c.lineTo(-9, -16); c.lineTo(-2.5, -8.5); c.closePath(); c.moveTo(10, -2); c.lineTo(9, -16); c.lineTo(2.5, -8.5); c.closePath(); });
-  c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-8.2, -4); c.lineTo(-8, -12.5); c.lineTo(-4.4, -8.2); c.moveTo(8.2, -4); c.lineTo(8, -12.5); c.lineTo(4.4, -8.2); c.fill();
-  nottBlob(c, () => c.ellipse(0, 0, 11, 10.5, 0, 0, 7)); // face
-  // eyes: open, wide (spotting a fish), half (loaf), blink, happy, slow blink
-  let mode = blinkOn ? 'blink' : 'open', look = 0;
-  if (react) mode = 'happy';
-  else if (act === 'slowblink') { mode = k > .3 && k < .62 ? 'blink' : k > .2 && k < .72 ? 'half' : 'open'; }
-  else if (act === 'loaf') mode = blinkOn ? 'blink' : 'half';
-  else if (act === 'groom' && groom) mode = 'happy';
-  else if (act === 'pounce' && k < .6) { mode = 'wide'; look = 1.6; }
-  nottEyes(c, -4.6, 4.6, -1.2, 2.6, mode, night, look);
-  c.fillStyle = N_PINK; c.beginPath(); c.moveTo(-1.7, 3.4); c.lineTo(1.7, 3.4); c.lineTo(0, 5.2); c.fill();
-  c.strokeStyle = '#8f8fae'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 5.2); c.lineTo(0, 6.2); c.arc(-1.5, 6.2, 1.5, 0, Math.PI); c.moveTo(3, 6.2); c.arc(1.5, 6.2, 1.5, 0, Math.PI); c.stroke();
-  if (groom) { c.fillStyle = '#ff7f99'; c.beginPath(); c.ellipse(-1, 8.2, 1.4, 1.8, 0, 0, 7); c.fill(); }
-  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .7; c.beginPath(); [[-6, 4.5, -15, 3], [-6, 6, -15, 7.5], [6, 4.5, 15, 3], [6, 6, 15, 7.5]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
-  c.fillStyle = 'rgba(255,120,150,.35)'; c.beginPath(); c.ellipse(-7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.ellipse(7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.fill();
-  c.restore();
-  // little collar with the white tag
-  c.strokeStyle = '#c94a62'; c.lineWidth = 1.8; c.beginPath(); c.arc(wiggle, -32, 9.8, Math.PI * .28, Math.PI * .72); c.stroke();
-  c.fillStyle = '#f4eef2'; c.beginPath(); c.ellipse(wiggle, -22.3, 2.4, 1.7, 0, 0, 7); c.fill();
-  if (act === 'slowblink' && k > .35 && k < .9) petHeart(c, 14, -52 - (k - .35) * 18, 1, 1 - (k - .35) * 1.6);
-  c.restore();
-  if (react) for (let i = 0; i < 3; i++) { const q = (k * 1.2 + i * .3) % 1; petHeart(c, -8 + i * 8 + Math.sin(q * 6 + i) * 3, -58 - q * 28, 1, 1 - q); }
-}
-function nottFish(c, k, t) { // the fish she pounces at
-  if (k > .1 && k < .62) { c.save(); c.globalAlpha = Math.min(1, (k - .1) * 6, (.62 - k) * 8); c.fillStyle = '#9fd8ef'; c.translate(46 + Math.sin(t * 3) * 2, 14); c.beginPath(); c.ellipse(0, 0, 6, 2.6, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-5, 0); c.lineTo(-9, -3); c.lineTo(-9, 3); c.fill(); c.restore(); }
-  if (k > .78 && k < 1) { c.save(); c.globalAlpha = (1 - k) * 4; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(40, 14, 10 + (k - .78) * 40, 3, 0, 0, 7); c.stroke(); c.restore(); }
-}
-function drawPet(look, X, Y, t) {
-  stepPet(look, dtFrame || 0);
-  const f = PET.fade > 0 && PET.prev ? PET.fade / PET_FADE : 0;
-  if (f > 0) { ctx.save(); ctx.globalAlpha = f; drawPetPose(look, X, Y, t, PET.prev); ctx.restore(); }
-  ctx.save(); ctx.globalAlpha = 1 - f * .85; drawPetPose(look, X, Y, t, PET); ctx.restore();
-}
-// an envelope that eases a move in and back out, so every pose starts and ends at rest
-const petEnv = (k, a = .2) => { const e = x => x * x * (3 - 2 * x); return k < a ? e(k / a) : k > 1 - a ? e((1 - k) / a) : 1; };
-function drawPetPose(look, X, Y, t, P) {
-  const c = ctx, k = Math.min(1, P.t / Math.max(.01, P.dur)), SC = 0.62;
-  const breathe = 1 + Math.sin(t * 2.4) * 0.025;
-  const reacting = P.react > 0, rp = reacting ? 1 - P.react / 1.3 : 0;
-  const hop = reacting ? Math.abs(Math.sin(rp * Math.PI * (P.big ? 3 : 2))) * (P.big ? 12 : 8) : 0;
-  const eyes = reacting ? 'happy' : P.blink < 0 ? 'blink' : 'open';
-  if (look === 'nott') {
-    c.save(); c.translate(X, Y); c.scale(SC, SC);
-    const act = reacting ? 'react' : P.act, kk = reacting ? rp : k, at = reacting ? rp * 1.3 : P.t;
-    if (act === 'pounce') nottFish(c, kk, t);
-    drawNott(c, act, kk, at, t, isNight(LOCS[S.loc]), P.blink < 0);
-    c.restore(); return;
-  }
-  c.save(); c.translate(X, Y);
-  // ---------- OTTER ----------
-  if (look === 'otter') {
+  const blush = (c, x1, x2, y, a = .45) => { c.fillStyle = `rgba(255,120,140,${a})`; c.beginPath(); c.ellipse(x1, y, 3, 1.8, 0, 0, 7); c.ellipse(x2, y, 3, 1.8, 0, 0, 7); c.fill(); };
+  function heart(c, x, y, s, a) { if (a <= 0) return; c.save(); c.globalAlpha = a; c.fillStyle = '#ff5a7a'; c.translate(x, y); c.scale(s, s); c.beginPath(); c.moveTo(0, 3); c.bezierCurveTo(-6, -2, -3, -7, 0, -3.5); c.bezierCurveTo(3, -7, 6, -2, 0, 3); c.fill(); c.restore(); }
+  function note(c, txt, x, y, a, size = 9) { if (a <= .01) return; c.save(); c.globalAlpha = Math.min(1, a); c.font = `${size}px "Lilita One", sans-serif`; c.textAlign = 'center'; c.lineWidth = 3; c.strokeStyle = 'rgba(5,20,28,.7)'; c.strokeText(txt, x, y); c.fillStyle = '#fff'; c.fillText(txt, x, y); c.restore(); }
+  const curve = (c, p) => { c.beginPath(); c.moveTo(p[0], p[1]); c.quadraticCurveTo(p[2], p[3], p[4], p[5]); };
+
+  // ---------------- OTTER ----------------
+  function otter(c, P, k, t, R) {
     const brown = '#7d5032', light = '#e2bd96', dark = '#4e301d';
-    const shell = (x, y, sc = 1) => { c.save(); c.translate(x, y); c.scale(sc, sc); c.fillStyle = '#ffb3c7'; c.beginPath(); c.moveTo(0, 3); c.arc(0, 0, 4, Math.PI * .9, Math.PI * 2.1); c.closePath(); c.fill(); c.strokeStyle = '#e07a98'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, 3); c.lineTo(-2.4, -2.6); c.moveTo(0, 3); c.lineTo(0, -3.6); c.moveTo(0, 3); c.lineTo(2.4, -2.6); c.stroke(); c.restore(); };
-    if (P.act === 'float') {
-      // hop in, float on its back in front of the dock, hop out
-      const into = Math.min(1, P.t / .6), out = Math.max(0, (P.t - (P.dur - .7)) / .7);
-      const wx = 36, wy = 34, u = out > 0 ? 1 - out : into;
-      const fx = wx * u, fy = wy * u - Math.sin(u * Math.PI) * 22;
-      if (into >= 1 && out === 0) {
-        const b = Math.sin(t * 2) * 1.5;
-        c.translate(fx, fy + b); c.scale(SC, SC);
-        c.strokeStyle = `rgba(255,255,255,${.25 + .15 * Math.sin(t * 3)})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(0, 6, 30 + Math.sin(t * 2) * 3, 6, 0, 0, 7); c.stroke();
-        c.fillStyle = brown; c.beginPath(); c.ellipse(0, 0, 22, 9, 0, 0, 7); c.fill();                 // body on its back
-        c.fillStyle = light; c.beginPath(); c.ellipse(0, -2, 15, 6, 0, 0, 7); c.fill();                // tummy up
-        c.fillStyle = brown; c.beginPath(); c.ellipse(-24, -1, 6, 3, -.3, 0, 7); c.fill();            // tail
-        c.beginPath(); c.ellipse(-14, -9 + Math.sin(t * 3) * 1, 2.6, 4, -.2, 0, 7); c.ellipse(-8, -9 + Math.sin(t * 3 + 1) * 1, 2.6, 4, .2, 0, 7); c.fill(); // feet up
-        c.beginPath(); c.arc(22, -4, 9, 0, 7); c.fill();                                                // head
-        c.fillStyle = light; c.beginPath(); c.ellipse(25, -2, 5.5, 4, 0, 0, 7); c.fill();
-        c.fillStyle = dark; c.beginPath(); c.ellipse(28, -4, 2.2, 1.6, 0, 0, 7); c.fill();
-        petEyes(c, 18, 24, -8, 1.8, 'blink');
-        shell(6, -8);
-        c.fillStyle = brown; c.beginPath(); c.ellipse(3, -7, 2.6, 2, 0, 0, 7); c.ellipse(9, -7, 2.6, 2, 0, 0, 7); c.fill(); // paws on the shell
-        if (Math.sin(t * 1.3) > .9) petNote(c, '♡', 12, -22, .8, 12);
-        c.restore(); return;
-      }
-      c.translate(fx, fy); // mid-hop: draw the sitting otter along the arc
+    let u = 0; // 0 sitting on the dock, 1 floating on its back
+    if (P.act === 'float') u = P.t < .8 ? ease(P.t / .8) : P.t > P.dur - .8 ? ease((P.dur - P.t) / .8) : 1;
+    const g = P.act === 'groom' ? env(k, .25) : 0, sh = P.act === 'shell' ? env(k, .15) : 0;
+    c.save();
+    if (u > 0) {
+      const x = 34 * u, y = 34 * u - Math.sin(u * Math.PI) * 22 + Math.sin(t * 2) * 1.5 * u;
+      c.translate(x, y);
+      const ra = Math.max(0, u - .5) * 2;
+      if (ra > 0) { c.strokeStyle = `rgba(255,255,255,${ra * (.3 + .15 * Math.sin(t * 3))})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(16, 3, 26 + Math.sin(t * 2) * 3, 5, 0, 0, 7); c.stroke(); }
+      c.rotate(Math.PI / 2 * u); // rolls onto its back as it slides in
     }
-    c.translate(0, -hop); c.scale(SC, SC * breathe);
-    c.fillStyle = brown; c.beginPath(); c.ellipse(-13, -3, 9, 3.5, -.25, 0, 7); c.fill();                 // tail
-    c.beginPath(); c.ellipse(0, -14, 13, 15, 0, 0, 7); c.fill();                                          // body
-    c.fillStyle = light; c.beginPath(); c.ellipse(0, -12, 8.5, 10.5, 0, 0, 7); c.fill();                  // tummy
-    c.fillStyle = dark; c.beginPath(); c.ellipse(-6, -1, 4, 2.2, 0, 0, 7); c.ellipse(6, -1, 4, 2.2, 0, 0, 7); c.fill(); // feet
-    // paws: hold the shell, rub the face, or clap the shell
-    let pl = { x: -4.5, y: -18 }, pr = { x: 4.5, y: -18 }, sh = { x: 0, y: -16 }, showShell = true;
-    if (P.act === 'groom') { const e = petEnv(k, .25), w = Math.sin(P.t * 16) * 2 * e; pl = { x: -4.5 - .5 * e + w, y: -18 - 13 * e }; pr = { x: 4.5 + .5 * e - w, y: -18 - 13 * e }; showShell = e < .5; }
-    if (P.act === 'shell') { const w = Math.abs(Math.sin(P.t * 9)) * petEnv(k, .15); pl = { x: -7 + w * 2, y: -20 - w * 4 }; pr = { x: 7 - w * 2, y: -20 - w * 4 }; sh = { x: 0, y: -21 - w * 4 }; if (w > .95) particles.push({ x: X, y: Y - 14, vx: rnd(-20, 20), vy: -30, life: .4, max: .4, color: '#fff', size: 1.4, type: 'spark', g: 0 }); }
-    if (reacting) { const w = Math.abs(Math.sin(rp * Math.PI * 6)); pl = { x: -7 + w * 3, y: -22 }; pr = { x: 7 - w * 3, y: -22 }; sh = { x: 0, y: -22 }; }
-    if (showShell) shell(sh.x, sh.y);
+    c.translate(0, -R.hop); c.scale(1, R.breathe);
+    const paddle = u > .7 ? Math.sin(t * 4) * 2 * u : 0;
+    c.fillStyle = brown; c.beginPath(); c.ellipse(-13, -3, 9, 3.5, -.25, 0, 7); c.fill();
+    c.beginPath(); c.ellipse(0, -14, 13, 15, 0, 0, 7); c.fill();
+    c.fillStyle = light; c.beginPath(); c.ellipse(0, -12, 8.5, 10.5, 0, 0, 7); c.fill();
+    c.fillStyle = dark; c.beginPath(); c.ellipse(-6 + paddle, -1, 4, 2.2, 0, 0, 7); c.ellipse(6 - paddle, -1, 4, 2.2, 0, 0, 7); c.fill();
+    // shell rests on the tummy; paws hold it, wash the face, or clap it
+    const w = Math.abs(Math.sin(P.t * 9)) * sh, cl = Math.abs(Math.sin(R.rp * Math.PI * 6)) * R.re;
+    const lift = Math.max(w, cl) * 4;
+    const sx = 0, sy = -16 - lift;
+    c.save(); c.translate(sx, sy); c.fillStyle = '#ffb3c7'; c.beginPath(); c.moveTo(0, 3); c.arc(0, 0, 4, Math.PI * .9, Math.PI * 2.1); c.closePath(); c.fill(); c.strokeStyle = '#e07a98'; c.lineWidth = .8; c.beginPath(); c.moveTo(0, 3); c.lineTo(-2.4, -2.6); c.moveTo(0, 3); c.lineTo(0, -3.6); c.moveTo(0, 3); c.lineTo(2.4, -2.6); c.stroke(); c.restore();
+    const wob = Math.sin(P.t * 16) * 2 * g, spread = (w + cl) * 2.2;
+    const pl = { x: lerp(-4.5 - spread, -5 + wob, g), y: lerp(-18 - lift, -31, g) }, pr = { x: lerp(4.5 + spread, 5 - wob, g), y: lerp(-18 - lift, -31, g) };
     c.fillStyle = brown; c.beginPath(); c.ellipse(pl.x, pl.y, 3, 2.4, 0, 0, 7); c.ellipse(pr.x, pr.y, 3, 2.4, 0, 0, 7); c.fill();
-    const tilt = P.act === 'idle' && !reacting ? Math.sin(t * .7) * .12 : 0;
-    c.save(); c.translate(0, -34); c.rotate(tilt);
-    c.fillStyle = brown; c.beginPath(); c.arc(-9, -7, 3.2, 0, 7); c.arc(9, -7, 3.2, 0, 7); c.fill();        // ears
-    c.beginPath(); c.arc(0, 0, 11.5, 0, 7); c.fill();                                                      // head
-    c.fillStyle = light; c.beginPath(); c.ellipse(0, 4, 7.5, 5.5, 0, 0, 7); c.fill();                     // muzzle
-    c.fillStyle = dark; c.beginPath(); c.ellipse(0, 1.6, 2.6, 1.8, 0, 0, 7); c.fill();                    // nose
+    c.save(); c.translate(0, -34); c.rotate(Math.sin(t * .7) * .12 * (1 - g));
+    c.fillStyle = brown; c.beginPath(); c.arc(-9, -7, 3.2, 0, 7); c.arc(9, -7, 3.2, 0, 7); c.fill();
+    c.beginPath(); c.arc(0, 0, 11.5, 0, 7); c.fill();
+    c.fillStyle = light; c.beginPath(); c.ellipse(0, 4, 7.5, 5.5, 0, 0, 7); c.fill();
+    c.fillStyle = dark; c.beginPath(); c.ellipse(0, 1.6, 2.6, 1.8, 0, 0, 7); c.fill();
     c.strokeStyle = dark; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 3.4); c.lineTo(0, 5); c.arc(-1.6, 5, 1.6, 0, Math.PI); c.moveTo(3.2, 5); c.arc(1.6, 5, 1.6, 0, Math.PI); c.stroke();
-    petEyes(c, -4.8, 4.8, -2.5, 2.1, P.act === 'groom' ? 'happy' : eyes);
+    eyes(c, -4.8, 4.8, -2.5, 2.1, { o: R.o * (1 - .85 * u), happy: Math.max(R.re, g) });
     blush(c, -7.5, 7.5, 3);
     c.restore();
+    c.restore();
+    if (u > .95) note(c, '♡', 30, -2, Math.max(0, (Math.sin(t * 1.3) - .75) * 4), 12);
   }
-  // ---------- CAT ----------
-  else if (look === 'cat') {
+
+  // ---------------- CAT ----------------
+  function cat(c, P, k, t, R) {
     const fur = '#f2a03d', stripe = '#cf7414', cream = '#fff3e0';
-    c.translate(0, -hop); c.scale(SC, SC * breathe);
-    if (P.act === 'nap') {
-      c.fillStyle = fur; c.beginPath(); c.ellipse(0, -8, 17, 9.5, 0, 0, 7); c.fill();                    // curled up
-      c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(14, -4); c.quadraticCurveTo(10, 4, -10, 1); c.stroke();
-      c.fillStyle = stripe; [-8, -2, 4].forEach(x => { c.fillRect(x, -16, 2.2, 5); });
-      c.fillStyle = fur; c.beginPath(); c.arc(-11, -11, 8.5, 0, 7); c.fill();
-      c.beginPath(); c.moveTo(-18, -14); c.lineTo(-18, -22); c.lineTo(-13, -17); c.moveTo(-8, -17); c.lineTo(-5, -24); c.lineTo(-3, -16); c.fill();
-      petEyes(c, -14.5, -8, -11, 1.9, 'blink'); blush(c, -16.5, -5.5, -7.5);
-      const z = (P.t * .8) % 1; petNote(c, 'z', 4 + z * 6, -22 - z * 14, 1 - z, 9); petNote(c, 'Z', 10 + ((z + .5) % 1) * 6, -26 - ((z + .5) % 1) * 14, 1 - (z + .5) % 1, 12);
-      c.restore(); return;
-    }
-    const st = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0;
-    c.scale(1 + st * .18, 1 - st * .16);
-    c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round';                                          // tail
-    const sw = Math.sin(t * (reacting ? 9 : 2.2)) * (reacting ? 6 : 4);
-    c.beginPath(); c.moveTo(9, -3); c.quadraticCurveTo(24, -4, 20 + sw, -22); c.stroke();
-    c.fillStyle = fur; c.beginPath(); c.ellipse(0, -13, 11.5, 13.5, 0, 0, 7); c.fill();                   // body
-    c.fillStyle = cream; c.beginPath(); c.ellipse(0, -11, 6.5, 9, 0, 0, 7); c.fill();
-    const lift = P.act === 'groom' ? petEnv(k, .25) : 0;
-    c.fillStyle = cream; c.beginPath(); c.ellipse(-4.5, -1.5, 3.5, 2.6, 0, 0, 7); c.fill();               // paws
-    c.beginPath(); c.ellipse(4.5 - 5.5 * lift, -1.5 - (22.5 + Math.sin(P.t * 10) * 1.5) * lift, 3.5 - .5 * lift, 2.6, 0, 0, 7); c.fill();
-    c.save(); c.translate(0, -30); c.rotate(P.act === 'idle' && !reacting ? Math.sin(t * .6) * .1 : 0);
+    const n = P.act === 'nap' ? env(k, .16) : 0, st = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0, g = P.act === 'groom' ? env(k, .25) : 0;
+    c.save(); c.translate(0, -R.hop); c.scale(1 + st * .18, (1 - st * .16) * lerp(R.breathe, 1 + Math.sin(t * 1.4) * .03, n));
+    const sw = lerp(Math.sin(t * 2.2) * 4, Math.sin(t * 9) * 6, R.re);
+    // tail: sitting sweep -> wrapped around her while napping
+    c.strokeStyle = fur; c.lineWidth = 5; c.lineCap = 'round';
+    curve(c, lp([9, -3, 24, -4, 20 + sw, -22], [14, -4, 10, 5, -10, 2], n)); c.stroke();
+    // body: upright pear -> curled ball
+    c.fillStyle = fur; c.beginPath(); c.ellipse(lerp(0, 1, n), lerp(-13, -8, n), lerp(11.5, 17, n), lerp(13.5, 9.5, n), 0, 0, 7); c.fill();
+    c.fillStyle = cream; c.globalAlpha = 1 - n; c.beginPath(); c.ellipse(0, -11, 6.5, 9, 0, 0, 7); c.fill(); c.globalAlpha = 1;
+    if (n > 0) { c.fillStyle = stripe; c.globalAlpha = n; [-6, 0, 6].forEach(x => c.fillRect(x + 2, -16 + (1 - n) * 4, 2.2, 5)); c.globalAlpha = 1; }
+    // paws tuck in as she lies down; one paw lifts to groom
+    const ps = 1 - n;
+    c.fillStyle = cream; c.beginPath(); c.ellipse(-4.5, -1.5, 3.5 * ps, 2.6 * ps, 0, 0, 7); c.fill();
+    c.beginPath(); c.ellipse(4.5 - 5.5 * g, -1.5 - (22.5 + Math.sin(P.t * 10) * 1.5) * g, 3.5 * ps, 2.6 * ps, 0, 0, 7); c.fill();
+    // head moves down beside the body
+    c.save(); c.translate(lerp(0, -11, n), lerp(-30, -11, n)); c.rotate(Math.sin(t * .6) * .1 * (1 - n) * (1 - g) - .25 * n); c.scale(lerp(1, .85, n), lerp(1, .85, n));
     c.fillStyle = fur; c.beginPath(); c.moveTo(-9.5, -3); c.lineTo(-8, -15); c.lineTo(-2, -8); c.moveTo(9.5, -3); c.lineTo(8, -15); c.lineTo(2, -8); c.fill();
     c.fillStyle = '#ffb3c0'; c.beginPath(); c.moveTo(-7.8, -5); c.lineTo(-7.4, -11.5); c.lineTo(-4, -7.5); c.moveTo(7.8, -5); c.lineTo(7.4, -11.5); c.lineTo(4, -7.5); c.fill();
-    c.fillStyle = fur; c.beginPath(); c.arc(0, 0, 11, 0, 7); c.fill();                                    // head
+    c.fillStyle = fur; c.beginPath(); c.arc(0, 0, 11, 0, 7); c.fill();
     c.fillStyle = stripe; c.fillRect(-1, -10.5, 2, 4.5); c.fillRect(-5, -9.5, 2, 3.5); c.fillRect(3, -9.5, 2, 3.5);
     c.fillStyle = cream; c.beginPath(); c.ellipse(0, 4.5, 6.5, 4.5, 0, 0, 7); c.fill();
     c.fillStyle = '#ff8fa3'; c.beginPath(); c.moveTo(-1.6, 2.2); c.lineTo(1.6, 2.2); c.lineTo(0, 3.8); c.fill();
-    const yawn = P.act === 'stretch' ? Math.sin(k * Math.PI) : 0;
-    if (yawn > .2) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 6.4, 2.4, 2.6 * yawn, 0, 0, 7); c.fill(); }
+    if (st > .15) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 6.4, 2.4, 2.6 * st, 0, 0, 7); c.fill(); }
     else { c.strokeStyle = '#7a3a12'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 3.8); c.lineTo(0, 5); c.arc(-1.5, 5, 1.5, 0, Math.PI); c.moveTo(3, 5); c.arc(1.5, 5, 1.5, 0, Math.PI); c.stroke(); }
-    if (lift > .6) { c.fillStyle = '#ff8fa3'; c.beginPath(); c.ellipse(-1, 7, 1.4, 1.8, 0, 0, 7); c.fill(); }
+    if (g > .6) { c.fillStyle = '#ff8fa3'; c.beginPath(); c.ellipse(-1, 7, 1.4, 1.8 * (g - .6) / .4, 0, 0, 7); c.fill(); }
     c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = .7; c.beginPath(); [[-5, 3.5, -13, 2], [-5, 5, -13, 6], [5, 3.5, 13, 2], [5, 5, 13, 6]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
-    petEyes(c, -4.5, 4.5, -2, 2.1, yawn > .2 || lift > .5 ? 'happy' : eyes);
+    eyes(c, -4.5, 4.5, -2, 2.1, { o: R.o * (1 - n) * (1 - st * .9), happy: Math.max(R.re, g) });
     blush(c, -7.2, 7.2, 3.2);
     c.restore();
+    c.restore();
+    const z = (P.t * .8) % 1; note(c, 'z', 6 + z * 6, -22 - z * 14, (1 - z) * n, 9); note(c, 'Z', 12 + ((z + .5) % 1) * 6, -26 - ((z + .5) % 1) * 14, (1 - (z + .5) % 1) * n, 12);
   }
-  // ---------- FROG ----------
-  else if (look === 'frog') {
-    const g = '#5cc96a', dg = '#3f9a4c', belly = '#d4f5a8';
-    const jump = P.act === 'hop' ? Math.sin(k * Math.PI) * 12 : 0;
-    c.translate(0, -hop - jump); c.scale(SC, SC * (P.act === 'hop' ? 1 + Math.sin(k * Math.PI) * .1 : breathe));
-    c.fillStyle = dg; c.beginPath(); c.ellipse(-12, -4, 7, 4.5, -.3, 0, 7); c.ellipse(12, -4, 7, 4.5, .3, 0, 7); c.fill(); // back legs
-    c.fillStyle = g; c.beginPath(); c.ellipse(0, -10, 14.5, 10.5, 0, 0, 7); c.fill();                     // body
+
+  // ---------------- FROG ----------------
+  function frog(c, P, k, t, R) {
+    const gr = '#5cc96a', dg = '#3f9a4c', belly = '#d4f5a8';
+    const jump = P.act === 'hop' ? Math.sin(k * Math.PI) * 12 : 0, squash = P.act === 'hop' ? Math.sin(k * Math.PI) * .1 : 0;
+    c.save(); c.translate(0, -R.hop - jump); c.scale(1 - squash * .5, (1 + squash) * R.breathe);
+    c.fillStyle = dg; c.beginPath(); c.ellipse(-12, -4, 7, 4.5, -.3, 0, 7); c.ellipse(12, -4, 7, 4.5, .3, 0, 7); c.fill();
+    c.fillStyle = gr; c.beginPath(); c.ellipse(0, -10, 14.5, 10.5, 0, 0, 7); c.fill();
     c.fillStyle = belly; c.beginPath(); c.ellipse(0, -6.5, 9, 6, 0, 0, 7); c.fill();
-    c.fillStyle = dg; c.beginPath(); c.ellipse(-5.5, -.5, 3.5, 1.8, 0, 0, 7); c.ellipse(5.5, -.5, 3.5, 1.8, 0, 0, 7); c.fill(); // front feet
-    const puff = P.act === 'ribbit' ? Math.max(0, Math.sin(P.t * 7)) * petEnv(k, .2) : 0;
-    if (puff > .05) { c.fillStyle = '#f2ffd6'; c.beginPath(); c.arc(0, -6, 4 + puff * 5, 0, 7); c.fill(); }
-    c.fillStyle = g; c.beginPath(); c.arc(-7.5, -19, 6.5, 0, 7); c.arc(7.5, -19, 6.5, 0, 7); c.fill();       // eye bumps
-    c.fillStyle = '#fff'; c.beginPath(); c.arc(-7.5, -19.5, 4.4, 0, 7); c.arc(7.5, -19.5, 4.4, 0, 7); c.fill();
-    if (eyes === 'open') { c.fillStyle = '#16110e'; c.beginPath(); c.arc(-7, -19.5, 2.4, 0, 7); c.arc(8, -19.5, 2.4, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-6.2, -20.5, .9, 0, 7); c.arc(8.8, -20.5, .9, 0, 7); c.fill(); }
-    else petEyes(c, -7.5, 7.5, -19.5, 2.4, eyes);
-    c.strokeStyle = '#2a6a33'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, -13, 6, .2, Math.PI - .2); c.stroke(); // smile
+    c.fillStyle = dg; c.beginPath(); c.ellipse(-5.5, -.5, 3.5, 1.8, 0, 0, 7); c.ellipse(5.5, -.5, 3.5, 1.8, 0, 0, 7); c.fill();
+    const puff = P.act === 'ribbit' ? Math.max(0, Math.sin(P.t * 7)) * env(k, .2) : 0;
+    if (puff > .02) { c.fillStyle = '#f2ffd6'; c.beginPath(); c.arc(0, -6, 4 + puff * 5, 0, 7); c.fill(); }
+    c.fillStyle = gr; c.beginPath(); c.arc(-7.5, -19, 6.5, 0, 7); c.arc(7.5, -19, 6.5, 0, 7); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.ellipse(-7.5, -19.5, 4.4, 4.4 * Math.max(.1, R.o), 0, 0, 7); c.ellipse(7.5, -19.5, 4.4, 4.4 * Math.max(.1, R.o), 0, 0, 7); c.fill();
+    if (R.re > .5) eyes(c, -7.5, 7.5, -19.5, 2.4, { happy: 1 });
+    else if (R.o > .2) { const ry = 2.4 * R.o; c.fillStyle = '#16110e'; c.beginPath(); c.ellipse(-7, -19.5, 2.4, ry, 0, 0, 7); c.ellipse(8, -19.5, 2.4, ry, 0, 0, 7); c.fill(); if (R.o > .6) { c.fillStyle = '#fff'; c.beginPath(); c.arc(-6.2, -20.5, .9, 0, 7); c.arc(8.8, -20.5, .9, 0, 7); c.fill(); } }
+    c.strokeStyle = '#2a6a33'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, -13, 6, .2, Math.PI - .2); c.stroke();
     blush(c, -9.5, 9.5, -12);
-    if (P.act === 'ribbit' && puff > .6) petNote(c, '♪', 14, -26 - puff * 3, puff, 11);
+    note(c, '♪', 14, -26 - puff * 3, puff > .6 ? puff : 0, 11);
     if (P.act === 'tongue') {
-      const fxp = 26, fyp = -28 + Math.sin(P.t * 18) * 2;
-      if (k < .55) { c.fillStyle = '#333'; c.beginPath(); c.arc(fxp + Math.sin(P.t * 23) * 3, fyp, 1.6, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(fxp + Math.sin(P.t * 23) * 3 - 1, fyp - 2, 1.6, 1, Math.sin(P.t * 60), 0, 7); c.fill(); }
-      if (k > .4 && k < .7) { const r = Math.sin((k - .4) / .3 * Math.PI); c.strokeStyle = '#ff6f8a'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(1, -12); c.lineTo(1 + (fxp - 1) * r, -12 + (fyp + 12) * r); c.stroke(); }
-      if (k > .75) petNote(c, 'gulp', 14, -32, 1 - (k - .75) * 4, 8);
+      const fx = 26 + Math.sin(P.t * 23) * 3, fy = -28 + Math.sin(P.t * 18) * 2, fa = Math.min(1, P.t * 4) * (k < .55 ? 1 : 0);
+      if (fa > 0) { c.globalAlpha = fa; c.fillStyle = '#333'; c.beginPath(); c.arc(fx, fy, 1.6, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(fx - 1, fy - 2, 1.6, 1, Math.sin(P.t * 60), 0, 7); c.fill(); c.globalAlpha = 1; }
+      const r = win(k, .4, .7, .5); if (r > 0) { c.strokeStyle = '#ff6f8a'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(1, -12); c.lineTo(1 + (26 - 1) * r, -12 + (-28 + 12) * r); c.stroke(); }
+      note(c, 'gulp', 14, -32, k > .75 ? env((k - .75) / .25, .4) : 0, 8);
     }
+    c.restore();
   }
-  // ---------- SEAGULL ----------
-  else if (look === 'gull') {
+
+  // ---------------- SEAGULL ----------------
+  function gull(c, P, k, t, R) {
     const grey = '#a9b6bd', beak = '#ffc93c';
-    const flap = P.act === 'flap' || reacting ? Math.sin((P.act === 'flap' ? P.t : rp) * 24) * (P.act === 'flap' ? petEnv(k, .2) : 1) : null;
-    c.translate(0, -hop - (P.act === 'flap' ? Math.abs(Math.sin(k * Math.PI)) * 6 : 0)); c.scale(SC, SC * breathe);
-    c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3, 0); c.moveTo(3, -6); c.lineTo(3, 0); c.stroke(); // legs
+    const fl = Math.max(P.act === 'flap' ? env(k, .2) : 0, R.re), lift = P.act === 'flap' ? Math.sin(k * Math.PI) * 6 : 0;
+    c.save(); c.translate(0, -R.hop - lift); c.scale(1, R.breathe);
+    c.strokeStyle = '#ff9f1c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-3, -6); c.lineTo(-3, 0); c.moveTo(3, -6); c.lineTo(3, 0); c.stroke();
     c.fillStyle = '#ff9f1c'; c.beginPath(); c.ellipse(-3, .5, 3, 1.2, 0, 0, 7); c.ellipse(3, .5, 3, 1.2, 0, 0, 7); c.fill();
-    c.fillStyle = '#e8eef1'; c.beginPath(); c.moveTo(-10, -14); c.lineTo(-21, -10); c.lineTo(-11, -9); c.fill();          // tail
-    c.fillStyle = '#fbfdfe'; c.beginPath(); c.ellipse(0, -14, 12.5, 10, -.1, 0, 7); c.fill();                        // body
-    if (flap !== null) { // wings up and flapping
-      c.fillStyle = grey; [-1, 1].forEach(sd => { c.save(); c.translate(-2, -18); c.rotate(sd * (.5 + flap * .6) - Math.PI / 2 * .2); c.beginPath(); c.ellipse(sd * 9, -6, 11, 4, sd * -.6, 0, 7); c.fill(); c.restore(); });
-    } else { c.fillStyle = grey; c.beginPath(); c.ellipse(-3, -15, 10, 6, -.25, 0, 7); c.fill(); c.fillStyle = '#4a5560'; c.beginPath(); c.ellipse(-11, -12, 4, 2.4, -.3, 0, 7); c.fill(); }
-    const turn = P.act === 'look' ? 1 - 2 * petEnv((k - .2) / .6 < 0 ? 0 : (k - .2) / .6 > 1 ? 1 : (k - .2) / .6, .3) * (k > .2 && k < .8 ? 1 : 0) : 1;
-    c.save(); c.translate(5, -27); c.scale(turn, 1); c.rotate(!reacting && P.act === 'idle' ? Math.sin(t * .9) * .12 : 0);
+    // far wing (behind), same hinge as the near wing
+    const ang = fl * (1.15 + Math.sin(t * 22) * .55);
+    const wing = (a, col) => { c.save(); c.translate(-1, -18); c.rotate(a); c.fillStyle = col; c.beginPath(); c.ellipse(-7, 3, 10, 5.5, -.25, 0, 7); c.fill(); c.fillStyle = '#4a5560'; c.beginPath(); c.ellipse(-15, 5.5, 3.6, 2.2, -.3, 0, 7); c.fill(); c.restore(); };
+    if (fl > .02) wing(ang * 1.1, '#8f9ca3');
+    c.fillStyle = '#e8eef1'; c.beginPath(); c.moveTo(-10, -14); c.lineTo(-21, -10); c.lineTo(-11, -9); c.fill();
+    c.fillStyle = '#fbfdfe'; c.beginPath(); c.ellipse(0, -14, 12.5, 10, -.1, 0, 7); c.fill();
+    wing(ang, grey);
+    const look = P.act === 'look' ? win(k, .15, .85, .3) : 0, turn = Math.cos(look * Math.PI);
+    c.save(); c.translate(5, -27); c.scale(turn, 1); c.rotate(Math.sin(t * .9) * .12 * (1 - look));
     c.fillStyle = '#fbfdfe'; c.beginPath(); c.arc(0, 0, 8.5, 0, 7); c.fill();
-    const open = P.act === 'squawk' ? Math.abs(Math.sin(P.t * 12)) * petEnv(k, .2) : reacting ? .5 : 0;
+    const open = P.act === 'squawk' ? Math.abs(Math.sin(P.t * 12)) * env(k, .2) : R.re * .5;
     c.fillStyle = beak; c.beginPath(); c.moveTo(6, -1.5); c.lineTo(15, -1 - open * 2); c.lineTo(7, 1); c.fill();
     c.beginPath(); c.moveTo(6, 1); c.lineTo(14, 1.5 + open * 3); c.lineTo(6, 3); c.fill();
     c.fillStyle = '#ff5a3d'; c.beginPath(); c.arc(11.5, 1.6 + open * 1.5, 1, 0, 7); c.fill();
-    petEyes(c, 2.5, 2.5, -2, 1.9, eyes);
+    eyes(c, 2.5, 2.5, -2, 1.9, { o: R.o, happy: R.re });
     blush(c, 1, 1, 2.8);
     c.restore();
-    if (P.act === 'squawk' && P.t > .2) petNote(c, 'squawk!', 14, -46, Math.min(1, (P.dur - P.t) * 3), 9);
+    c.restore();
+    note(c, 'squawk!', 14, -46, P.act === 'squawk' ? win(k, .1, 1, .2) : 0, 9);
   }
-  c.restore();
-  // hearts when you land something
-  if (reacting) for (let i = 0; i < (P.big ? 4 : 2); i++) { const q = (rp * 1.2 + i * .28) % 1; petHeart(c, X - 6 + i * 6 + Math.sin(q * 6 + i) * 3, Y - 28 - q * 26, .8 + (P.big ? .3 : 0), 1 - q); }
+
+  // ---------------- NÓTT ----------------
+  const NB = '#17171f', NR = '#3c3c52', NP = '#ff9fb3';
+  const nb = (c, f) => { c.fillStyle = NB; c.strokeStyle = NR; c.lineWidth = 1.6; c.beginPath(); f(); c.fill(); c.stroke(); };
+  const limb = (c, x1, y1, x2, y2, w) => { if (w < .2) return; c.lineCap = 'round'; c.strokeStyle = NR; c.lineWidth = w + 1.8; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.strokeStyle = NB; c.lineWidth = w; c.stroke(); };
+  function nott(c, P, k, t, R, night) {
+    const A = P.act;
+    const loaf = A === 'loaf' ? env(k, .2) : 0, g = A === 'groom' ? env(k, .22) : 0, n = A === 'nap' ? env(k, .16) : 0;
+    const s = A === 'bigstretch' ? env(k, .28) : 0, sWob = 1 + Math.sin(P.t * 7) * .02 * s;
+    const crouch = A === 'pounce' ? win(k, .08, .6, .3) : 0, wig = Math.sin(P.t * 30) * 2.2 * (A === 'pounce' ? win(k, .22, .56, .3) : 0);
+    const leap = A === 'pounce' ? win(k, .56, .86, .5) * 16 : 0;
+    const px = A === 'pounce' ? (k < .56 ? 0 : k < .86 ? ease((k - .56) / .3) * 16 : 16 * (1 - ease((k - .86) / .14))) : 0;
+    c.save(); c.translate(px, -R.hop - leap);
+    c.scale(1 + loaf * .08 + crouch * .06, (1 - loaf * .18 - crouch * .15) * lerp(R.breathe, 1 + Math.sin(t * 1.4) * .03, n));
+    // skeleton blended between sitting, stretching and napping
+    const hip = { x: -7, y: -16 - 7 * s * sWob }, chest = { x: 6 + 3 * s, y: -15 + 7 * s * sWob };
+    const stCx = (hip.x + chest.x) / 2, stCy = (hip.y + chest.y) / 2, stRx = Math.hypot(chest.x - hip.x, chest.y - hip.y) / 2 + 7, stRot = Math.atan2(chest.y - hip.y, chest.x - hip.x);
+    let bx = lerp(wig, stCx, s), by = lerp(-14.5, stCy, s), brx = lerp(10, stRx, s), bry = lerp(15.5, 7.5, s), brot = lerp(0, stRot, s);
+    bx = lerp(bx, 0, n); by = lerp(by, -8, n); brx = lerp(brx, 16, n); bry = lerp(bry, 8, n);
+    let hx = lerp(wig, chest.x + 6, s), hy = lerp(-32, chest.y - 2 + 2 * s, s), hs = 1;
+    hx = lerp(hx, -12, n); hy = lerp(hy, -12, n); hs = lerp(1, .9, n);
+    // tail
+    const sw = lerp(Math.sin(t * 2) * 4, Math.sin(t * 9) * 5, R.re);
+    let tail = [7 + wig, -4, 26, -2, 26 + sw, -17];
+    tail = lp(tail, [7, -3, 4, 3, -10, 1], loaf);
+    tail = lp(tail, [hip.x - 2, hip.y - 2, hip.x - 10, hip.y - 14, hip.x - 4 + Math.sin(t * 3) * 2, hip.y - 26], s);
+    tail = lp(tail, [14, -4, 10, 5, -12, 2], n);
+    tail = lp(tail, [7, -8, 19, -20, 14 + sw * .4, -42], R.re);
+    c.save(); c.lineCap = 'round'; c.strokeStyle = NR; c.lineWidth = 8; curve(c, tail); c.stroke(); c.strokeStyle = NB; c.lineWidth = 6; curve(c, tail); c.stroke(); c.restore();
+    // back legs appear as she stretches
+    limb(c, hip.x - 1, hip.y + 4, -9, -1, 5 * s); limb(c, hip.x + 2, hip.y + 4, -4, -1, 5 * s);
+    nb(c, () => c.ellipse(bx, by, brx, bry, brot, 0, 7));
+    c.fillStyle = 'rgba(255,255,255,.05)'; c.beginPath(); c.ellipse(bx - 3, by - 3.5, Math.max(0, 4 * (1 - s)), Math.max(0, 8 * (1 - n)), 0, 0, 7); c.fill();
+    // front paws: sitting -> reaching far out (stretch) -> tucked (loaf, nap); one paw grooms
+    const reach = 10 + 16 * s, tuck = Math.max(loaf, n);
+    const lf = { x: lerp(-3.8 + wig, chest.x + reach - 4, s), y: lerp(-1.5, -1.2, s) }, rf = { x: lerp(3.8 + wig, chest.x + reach + 1, s), y: -1.5 };
+    rf.x = lerp(rf.x, -1, g); rf.y = lerp(rf.y, -26 + Math.sin(P.t * 10) * 1.5, g);
+    limb(c, chest.x - 2, chest.y + 3, lf.x, lf.y, 4.6 * s); limb(c, chest.x, chest.y + 3, rf.x, rf.y, 4.6 * s);
+    const pw = 1 - tuck;
+    if (pw > .02) nb(c, () => { c.ellipse(lf.x, lf.y, 3 * pw, 2.4 * pw, 0, 0, 7); c.ellipse(rf.x, rf.y, (3 + .4 * g) * pw, (2.4 + .4 * g) * pw, 0, 0, 7); });
+    if (s > .9) { c.strokeStyle = '#ddd'; c.lineWidth = .7; for (const dx of [-1, 1, 3]) { c.beginPath(); c.moveTo(rf.x + 1 + dx, -2.6); c.lineTo(rf.x + 2.4 + dx, -3.8); c.stroke(); } }
+    // head
+    const tilt = Math.sin(t * .6) * .12 * (1 - s) * (1 - n) * (1 - g) + .15 * s - .25 * n + Math.sin(t * 8) * .08 * R.re;
+    c.save(); c.translate(hx, hy); c.rotate(tilt); c.scale(hs, hs);
+    nb(c, () => { c.moveTo(-10, -2); c.lineTo(-9 + 2 * s, -16 + 2 * s); c.lineTo(-2.5, -8.5); c.closePath(); c.moveTo(10, -2); c.lineTo(9 - 2 * s, -16 + 2 * s); c.lineTo(2.5, -8.5); c.closePath(); });
+    c.fillStyle = NP; c.beginPath(); c.moveTo(-8.2, -4); c.lineTo(-8, -12.5); c.lineTo(-4.4, -8.2); c.moveTo(8.2, -4); c.lineTo(8, -12.5); c.lineTo(4.4, -8.2); c.fill();
+    nb(c, () => c.ellipse(0, 0, 11, 10.5, 0, 0, 7));
+    // eyelids: slow blink, loaf (half), nap and stretch (closed), pounce (wide)
+    const sb = A === 'slowblink' ? win(k, .15, .8, .35) : 0;
+    let o = R.o * (1 - .55 * loaf) * (1 - sb) * (1 - n) * (1 - s);
+    const happy = Math.max(R.re, g > .5 ? 1 : 0, s > .5 ? 1 : 0);
+    eyes(c, -4.6, 4.6, -1.2, 2.6, { o, happy, iris: night ? '#e4f25e' : '#cfdc4a', slit: .32 + .45 * crouch, glow: night && o > .3, lash: '#8f8fae' });
+    c.fillStyle = NP; c.beginPath(); c.moveTo(-1.7, 3.4); c.lineTo(1.7, 3.4); c.lineTo(0, 5.2); c.fill();
+    const yawn = A === 'bigstretch' ? win(k, .32, .72, .35) : 0;
+    if (yawn > .15) { c.fillStyle = '#c94a62'; c.beginPath(); c.ellipse(0, 7.6, 2.2, 2.8 * yawn, 0, 0, 7); c.fill(); }
+    else { c.strokeStyle = '#8f8fae'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 5.2); c.lineTo(0, 6.2); c.arc(-1.5, 6.2, 1.5, 0, Math.PI); c.moveTo(3, 6.2); c.arc(1.5, 6.2, 1.5, 0, Math.PI); c.stroke(); }
+    if (g > .6) { c.fillStyle = '#ff7f99'; c.beginPath(); c.ellipse(-1, 8.4, 1.4, 1.8 * (g - .6) / .4, 0, 0, 7); c.fill(); }
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = .7; c.beginPath(); [[-6, 4.5, -15, 3], [-6, 6, -15, 7.5], [6, 4.5, 15, 3], [6, 6, 15, 7.5]].forEach(([a, b, d, e]) => { c.moveTo(a, b); c.lineTo(d, e); }); c.stroke();
+    c.fillStyle = 'rgba(255,120,150,.35)'; c.beginPath(); c.ellipse(-7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.ellipse(7.2, 4.2, 2.4, 1.4, 0, 0, 7); c.fill();
+    // collar and tag sit just under the chin
+    c.strokeStyle = '#c94a62'; c.lineWidth = 1.8; c.beginPath(); c.arc(0, 0, 9.8, Math.PI * .28, Math.PI * .72); c.stroke();
+    c.fillStyle = '#f4eef2'; c.beginPath(); c.ellipse(0, 9.7, 2.4, 1.7, 0, 0, 7); c.fill();
+    c.restore();
+    if (sb > .3) heart(c, hx + 14, -52 - k * 10, 1, (sb - .3) / .7);
+    c.restore();
+    const z = (P.t * .7) % 1; note(c, 'z', 6 + z * 8, -24 - z * 16, (1 - z) * n, 11); note(c, 'Z', 13 + ((z + .5) % 1) * 8, -28 - ((z + .5) % 1) * 16, (1 - (z + .5) % 1) * n, 14);
+    if (A === 'pounce') { // the fish she spots
+      const fa = win(k, .05, .62, .2);
+      if (fa > 0) { c.save(); c.globalAlpha = fa; c.fillStyle = '#9fd8ef'; c.translate(46 + Math.sin(t * 3) * 2, 14); c.beginPath(); c.ellipse(0, 0, 6, 2.6, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-5, 0); c.lineTo(-9, -3); c.lineTo(-9, 3); c.fill(); c.restore(); }
+      const sp = win(k, .78, 1, .3); if (sp > 0) { c.save(); c.globalAlpha = sp; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(40, 14, 10 + (k - .78) * 40, 3, 0, 0, 7); c.stroke(); c.restore(); }
+    }
+  }
+
+  const DRAW = { otter, cat, frog, gull, nott };
+  // draw a pet: c is a 2D context already translated to the pet's feet and scaled
+  function draw(c, look, P, t, night = false) {
+    const k = P.act === 'idle' ? 0 : Math.min(1, P.t / Math.max(.01, P.dur));
+    const rp = P.react > 0 ? 1 - P.react / REACT : 0, re = P.react > 0 ? env(rp, .15) : 0;
+    const R = {
+      breathe: 1 + Math.sin(t * 2.4) * .025, rp, re,
+      hop: P.react > 0 ? Math.abs(Math.sin(rp * Math.PI * (P.big ? 3 : 2))) * (P.big ? 12 : 8) : 0,
+      o: P.blink < 0 ? Math.abs(P.blink + .07) / .07 : 1, // eyelids close and open over a blink
+    };
+    (DRAW[look] || (() => {}))(c, P, k, t, R, night);
+    if (P.react > 0) for (let i = 0; i < (P.big ? 4 : 2); i++) { const q = (rp * 1.2 + i * .28) % 1; heart(c, -6 + i * 6 + Math.sin(q * 6 + i) * 3, -44 - q * 34, 1.2 + (P.big ? .4 : 0), (1 - q) * env(rp, .1)); }
+  }
+  return { ACTS, newState, step, react, start, draw, REACT };
+})();
+// the pet on your dock
+const PET = PETS.newState();
+function petReact(rarity) { PETS.react(PET, rarity); }
+function drawPet(look, X, Y, t) {
+  PETS.step(PET, look, dtFrame || 0);
+  ctx.save(); ctx.translate(X, Y); ctx.scale(.62, .62);
+  PETS.draw(ctx, look, PET, t, isNight(LOCS[S.loc]));
+  ctx.restore();
 }
 function drawTrophy(look, X, Y) {
   const c = ctx, col = { mossback: '#6f7d3c', marlin: '#3a7bd5', leviathan: '#c9a2ff' }[look];
